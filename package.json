@@ -49,7 +49,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && node scripts/rewrite-dts-imports.mjs",
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.json && node scripts/rewrite-dts-imports.mjs",
     "lint": "echo \"lint not configured\"",
     "sync:discovery:vercel": "node --experimental-strip-types scripts/sync-discovery-vercel.ts",
     "test": "vitest --run",
