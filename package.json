@@ -56,7 +56,6 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "drizzle-orm": "^0.32.0",
     "@undefineds.co/drizzle-solid": "^0.3.4",
     "zod": "^3.22.4"
   },
