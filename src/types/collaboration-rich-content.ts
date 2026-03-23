@@ -1,14 +1,14 @@
 /**
- * Wave A CP0: collaboration-related richContent block contracts.
+ * Wave A CP0: collaboration-related rich content items.
  *
- * These are minimal JSON shapes stored in MessageRow.richContent and consumed by downstream UIs.
- * They intentionally do NOT include UI block runtime fields (id/createdAt/status, etc.).
+ * These are data contracts stored in `MessageRow.richContent.items`.
+ * They intentionally omit presentation/runtime wrapper fields.
  */
 
 export type ToolRisk = 'low' | 'medium' | 'high'
 export type ToolApprovalStatus = 'pending' | 'approved' | 'rejected' | 'auto_approved'
 
-export interface ToolApprovalBlock {
+export interface ToolApprovalRichContentItem {
   type: 'tool_approval'
 
   toolCallId: string
@@ -33,7 +33,7 @@ export interface ToolApprovalBlock {
 
 export type TaskProgressStepStatus = 'pending' | 'running' | 'done' | 'error' | 'skipped'
 
-export interface TaskProgressBlock {
+export interface TaskProgressRichContentItem {
   type: 'task_progress'
 
   taskId: string
@@ -52,8 +52,7 @@ export interface TaskProgressBlock {
 
 export type ToolCallStatus = 'calling' | 'waiting_approval' | 'running' | 'done' | 'error'
 
-export interface ToolCallBlock {
-  // Maps to MessageBlockType.TOOL in message-block.ts runtime model.
+export interface ToolCallRichContentItem {
   type: 'tool'
 
   toolCallId: string
@@ -66,4 +65,7 @@ export interface ToolCallBlock {
   duration?: number
 }
 
-export type CollaborationRichBlock = ToolApprovalBlock | TaskProgressBlock | ToolCallBlock
+export type CollaborationRichContentItem =
+  | ToolApprovalRichContentItem
+  | TaskProgressRichContentItem
+  | ToolCallRichContentItem

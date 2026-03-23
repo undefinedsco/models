@@ -82,36 +82,37 @@ export {
 } from './message.schema.js'
 
 export {
-  MessageBlockType,
-  MessageBlockStatus,
-  type BaseMessageBlock,
-  type PlaceholderMessageBlock,
-  type MainTextMessageBlock,
-  type ThinkingMessageBlock,
-  type ImageMessageBlock,
-  type CodeMessageBlock,
-  type ToolMessageBlock,
-  type FileMessageBlock,
-  type ErrorMessageBlock,
-  type CitationMessageBlock,
-  type MessageBlock,
+  RichContentItemType,
+  type RichContentModelRef,
+  type BaseRichContentItem,
+  type MainTextRichContentItem,
+  type ThinkingRichContentItem,
+  type ImageRichContentItem,
+  type CodeRichContentItem,
+  type FileRichContentItem,
+  type ErrorRichContentItem,
+  type CitationRichContentItem,
+  type MessageRichContentItem,
   type MessageRichContent,
-  createMessageBlock,
-  isBlockType,
-  parseMessageBlocks,
-  serializeMessageBlocks,
-} from './types/message-block.js'
+  type LegacyToolInvocation,
+  createRichContentItem,
+  isRichContentItemType,
+  parseMessageRichContent,
+  parseMessageRichContentItems,
+  serializeMessageRichContent,
+  serializeMessageRichContentItems,
+} from './types/message-rich-content.js'
 
 export {
-  type ToolApprovalBlock,
-  type ToolCallBlock,
-  type TaskProgressBlock,
-  type CollaborationRichBlock,
+  type ToolApprovalRichContentItem,
+  type ToolCallRichContentItem,
+  type TaskProgressRichContentItem,
+  type CollaborationRichContentItem,
   type ToolRisk,
   type ToolApprovalStatus,
   type ToolCallStatus,
   type TaskProgressStepStatus,
-} from './types/collaboration-blocks.js'
+} from './types/collaboration-rich-content.js'
 
 export { fileTable, type FileRow, type FileInsert, type FileUpdate } from './file.js'
 
@@ -169,7 +170,7 @@ export {
   type InboxNotificationUpdate,
 } from './inbox-notification.schema.js'
 
-export { ApprovalVocab, AuditVocab, GrantVocab, InboxNotificationVocab } from './vocab/sidecar.vocab.js'
+export { ApprovalVocab, AuditVocab, GrantVocab, InboxNotificationVocab } from './vocab/governance.vocab.js'
 
 export {
   knowledgeFolderSchema,
@@ -245,4 +246,4 @@ export {
   type AgentStatusUpdate,
 } from './agent-status.schema.js'
 
-export { linxSchema } from './schema.js'
+export { schema } from './schema.js'

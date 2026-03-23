@@ -3,10 +3,10 @@ import type { ContactInsert } from '../contact.schema.js'
 import type { MessageInsert } from '../message.schema.js'
 import type { ThreadInsert } from '../thread.schema.js'
 import type {
-  ToolApprovalBlock,
-  ToolCallBlock,
-  TaskProgressBlock,
-} from '../types/collaboration-blocks.js'
+  ToolApprovalRichContentItem,
+  ToolCallRichContentItem,
+  TaskProgressRichContentItem,
+} from '../types/collaboration-rich-content.js'
 import { ContactClass } from '../contact.schema.js'
 
 export const fixtureContactSolid: ContactInsert = {
@@ -49,7 +49,7 @@ export const fixtureThreadDirectAI: ThreadInsert = {
   workspace: 'https://pod.example/.data/agent-workspaces/secretary/ws-main/',
 } satisfies ThreadInsert
 
-export const fixtureToolCallBlock: ToolCallBlock = {
+export const fixtureToolCallRichContentItem: ToolCallRichContentItem = {
   type: 'tool',
   toolCallId: 'toolcall-1',
   toolName: 'write_file',
@@ -58,7 +58,7 @@ export const fixtureToolCallBlock: ToolCallBlock = {
   duration: 123,
 }
 
-export const fixtureToolApprovalBlock: ToolApprovalBlock = {
+export const fixtureToolApprovalRichContentItem: ToolApprovalRichContentItem = {
   type: 'tool_approval',
   toolCallId: 'toolcall-1',
   toolName: 'write_file',
@@ -69,7 +69,7 @@ export const fixtureToolApprovalBlock: ToolApprovalBlock = {
   decisionRole: 'human',
 }
 
-export const fixtureTaskProgressBlock: TaskProgressBlock = {
+export const fixtureTaskProgressRichContentItem: TaskProgressRichContentItem = {
   type: 'task_progress',
   taskId: 'task-1',
   title: 'CP0 contract baseline',
@@ -89,7 +89,11 @@ export const fixtureMessageTooling: MessageInsert = {
   role: 'assistant',
   content: 'I will write a file after approval.',
   richContent: JSON.stringify({
-    blocks: [fixtureToolCallBlock, fixtureToolApprovalBlock, fixtureTaskProgressBlock],
+    items: [
+      fixtureToolCallRichContentItem,
+      fixtureToolApprovalRichContentItem,
+      fixtureTaskProgressRichContentItem,
+    ],
   }),
   status: 'sent',
 } satisfies MessageInsert

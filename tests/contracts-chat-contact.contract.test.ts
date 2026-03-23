@@ -17,6 +17,8 @@ import {
   buildLocalWorkspaceUri,
   parseLocalWorkspaceUri,
   isLocalWorkspaceUri,
+  parseMessageRichContent,
+  serializeMessageRichContent,
 } from '../src/index'
 
 import type { ChatRow } from '../src/chat.schema'
@@ -29,9 +31,9 @@ import {
   fixtureChatDirectAI,
   fixtureThreadDirectAI,
   fixtureMessageTooling,
-  fixtureToolApprovalBlock,
-  fixtureToolCallBlock,
-  fixtureTaskProgressBlock,
+  fixtureToolApprovalRichContentItem,
+  fixtureToolCallRichContentItem,
+  fixtureTaskProgressRichContentItem,
 } from '../src/fixtures/contracts-chat-contact'
 
 describe('Wave A CP0 contracts: namespaces', () => {
@@ -136,9 +138,9 @@ describe('Wave A CP0 fixtures compile and are stable', () => {
 
     expect(fixtureMessageTooling.richContent).toContain('tool_approval')
 
-    expect(fixtureToolCallBlock.type).toBe('tool')
-    expect(fixtureToolApprovalBlock.type).toBe('tool_approval')
-    expect(fixtureTaskProgressBlock.type).toBe('task_progress')
+    expect(fixtureToolCallRichContentItem.type).toBe('tool')
+    expect(fixtureToolApprovalRichContentItem.type).toBe('tool_approval')
+    expect(fixtureTaskProgressRichContentItem.type).toBe('task_progress')
   })
 
   it('derives workspace container URIs deterministically', () => {
@@ -155,5 +157,13 @@ describe('Wave A CP0 fixtures compile and are stable', () => {
       nodeId: 'node-123',
       path: '/Users/ganlu/develop/linx',
     })
+  })
+
+  it('normalizes richContent payloads to items', () => {
+    const parsed = parseMessageRichContent(fixtureMessageTooling.richContent)
+
+    expect(parsed.items).toHaveLength(3)
+    expect(parsed.items?.[0]?.type).toBe('tool')
+    expect(serializeMessageRichContent(parsed)).toContain('"items"')
   })
 })

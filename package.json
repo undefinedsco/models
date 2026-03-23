@@ -1,6 +1,6 @@
 {
   "name": "@undefineds.co/models",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -26,6 +26,14 @@
     "./ai-config": {
       "types": "./dist/ai-config/index.d.ts",
       "default": "./dist/ai-config/index.js"
+    },
+    "./protocols": {
+      "types": "./dist/protocols/index.d.ts",
+      "default": "./dist/protocols/index.js"
+    },
+    "./governance": {
+      "types": "./dist/governance/index.d.ts",
+      "default": "./dist/governance/index.js"
     },
     "./_drizzle-solid/pod-table": {
       "types": "./dist/_drizzle-solid/pod-table.d.ts",

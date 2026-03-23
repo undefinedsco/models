@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 // ============================================
-// Sidecar Runtime Event Contracts (CP0)
+// Runtime Protocol Event Contracts (CP0)
 //
 // Notes:
 // - Runtime wire contracts only; events are NOT persisted as-is.
@@ -9,8 +9,8 @@ import { z } from 'zod'
 // - CP0 freezes v1 as strict. If fields change later, introduce v2.
 // ============================================
 
-export type SidecarEventType = 'tool.call' | 'session.state' | 'tool.control' | 'inbox.approval'
-export type SidecarEventVersion = 1
+export type RuntimeEventType = 'tool.call' | 'session.state' | 'tool.control' | 'inbox.approval'
+export type RuntimeEventVersion = 1
 
 export const RiskLevelSchema = z.enum(['low', 'medium', 'high'])
 export type RiskLevel = z.infer<typeof RiskLevelSchema>
@@ -31,46 +31,32 @@ export type ToolCallStatus = z.infer<typeof ToolCallStatusSchema>
 
 const IsoDatetimeSchema = z.string().datetime()
 
-// --------------------------------------------
-// tool.call
-// --------------------------------------------
-
 export const ToolCallEventV1Schema = z
   .object({
     type: z.literal('tool.call'),
     version: z.literal(1).optional(),
-
     sessionId: z.string(),
     toolCallId: z.string(),
     toolName: z.string(),
     risk: RiskLevelSchema.optional(),
     status: ToolCallStatusSchema,
-
-    // CP0 Pod-only scope projection
     target: z.string().optional(),
     action: z.string().optional(),
-
     arguments: z.record(z.unknown()).optional(),
     result: z.unknown().optional(),
     error: z.string().optional(),
     duration: z.number().int().nonnegative().optional(),
-
     inboxItemId: z.string().optional(),
-    decisionBy: z.string().optional(), // WebID
+    decisionBy: z.string().optional(),
     decisionRole: DecisionRoleSchema.optional(),
-    onBehalfOf: z.string().optional(), // WebID
+    onBehalfOf: z.string().optional(),
     policyVersion: z.string().optional(),
-
     timestamp: IsoDatetimeSchema,
   })
   .strict()
 
 export const ToolCallEventSchema = ToolCallEventV1Schema
 export type ToolCallEvent = z.infer<typeof ToolCallEventSchema>
-
-// --------------------------------------------
-// session.state
-// --------------------------------------------
 
 export const SessionToolSchema = z.enum(['claude-code', 'cursor', 'windsurf'])
 export type SessionTool = z.infer<typeof SessionToolSchema>
@@ -82,7 +68,6 @@ export const SessionStateEventV1Schema = z
   .object({
     type: z.literal('session.state'),
     version: z.literal(1).optional(),
-
     sessionId: z.string(),
     chatId: z.string(),
     policy: z.string().optional(),
@@ -97,10 +82,6 @@ export const SessionStateEventV1Schema = z
 
 export const SessionStateEventSchema = SessionStateEventV1Schema
 export type SessionStateEvent = z.infer<typeof SessionStateEventSchema>
-
-// --------------------------------------------
-// tool.control
-// --------------------------------------------
 
 export const ToolControlCommandNameSchema = z.enum([
   'approve',
@@ -118,15 +99,12 @@ export const ToolControlCommandV1Schema = z
     commandId: z.string().optional(),
     type: z.literal('tool.control'),
     version: z.literal(1).optional(),
-
     command: ToolControlCommandNameSchema,
     sessionId: z.string(),
-
     toolCallId: z.string().optional(),
     message: z.string().optional(),
     pattern: z.string().optional(),
     inboxItemId: z.string().optional(),
-
     actor: z
       .object({
         actorWebId: z.string(),
@@ -134,7 +112,6 @@ export const ToolControlCommandV1Schema = z
         onBehalfOf: z.string().optional(),
       })
       .optional(),
-
     policyVersion: z.string().optional(),
     timestamp: IsoDatetimeSchema,
   })
@@ -143,10 +120,6 @@ export const ToolControlCommandV1Schema = z
 export const ToolControlCommandSchema = ToolControlCommandV1Schema
 export type ToolControlCommand = z.infer<typeof ToolControlCommandSchema>
 
-// --------------------------------------------
-// inbox.approval
-// --------------------------------------------
-
 export const InboxApprovalStatusSchema = z.enum(['pending', 'approved', 'rejected', 'expired'])
 export type InboxApprovalStatus = z.infer<typeof InboxApprovalStatusSchema>
 
@@ -154,22 +127,16 @@ export const InboxApprovalEventV1Schema = z
   .object({
     type: z.literal('inbox.approval'),
     version: z.literal(1).optional(),
-
     inboxItemId: z.string(),
     sessionId: z.string(),
     toolCallId: z.string(),
-
-    // Optional Pod scope projection
     target: z.string().optional(),
     action: z.string().optional(),
-
     policy: z.string().optional(),
     policyVersion: z.string().optional(),
-
     risk: RiskLevelSchema,
     status: InboxApprovalStatusSchema,
     assignedTo: z.string().optional(),
-
     createdAt: IsoDatetimeSchema,
     resolvedAt: IsoDatetimeSchema.optional(),
   })
@@ -178,19 +145,15 @@ export const InboxApprovalEventV1Schema = z
 export const InboxApprovalEventSchema = InboxApprovalEventV1Schema
 export type InboxApprovalEvent = z.infer<typeof InboxApprovalEventSchema>
 
-// --------------------------------------------
-// SidecarEvent
-// --------------------------------------------
-
-export const SidecarEventSchema = z.union([
+export const RuntimeEventSchema = z.union([
   ToolCallEventSchema,
   SessionStateEventSchema,
   ToolControlCommandSchema,
   InboxApprovalEventSchema,
 ])
 
-export type SidecarEvent = z.infer<typeof SidecarEventSchema>
+export type RuntimeEvent = z.infer<typeof RuntimeEventSchema>
 
-export function getSidecarEventVersion(_event: SidecarEvent): SidecarEventVersion {
+export function getRuntimeEventVersion(_event: RuntimeEvent): RuntimeEventVersion {
   return 1
 }

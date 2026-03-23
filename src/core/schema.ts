@@ -20,7 +20,7 @@ import { threadTable } from './thread.schema.js'
 import { indexedFileTable, vectorStoreTable } from './vector-store.schema.js'
 import { workspaceTable } from './workspace.schema.js'
 
-export const linxSchema = {
+export const schema = {
   solidProfileTable,
   contactTable,
   agentTable,

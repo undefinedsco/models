@@ -9,7 +9,7 @@
 
 <> a owl:Ontology ;
   rdfs:label "LinX Chat/Thread Vocabulary (Wave A CP0)" ;
-  rdfs:comment "Company-level terms (udfs:) used by chat/thread contracts. Chat is a thin channel; behavioral differences are expressed via Message richContent blocks." .
+  rdfs:comment "Company-level terms (udfs:) used by chat/thread contracts. Chat is a thin channel; behavioral differences are expressed via Message richContent items." .
 
 # --------------------------------------------
 # Predicates (company namespace)

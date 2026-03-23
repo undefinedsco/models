@@ -97,39 +97,40 @@ export {
 } from './message.schema.js'
 export { messageRepository } from './message.repository.js'
 
-// Message Block - 消息块类型系统 (Block-based Message System)
+// Message Rich Content - 消息富内容数据合同
 export {
-  MessageBlockType,
-  MessageBlockStatus,
-  type BaseMessageBlock,
-  type PlaceholderMessageBlock,
-  type MainTextMessageBlock,
-  type ThinkingMessageBlock,
-  type ImageMessageBlock,
-  type CodeMessageBlock,
-  type ToolMessageBlock,
-  type FileMessageBlock,
-  type ErrorMessageBlock,
-  type CitationMessageBlock,
-  type MessageBlock,
+  RichContentItemType,
+  type RichContentModelRef,
+  type BaseRichContentItem,
+  type MainTextRichContentItem,
+  type ThinkingRichContentItem,
+  type ImageRichContentItem,
+  type CodeRichContentItem,
+  type FileRichContentItem,
+  type ErrorRichContentItem,
+  type CitationRichContentItem,
+  type MessageRichContentItem,
   type MessageRichContent,
-  createMessageBlock,
-  isBlockType,
-  parseMessageBlocks,
-  serializeMessageBlocks,
-} from './types/message-block.js'
+  type LegacyToolInvocation,
+  createRichContentItem,
+  isRichContentItemType,
+  parseMessageRichContent,
+  parseMessageRichContentItems,
+  serializeMessageRichContent,
+  serializeMessageRichContentItems,
+} from './types/message-rich-content.js'
 
-// Wave A CP0: collaboration-related richContent block contracts
+// Wave A CP0: collaboration-related rich content item contracts
 export {
-  type ToolApprovalBlock,
-  type ToolCallBlock,
-  type TaskProgressBlock,
-  type CollaborationRichBlock,
+  type ToolApprovalRichContentItem,
+  type ToolCallRichContentItem,
+  type TaskProgressRichContentItem,
+  type CollaborationRichContentItem,
   type ToolRisk,
   type ToolApprovalStatus,
   type ToolCallStatus,
   type TaskProgressStepStatus,
-} from "./types/collaboration-blocks.js";
+} from "./types/collaboration-rich-content.js";
 
 // Wave A CP0: fixtures for downstream parallel development
 export * from "./fixtures/contracts-chat-contact.js";
@@ -174,10 +175,13 @@ export {
 
 // Agent - AI 助手配置
 export {
+  createAgentSchema,
+  agentSchema,
   agentTable,
   type AgentRow,
   type AgentInsert,
   type AgentUpdate,
+  type CreateAgentSchemaOptions,
 } from './agent.schema.js'
 export { agentRepository } from './agent.repository.js'
 
@@ -223,10 +227,10 @@ export {
   type InboxNotificationUpdate,
 } from './inbox-notification.schema.js'
 
-// Sidecar vocab + runtime contracts
-export { ApprovalVocab, AuditVocab, GrantVocab, InboxNotificationVocab } from './vocab/sidecar.vocab.js'
-export * from './sidecar/sidecar-events.js'
-export * from './sidecar/persistence-mapping.js'
+// Governance vocab + protocol contracts
+export { ApprovalVocab, AuditVocab, GrantVocab, InboxNotificationVocab } from './vocab/governance.vocab.js'
+export * from './protocols/index.js'
+export * from './governance/index.js'
 
 // Knowledge Folder - 知识库文件夹
 export {
@@ -288,6 +292,30 @@ export {
 } from './ai-config.js'
 
 export {
+  aiConfigTable,
+  type AIConfigRow,
+  type AIConfigInsert,
+} from './core.js'
+
+export {
+  vectorStoreTable,
+  indexedFileTable,
+  type VectorStoreRow,
+  type VectorStoreInsert,
+  type VectorStoreUpdate,
+  type IndexedFileRow,
+  type IndexedFileInsert,
+  type IndexedFileUpdate,
+} from './core.js'
+
+export {
+  agentStatusTable,
+  type AgentStatusRow,
+  type AgentStatusInsert,
+  type AgentStatusUpdate,
+} from './core.js'
+
+export {
   createRepositoryDescriptor,
   deleteExactRecord,
   definePodRepository,
@@ -314,7 +342,7 @@ export { eq, ne, and, or, drizzle } from '@undefineds.co/drizzle-solid'
 // ============================================
 // Schema registry
 // ============================================
-export { linxSchema } from './schema.js'
+export { schema } from './schema.js'
 
 // ============================================
 // Discovery Service (发现服务)

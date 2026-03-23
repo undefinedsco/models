@@ -2,19 +2,15 @@ import type { ApprovalInsert, ApprovalUpdate } from '../approval.schema.js'
 import type { AuditInsert } from '../audit.schema.js'
 import type { GrantInsert } from '../grant.schema.js'
 import type { InboxNotificationInsert } from '../inbox-notification.schema.js'
-import type { ToolCallEvent, InboxApprovalEvent, SessionStateEvent } from './sidecar-events.js'
+import type { InboxApprovalEvent, SessionStateEvent, ToolCallEvent } from '../protocols/runtime-events.js'
 
 // ============================================
-// Runtime Event -> Pod Persistence Projection (CP0)
+// Runtime Event -> Governance Projection Helpers
 //
-// This file is intentionally contract-only:
-// - It defines what MUST be persisted (stable fields only).
-// - It does NOT implement bridge/service business logic.
-// - Runtime-only fields (timestamp/duration/result/error/etc.) MUST NOT become stable Pod fields.
-//
-// Writer-of-record note:
-// - When integrating with xpod/chatkit (architecture choice B), the service-side adapter is responsible
-//   for executing the action and persisting these projections to the Pod (Approval/Audit/Grant/InboxNotification).
+// This module is SDK-level shared logic, similar to favorite sync:
+// - It defines stable projections from normalized runtime events into Pod rows.
+// - It does NOT assume xpod, linx, server processes, or any transport.
+// - Callers remain responsible for executing writes with their own runtime/policy layer.
 // ============================================
 
 export type ChatSessionProjection = {
@@ -51,8 +47,7 @@ export type InboxNotificationProjectionInsert = Pick<
   'actor' | 'object'
 >
 
-export const SidecarEventToPodMapping = {
-  // tool.call
+export const RuntimeEventProjectionRules = {
   tool_call_waiting_approval: {
     approval: 'insert' as const,
     inboxNotification: 'insert' as const,
@@ -65,30 +60,23 @@ export const SidecarEventToPodMapping = {
     audit: 'insert' as const,
     grant: null,
   },
-
-  // inbox.approval
   inbox_approval_resolved: {
     approval: 'update' as const,
     inboxNotification: 'insert' as const,
     audit: null,
     grant: null,
   },
-
-  // session.state
   session_state_terminal: {
     chat: 'update' as const,
   },
 } as const
 
-// Projection helpers (pure, no DB calls)
-// NOTE: CP0 scope is Pod-only. Only project events that provide a concrete ODRL target/action.
+export type RuntimeEventProjectionRuleKey = keyof typeof RuntimeEventProjectionRules
+
 export function hasPodScope(scope: { target?: string; action?: string }): scope is { target: string; action: string } {
   return typeof scope.target === 'string' && scope.target.length > 0 && typeof scope.action === 'string' && scope.action.length > 0
 }
 
-export type SidecarPersistenceRuleKey = keyof typeof SidecarEventToPodMapping
-
-// Optional helpers for downstream implementers (pure, no DB calls)
 export function isToolWaitingApproval(event: ToolCallEvent): boolean {
   return event.type === 'tool.call' && event.status === 'waiting_approval'
 }

@@ -1,1 +1,1 @@
-export { linxSchema } from './core.js'
+export { schema } from './core.js'

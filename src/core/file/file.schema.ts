@@ -3,7 +3,7 @@ import { UDFS, DCTerms, SCHEMA } from "../namespaces.js";
 
 /**
  * @deprecated 文件管理应由 xpod 处理，Pod 本身就是文件系统。
- * 标签、索引等元数据功能由 xpod sidecar 提供。
+ * 标签、索引等元数据功能由运行时治理/索引服务提供。
  * 此 schema 将在未来版本中移除。
  * 
  * File Schema
@@ -61,7 +61,6 @@ export const fileTable = podTable("file", {
 export type FileRow = typeof fileTable.$inferSelect;
 export type FileInsert = typeof fileTable.$inferInsert;
 export type FileUpdate = typeof fileTable.$inferUpdate;
-
 
 
 
