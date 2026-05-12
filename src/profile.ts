@@ -27,13 +27,13 @@ export interface SolidProfileSessionLike {
 }
 
 export interface SolidProfileReader<TTable = unknown> {
-  findByIri(table: TTable, iri: string): Promise<unknown | null>;
+  findByIri(resource: TTable, iri: string): Promise<unknown | null>;
 }
 
 export async function createSolidProfileDatabase(session: unknown): Promise<SolidProfileReader> {
   applySolidProfileComunicaPatches();
 
-  const [{ drizzle }, { solidProfileTable }] = await Promise.all([
+  const [{ drizzle }, { solidProfileResource }] = await Promise.all([
     import("@undefineds.co/drizzle-solid"),
     import("./profile.schema.js"),
   ]);
@@ -41,7 +41,7 @@ export async function createSolidProfileDatabase(session: unknown): Promise<Soli
   return drizzle(session as never, {
     logger: false,
     disableInteropDiscovery: true,
-    schema: { solidProfileTable },
+    schema: { solidProfileResource },
   }) as SolidProfileReader;
 }
 
@@ -61,10 +61,18 @@ export async function resolveSolidProfileWithTable<TTable>(
   webId: string,
   table: TTable,
 ): Promise<SolidProfileRow | null> {
+  return resolveSolidProfileWithResource(db, webId, table);
+}
+
+export async function resolveSolidProfileWithResource<TResource>(
+  db: SolidProfileReader<TResource>,
+  webId: string,
+  resource: TResource,
+): Promise<SolidProfileRow | null> {
   if (!webId.trim()) {
     return null;
   }
-  return await db.findByIri(table, webId) as SolidProfileRow | null;
+  return await db.findByIri(resource, webId) as SolidProfileRow | null;
 }
 
 export async function resolveSolidProfileDisplayName(

@@ -1,7 +1,7 @@
 import { id, podTable, string } from "@undefineds.co/drizzle-solid";
 import { FOAF, LDP, UDFS, VCARD } from "./namespaces.js";
 
-export const solidProfileTable = podTable("profile", {
+export const solidProfileResource = podTable("profile", {
   id: id("id"),
   name: string("name").predicate(VCARD.fn),
   nick: string("nick").predicate(FOAF.nick),
@@ -19,6 +19,9 @@ export const solidProfileTable = podTable("profile", {
   namespace: UDFS,
 });
 
-export type SolidProfileRow = typeof solidProfileTable.$inferSelect;
-export type SolidProfileInsert = typeof solidProfileTable.$inferInsert;
-export type SolidProfileUpdate = typeof solidProfileTable.$inferUpdate;
+// Compatibility alias. New model code should prefer `solidProfileResource`.
+export const solidProfileTable = solidProfileResource;
+
+export type SolidProfileRow = typeof solidProfileResource.$inferSelect;
+export type SolidProfileInsert = typeof solidProfileResource.$inferInsert;
+export type SolidProfileUpdate = typeof solidProfileResource.$inferUpdate;

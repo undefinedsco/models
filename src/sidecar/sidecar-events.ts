@@ -5,7 +5,7 @@ import { z } from 'zod'
 //
 // Notes:
 // - Runtime wire contracts only; events are NOT persisted as-is.
-// - Pod projections live in approval/audit/grant/inboxNotification tables.
+// - Pod projections live in approval/audit/grant/inboxNotification resources.
 // - CP0 freezes v1 as strict. If fields change later, introduce v2.
 // ============================================
 

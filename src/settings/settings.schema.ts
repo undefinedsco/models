@@ -2,7 +2,7 @@ import { podTable, string, timestamp, text, boolean } from "@undefineds.co/drizz
 import { UDFS, DCTerms, SCHEMA } from "../namespaces";
 
 /**
- * Settings Schema
+ * Settings resource
  * 用户设置模型 - 基于 Solid Pod 存储
  *
  * 参考标准：
@@ -11,7 +11,7 @@ import { UDFS, DCTerms, SCHEMA } from "../namespaces";
  *
  * 存储用户的应用配置、偏好设置等
  */
-export const settingsTable = podTable("settings", {
+export const settingsResource = podTable("settings", {
   // 设置键值对
   key: string("key").primaryKey().predicate(UDFS.settingKey).notNull(), // 设置键（唯一）
   value: text("value").predicate(UDFS.settingValue).notNull(), // 设置值（JSON 字符串）
@@ -76,6 +76,9 @@ export const SETTING_KEYS = {
 
 export type SettingKey = typeof SETTING_KEYS[keyof typeof SETTING_KEYS];
 
-export type SettingsRow = typeof settingsTable.$inferSelect;
-export type SettingsInsert = typeof settingsTable.$inferInsert;
-export type SettingsUpdate = typeof settingsTable.$inferUpdate;
+// Compatibility alias. New model code should prefer `settingsResource`.
+export const settingsTable = settingsResource;
+
+export type SettingsRow = typeof settingsResource.$inferSelect;
+export type SettingsInsert = typeof settingsResource.$inferInsert;
+export type SettingsUpdate = typeof settingsResource.$inferUpdate;

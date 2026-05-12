@@ -1,6 +1,6 @@
 {
   "name": "@undefineds.co/models",
-  "version": "0.2.20",
+  "version": "0.2.21",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
@@ -77,6 +77,7 @@
     "pack:release": "node scripts/pack-release.mjs",
     "sync:discovery:vercel": "node --experimental-strip-types scripts/sync-discovery-vercel.ts",
     "test": "vitest run",
+    "test:ci": "vitest run tests/ai-config.test.ts tests/ai-runtime-schema.test.ts tests/client.test.ts tests/contracts-chat-contact.contract.test.ts tests/discovery-vercel.test.ts tests/discovery.test.ts tests/profile.test.ts tests/repository.test.ts tests/resource-utils.test.ts tests/session-schema.test.ts tests/sidecar-events.contract.test.ts tests/watch.test.ts tests/resource-schema.test.ts",
     "test:pod": "dotenv -e ../linx-models/.env -- vitest run tests/pod.integration.test.ts"
   },
   "dependencies": {

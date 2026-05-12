@@ -54,6 +54,7 @@ LinX 的所有数据存储在 Solid Pod 中，使用标准的 RDF 格式。本�
 - Pod schema 使用 `chat`、`thread` 这类 URI-valued RDF relation 字段。
 - `chatId`、`threadId` 只允许作为 UI 状态、函数参数、runtime protocol 字段或 metadata 中的兼容信息，不允许作为持久 RDF link 字段。
 - 新增 shared model 代码优先使用 `chatResource`、`threadResource`、`messageResource`、`sessionResource` 等 Solid resource 命名；`*Table` 只作为兼容 alias 逐步退出。
+- `solidResources` 是 Resource-first registry；`solidSchema` 是给已有 drizzle-solid 调用保留的兼容 registry。
 - 如果壳层需要新的查询、upsert、resolve-by-uri、审计或审批状态变更能力，优先在本包新增 repository/helper 和 tests；不要在 CLI/App 中复制 predicate、subject template、Turtle 读写或 shared 状态机。
 - `approval` / `grant` / `audit` / `inboxNotification` / `session` 等跨端控制面也属于本包的 shared resource 语义。CLI/App 只负责把 Pi/Codex/Claude 等运行时事件映射成本包定义的 insert/update DTO，不能另建一套存储路径或审批策略。
 - approval 的倒计时和可选决策也属于 shared resource 语义：使用 `approvalResource.expiresAt` 表示截止时间，使用 `approvalResource.approvalOptions` 存储上游原生协议给出的可选决策（例如 `allow_once` / `allow_always` / `reject_once`）。CLI/App 不得各自用私有 predicate 或本地状态推断这些字段。
@@ -408,14 +409,14 @@ import {
   // 词汇表
   LINQ, SIOC, DCTerms, SCHEMA,
 
-  // 模型表
-  contactTable,
-  chatTable,
-  messageTable,
-  fileTable,
-  favoriteTable,
-  settingsTable,
-  aiAssistantTable,
+  // Solid resources
+  contactResource,
+  chatResource,
+  messageResource,
+  fileResource,
+  favoriteResource,
+  settingsResource,
+  agentResource,
 
   // 类型
   type ContactRow,
@@ -435,12 +436,12 @@ import {
 // 查询联系人
 const contacts = await db
   .select()
-  .from(contactTable)
-  .where(eq(contactTable.contactType, CONTACT_TYPES.PERSON));
+  .from(contactResource)
+  .where(eq(contactResource.contactType, CONTACT_TYPES.PERSON));
 
 // 创建聊天会话
 const newChat = await db
-  .insert(chatTable)
+  .insert(chatResource)
   .values({
     title: "与 Alice 的对话",
     conversationType: "direct",
@@ -451,7 +452,7 @@ const newChat = await db
 
 // 发送消息
 const newMessage = await db
-  .insert(messageTable)
+  .insert(messageResource)
   .values({
     content: "你好，Alice！",
     messageType: "text",
@@ -464,13 +465,13 @@ const newMessage = await db
 // 查询设置
 const theme = await db
   .select()
-  .from(settingsTable)
-  .where(eq(settingsTable.key, SETTING_KEYS.UI_THEME))
+  .from(settingsResource)
+  .where(eq(settingsResource.key, SETTING_KEYS.UI_THEME))
   .limit(1);
 
 // 创建 AI 助手
 const assistant = await db
-  .insert(aiAssistantTable)
+  .insert(agentResource)
   .values({
     name: "LinX 助手",
     provider: AI_PROVIDERS.OPENAI,
@@ -524,7 +525,7 @@ const assistant = await db
 ### 添加新模型
 
 1. 在 `src/<entity>/` 创建 `<entity>.schema.ts`
-2. 使用 `podTable` 定义表结构
+2. 使用 `podTable` 定义 Solid resource
 3. 选择合适的 RDF 类和谓词
 4. 导出类型：`Row`, `Insert`, `Update`
 5. 在 `src/<entity>/index.ts` 导出

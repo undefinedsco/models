@@ -6,7 +6,7 @@ import { UDFS, DCTerms, SCHEMA } from "../namespaces";
  * 标签、索引等元数据功能由 xpod sidecar 提供。
  * 此 schema 将在未来版本中移除。
  *
- * File Schema
+ * File resource
  * 文件管理模型 - 基于 Solid Pod 存储
  *
  * 参考标准：
@@ -14,9 +14,9 @@ import { UDFS, DCTerms, SCHEMA } from "../namespaces";
  * - Schema.org CreativeWork
  * - LDP NonRDFSource (实际文件)
  *
- * 注意：此表存储文件元数据，实际文件内容存储在 Pod 的文件系统中
+ * 注意：此 resource 存储文件元数据，实际文件内容存储在 Pod 的文件系统中
  */
-export const fileTable = podTable("file", {
+export const fileResource = podTable("file", {
   // 基础信息
   id: id("id"),
   name: string("name").predicate(SCHEMA.name).notNull(), // 文件名
@@ -58,6 +58,9 @@ export const fileTable = podTable("file", {
   namespace: UDFS,
 });
 
-export type FileRow = typeof fileTable.$inferSelect;
-export type FileInsert = typeof fileTable.$inferInsert;
-export type FileUpdate = typeof fileTable.$inferUpdate;
+// Compatibility alias. New model code should prefer `fileResource`.
+export const fileTable = fileResource;
+
+export type FileRow = typeof fileResource.$inferSelect;
+export type FileInsert = typeof fileResource.$inferInsert;
+export type FileUpdate = typeof fileResource.$inferUpdate;

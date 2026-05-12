@@ -51,6 +51,14 @@ describe('AI runtime resources', () => {
     expect((solidResources as any).indexedFileResource).toBe(indexedFileResource)
     expect((solidResources as any).agentStatusResource).toBe(agentStatusResource)
 
+    expect((solidResources as any).credentialTable).toBeUndefined()
+    expect((solidResources as any).aiProviderTable).toBeUndefined()
+    expect((solidResources as any).aiModelTable).toBeUndefined()
+    expect((solidResources as any).aiConfigTable).toBeUndefined()
+    expect((solidResources as any).vectorStoreTable).toBeUndefined()
+    expect((solidResources as any).indexedFileTable).toBeUndefined()
+    expect((solidResources as any).agentStatusTable).toBeUndefined()
+
     expect((solidSchema as any).credentialTable).toBe(credentialTable)
     expect((solidSchema as any).aiProviderTable).toBe(aiProviderTable)
     expect((solidSchema as any).aiModelTable).toBe(aiModelTable)

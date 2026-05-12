@@ -50,7 +50,7 @@
 
 | Solid Chat | 我们的字段 | 说明 |
 |------------|-----------|------|
-| `mee:LongChat` | `chatTable` | 聊天 |
+| `mee:LongChat` | `chatResource` | 聊天 |
 | `dc:title` | `title` | 标题 |
 | `dc:author` | - | 创建者 (需添加) |
 | `dc:created` | `createdAt` | 创建时间 |
@@ -60,7 +60,7 @@
 
 | Solid Chat | 我们的字段 | 说明 |
 |------------|-----------|------|
-| `flow:message` | `messageTable` | 消息 |
+| `flow:message` | `messageResource` | 消息 |
 | `terms:created` | `createdAt` | 创建时间 |
 | `foaf:maker` | `maker` | 发送者 WebID |
 | `sioc:content` | `content` | 内容 |
@@ -69,7 +69,7 @@
 
 | Solid Contacts | 我们的字段 | 说明 |
 |----------------|-----------|------|
-| `vcard:Individual` | `contactTable` | 联系人 |
+| `vcard:Individual` | `contactResource` | 联系人 |
 | `vcard:fn` | `name` | 全名 |
 | `vcard:hasEmail` | - | 邮箱 |
 | `vcard:hasTelephone` | - | 电话 |

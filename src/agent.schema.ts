@@ -1,7 +1,7 @@
 import { podTable, string, integer, timestamp, text, real, uri, id } from "@undefineds.co/drizzle-solid";
 import { UDFS, DCTerms, FOAF, VCARD } from "./namespaces";
 
-export const agentTable = podTable("agent", {
+export const agentResource = podTable("agent", {
   id: id("id"),
   name: string("name").predicate(FOAF.name).notNull(),
   description: text("description").predicate(DCTerms.description),
@@ -28,6 +28,9 @@ export const agentTable = podTable("agent", {
   subjectTemplate: '{id}.ttl',
 });
 
-export type AgentRow = typeof agentTable.$inferSelect;
-export type AgentInsert = typeof agentTable.$inferInsert;
-export type AgentUpdate = typeof agentTable.$inferUpdate;
+// Compatibility alias. New model code should prefer `agentResource`.
+export const agentTable = agentResource;
+
+export type AgentRow = typeof agentResource.$inferSelect;
+export type AgentInsert = typeof agentResource.$inferInsert;
+export type AgentUpdate = typeof agentResource.$inferUpdate;

@@ -4,11 +4,12 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 describe('session schema', () => {
-  it('registers a real session table in the shared schema', () => {
+  it('registers a real session resource with a compatibility schema alias', () => {
     expect(sessionTable).toBeDefined()
     expect((solidSchema as any).sessionTable).toBe(sessionTable)
     expect(sessionResource).toBe(sessionTable)
     expect((solidResources as any).sessionResource).toBe(sessionResource)
+    expect((solidResources as any).sessionTable).toBeUndefined()
   })
 
   it('uses Pod-backed session fields instead of a stub contract', () => {

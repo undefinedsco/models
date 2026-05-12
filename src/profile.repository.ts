@@ -1,7 +1,7 @@
 import { extractProfileUsernameFromWebId } from './client/index.js'
 import { definePodRepository, type AnyPodTable } from './repository.js'
 import {
-  solidProfileTable,
+  solidProfileResource,
   type SolidProfileInsert,
   type SolidProfileRow,
   type SolidProfileUpdate,
@@ -19,13 +19,13 @@ export interface SolidProfileRepositoryReader {
 }
 
 const baseProfileRepository = definePodRepository<
-  typeof solidProfileTable,
+  typeof solidProfileResource,
   SolidProfileRow,
   SolidProfileInsert,
   SolidProfileUpdate
 >({
   namespace: 'profile',
-  table: solidProfileTable,
+  table: solidProfileResource,
   searchableFields: ['name', 'nick'],
   disableMutations: {
     create: true,
@@ -41,7 +41,7 @@ export const profileRepository = {
     if (!webId.trim()) {
       return null
     }
-    return await db.findByIri?.(solidProfileTable, webId) as SolidProfileRow | null ?? null
+    return await db.findByIri?.(solidProfileResource, webId) as SolidProfileRow | null ?? null
   },
 
   async resolveDisplayName(db: SolidProfileRepositoryReader, webId: string): Promise<string | null> {

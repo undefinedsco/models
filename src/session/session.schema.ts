@@ -38,7 +38,7 @@ export function extractRuntimeSessionId(sessionRef: string | null | undefined): 
  * - `archived` is a persistence-layer/session-lifecycle status; interactive runtime
  *   surfaces may continue to use the narrower active/paused/completed/error subset
  *   until they explicitly adopt archival semantics.
- * - `tool` is intentionally open-string in this baseline so the durable table does not
+ * - `tool` is intentionally open-string in this baseline so the durable resource does not
  *   prematurely overfit to today's sidecar enum before all writers are aligned.
  */
 export const sessionResource = podTable(

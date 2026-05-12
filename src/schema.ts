@@ -1,4 +1,4 @@
-import { agentTable } from './agent.schema'
+import { agentResource, agentTable } from './agent.schema'
 import {
   agentStatusResource,
   agentStatusTable,
@@ -14,22 +14,22 @@ import { auditResource, auditTable } from './audit.schema'
 import { aiModelResource, aiModelTable } from './ai-model.schema'
 import { aiProviderResource, aiProviderTable } from './ai-provider.schema'
 import { chatResource, chatTable } from './chat.schema'
-import { contactTable } from './contact.schema'
+import { contactResource, contactTable } from './contact.schema'
 import { credentialResource, credentialTable } from './credential.schema'
-import { favoriteTable } from './favorite/favorite.schema'
-import { fileTable } from './file/file.schema'
+import { favoriteResource, favoriteTable } from './favorite/favorite.schema'
+import { fileResource, fileTable } from './file/file.schema'
 import { grantResource, grantTable } from './grant.schema'
-import { inboxNotificationTable } from './inbox-notification.schema'
+import { inboxNotificationResource, inboxNotificationTable } from './inbox-notification.schema'
 import { messageResource, messageTable } from './message.schema'
-import { solidProfileTable } from './profile.schema'
+import { solidProfileResource, solidProfileTable } from './profile.schema'
 import { sessionResource, sessionTable } from './session'
-import { settingsTable } from './settings/settings.schema'
+import { settingsResource, settingsTable } from './settings/settings.schema'
 import { threadResource, threadTable } from './thread.schema'
 
 export const solidResources = {
-  solidProfileTable,
-  contactTable,
-  agentTable,
+  solidProfileResource,
+  contactResource,
+  agentResource,
   chatResource,
   sessionResource,
   threadResource,
@@ -41,18 +41,19 @@ export const solidResources = {
   vectorStoreResource,
   indexedFileResource,
   agentStatusResource,
-  fileTable,
-  favoriteTable,
-  settingsTable,
+  fileResource,
+  favoriteResource,
+  settingsResource,
 
   // Sidecar collaboration data
   approvalResource,
   auditResource,
   grantResource,
-  inboxNotificationTable,
+  inboxNotificationResource,
 }
 
-// Compatibility schema for existing drizzle-solid call sites.
+// Compatibility registry for existing drizzle-solid call sites that still import
+// `*Table` names. New shared-model code should prefer `solidResources`.
 export const solidSchema = {
   solidProfileTable,
   contactTable,

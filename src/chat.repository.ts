@@ -1,14 +1,14 @@
 import { definePodRepository } from './repository'
-import { chatTable, type ChatRow, type ChatInsert, type ChatUpdate } from './chat.schema'
+import { chatResource, type ChatRow, type ChatInsert, type ChatUpdate } from './chat.schema'
 
 export const chatRepository = definePodRepository<
-  typeof chatTable,
+  typeof chatResource,
   ChatRow,
   ChatInsert,
   ChatUpdate
 >({
   namespace: 'chat',
-  table: chatTable,
+  table: chatResource,
   searchableFields: ['title', 'description'],
   defaultSort: { field: 'lastActiveAt', direction: 'desc' },
 })

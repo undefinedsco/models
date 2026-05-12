@@ -51,9 +51,9 @@ export function normalizeContactGender(
 }
 
 /**
- * Contact Table - Unified contact index for all contact types.
+ * Contact resource - unified contact index for all contact types.
  */
-export const contactTable = podTable(
+export const contactResource = podTable(
   'contact',
   {
     id: id('id'),
@@ -108,6 +108,9 @@ export const contactTable = podTable(
   },
 )
 
-export type ContactRow = typeof contactTable.$inferSelect
-export type ContactInsert = typeof contactTable.$inferInsert
-export type ContactUpdate = typeof contactTable.$inferUpdate
+// Compatibility alias. New model code should prefer `contactResource`.
+export const contactTable = contactResource
+
+export type ContactRow = typeof contactResource.$inferSelect
+export type ContactInsert = typeof contactResource.$inferInsert
+export type ContactUpdate = typeof contactResource.$inferUpdate

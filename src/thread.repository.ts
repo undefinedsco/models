@@ -1,14 +1,14 @@
 import { definePodRepository } from './repository'
-import { threadTable, type ThreadRow, type ThreadInsert, type ThreadUpdate } from './thread.schema'
+import { threadResource, type ThreadRow, type ThreadInsert, type ThreadUpdate } from './thread.schema'
 
 export const threadRepository = definePodRepository<
-  typeof threadTable,
+  typeof threadResource,
   ThreadRow,
   ThreadInsert,
   ThreadUpdate
 >({
   namespace: 'thread',
-  table: threadTable,
+  table: threadResource,
   searchableFields: ['title'],
   defaultSort: { field: 'updatedAt', direction: 'desc' },
 })

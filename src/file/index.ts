@@ -1,1 +1,1 @@
-export { fileTable, type FileRow, type FileInsert, type FileUpdate } from "./file.schema";
+export { fileResource, fileTable, type FileRow, type FileInsert, type FileUpdate } from "./file.schema";

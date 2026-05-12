@@ -7,6 +7,7 @@ import {
   resolveSolidProfileDisplayName,
   resolveSolidProfileIdentityFromWebIdDocument,
   resolveSolidProfileIdentityWithReader,
+  resolveSolidProfileWithResource,
   resolveSolidProfileWithTable,
   type SolidProfileRow,
 } from '../src/profile'
@@ -42,6 +43,25 @@ describe('solid profile helpers', () => {
     })
     expect(calls).toEqual([
       { table: profileTable, iri: 'https://id.undefineds.co/ganbb/profile/card#me' },
+    ])
+  })
+
+  it('resolves profile rows through a caller-provided profile resource without loading schema dependencies', async () => {
+    const profileResource = { name: 'solidProfileResource' }
+    const calls: Array<{ resource: unknown; iri: string }> = []
+    const db = {
+      async findByIri(resource: unknown, iri: string) {
+        calls.push({ resource, iri })
+        return { '@id': iri, name: 'Gan Lu' }
+      },
+    }
+
+    await expect(resolveSolidProfileWithResource(db, 'https://id.undefineds.co/ganbb/profile/card#me', profileResource)).resolves.toEqual({
+      '@id': 'https://id.undefineds.co/ganbb/profile/card#me',
+      name: 'Gan Lu',
+    })
+    expect(calls).toEqual([
+      { resource: profileResource, iri: 'https://id.undefineds.co/ganbb/profile/card#me' },
     ])
   })
 

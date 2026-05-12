@@ -2,13 +2,13 @@ import { podTable, string, timestamp, text, id, uri } from "@undefineds.co/drizz
 import { UDFS, DCTerms, SCHEMA, RDF } from "../namespaces";
 
 /**
- * Favorite Schema
+ * Favorite resource
  * 收藏项 - 基于 Solid Pod 存储
  *
  * 支持收藏：Chat, Thread, Contact, Message 等
  * favoriteType 使用 RDF type URI 标识实体类型
  */
-export const favoriteTable = podTable("favorite", {
+export const favoriteResource = podTable("favorite", {
   id: id("id"),
 
   // 收藏目标
@@ -40,6 +40,9 @@ export const favoriteTable = podTable("favorite", {
   namespace: UDFS,
 });
 
-export type FavoriteRow = typeof favoriteTable.$inferSelect;
-export type FavoriteInsert = typeof favoriteTable.$inferInsert;
-export type FavoriteUpdate = typeof favoriteTable.$inferUpdate;
+// Compatibility alias. New model code should prefer `favoriteResource`.
+export const favoriteTable = favoriteResource;
+
+export type FavoriteRow = typeof favoriteResource.$inferSelect;
+export type FavoriteInsert = typeof favoriteResource.$inferInsert;
+export type FavoriteUpdate = typeof favoriteResource.$inferUpdate;

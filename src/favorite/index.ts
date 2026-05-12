@@ -1,4 +1,4 @@
-export { favoriteTable, type FavoriteRow, type FavoriteInsert, type FavoriteUpdate } from "./favorite.schema";
+export { favoriteResource, favoriteTable, type FavoriteRow, type FavoriteInsert, type FavoriteUpdate } from "./favorite.schema";
 
 // Starred Sync Hook
 export {

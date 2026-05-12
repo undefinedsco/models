@@ -44,6 +44,7 @@ export * from './profile.schema'
 // Contact - 联系人 (unified index for Solid users, external users, and AI agents)
 export {
   ContactGender,
+  contactResource,
   contactTable,
   ContactClass,
   ContactType,
@@ -136,6 +137,7 @@ export * from "./fixtures/contracts-chat-contact";
 
 // File - 文件管理
 export {
+  fileResource,
   fileTable,
   type FileRow,
   type FileInsert,
@@ -144,6 +146,7 @@ export {
 
 // Favorite - 收藏
 export {
+  favoriteResource,
   favoriteTable,
   type FavoriteRow,
   type FavoriteInsert,
@@ -164,6 +167,7 @@ export {
 
 // Settings - 用户设置
 export {
+  settingsResource,
   settingsTable,
   SETTING_KEYS,
   type SettingKey,
@@ -174,6 +178,7 @@ export {
 
 // Agent - AI 助手配置
 export {
+  agentResource,
   agentTable,
   type AgentRow,
   type AgentInsert,
@@ -241,6 +246,7 @@ export {
 } from './grant.schema'
 
 export {
+  inboxNotificationResource,
   inboxNotificationTable,
   type InboxNotificationRow,
   type InboxNotificationInsert,
@@ -405,7 +411,9 @@ export {
 export {
   createRepositoryDescriptor,
   definePodRepository,
+  initSolidResources,
   initSolidTables,
+  type AnyPodResource,
   type AnyPodTable,
   type PodRepositoryDescriptor,
   type RepositoryCacheOptions,

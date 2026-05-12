@@ -1,7 +1,7 @@
 /**
  * Starred Sync Hook
  *
- * 当实体的 starred 字段变更时，自动同步到 favoriteTable：
+ * 当实体的 starred 字段变更时，自动同步到 favoriteResource：
  * - starred: true → 创建 Favorite 记录
  * - starred: false → 删除 Favorite 记录
  *
@@ -9,7 +9,7 @@
  * favoriteType 使用 RDF type URI 标识
  */
 import type { HookContext, TableHooks } from '@undefineds.co/drizzle-solid'
-import { favoriteTable, type FavoriteInsert } from './favorite.schema'
+import { favoriteResource, type FavoriteInsert } from './favorite.schema'
 import { MEETING, SIOC } from '../namespaces'
 import { VCARD } from '@inrupt/vocab-common-rdf'
 
@@ -85,7 +85,7 @@ async function createFavorite(
   try {
     const db = getDbInstance()
     if (db) {
-      await db.insert(favoriteTable).values(favoriteData).execute()
+      await db.insert(favoriteResource).values(favoriteData).execute()
       console.log(`[StarredSync] Created favorite: ${rdfType} → ${targetUri}`)
     } else {
       console.warn('[StarredSync] No db instance registered')
@@ -107,7 +107,7 @@ async function deleteFavorite(
   try {
     const db = getDbInstance()
     if (db) {
-      await db.delete(favoriteTable)
+      await db.delete(favoriteResource)
         .where({ targetUri } as any)
         .execute()
       console.log(`[StarredSync] Deleted favorite: ${targetUri}`)
@@ -125,7 +125,7 @@ async function deleteFavorite(
  * 创建 starred 同步 hook
  *
  * @example
- * const chatTable = podTable('chats', columns, {
+ * const chatResource = podTable('chats', columns, {
  *   hooks: createStarredSyncHook({
  *     rdfType: MEETING.LongChat,
  *     extractor: {

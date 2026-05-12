@@ -38,7 +38,7 @@ jobs:
         run: yarn build
 
       - name: Test
-        run: yarn test
+        run: yarn test:ci
 
       - name: Check npm version
         id: npm-version

@@ -1,4 +1,5 @@
 export {
+  settingsResource,
   settingsTable,
   SETTING_KEYS,
   type SettingKey,

@@ -2,7 +2,7 @@ import { podTable, uri, timestamp, id } from '@undefineds.co/drizzle-solid'
 import { AS, DCTerms, RDF } from './namespaces'
 
 // Solid inbox notifications (protocol channel)
-export const inboxNotificationTable = podTable(
+export const inboxNotificationResource = podTable(
   'inbox_notification',
   {
     id: id('id'),
@@ -26,6 +26,9 @@ export const inboxNotificationTable = podTable(
   },
 )
 
-export type InboxNotificationRow = typeof inboxNotificationTable.$inferSelect
-export type InboxNotificationInsert = typeof inboxNotificationTable.$inferInsert
-export type InboxNotificationUpdate = typeof inboxNotificationTable.$inferUpdate
+// Compatibility alias. New model code should prefer `inboxNotificationResource`.
+export const inboxNotificationTable = inboxNotificationResource
+
+export type InboxNotificationRow = typeof inboxNotificationResource.$inferSelect
+export type InboxNotificationInsert = typeof inboxNotificationResource.$inferInsert
+export type InboxNotificationUpdate = typeof inboxNotificationResource.$inferUpdate
