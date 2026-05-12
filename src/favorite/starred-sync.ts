@@ -1,16 +1,16 @@
 /**
  * Starred Sync Hook
- * 
+ *
  * 当实体的 starred 字段变更时，自动同步到 favoriteTable：
  * - starred: true → 创建 Favorite 记录
  * - starred: false → 删除 Favorite 记录
- * 
+ *
  * 支持的实体类型：Chat, Thread, Contact
  * favoriteType 使用 RDF type URI 标识
  */
 import type { HookContext, TableHooks } from '@undefineds.co/drizzle-solid'
-import { favoriteTable, type FavoriteInsert } from './favorite.schema.js'
-import { MEETING, SIOC } from '../namespaces.js'
+import { favoriteTable, type FavoriteInsert } from './favorite.schema'
+import { MEETING, SIOC } from '../namespaces'
 import { VCARD } from '@inrupt/vocab-common-rdf'
 
 // ============================================================================
@@ -123,7 +123,7 @@ async function deleteFavorite(
 
 /**
  * 创建 starred 同步 hook
- * 
+ *
  * @example
  * const chatTable = podTable('chats', columns, {
  *   hooks: createStarredSyncHook({

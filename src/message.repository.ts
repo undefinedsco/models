@@ -1,5 +1,5 @@
-import { definePodRepository } from './repository.js'
-import { messageTable, type MessageRow, type MessageInsert, type MessageUpdate } from './message.schema.js'
+import { definePodRepository } from './repository'
+import { messageTable, type MessageRow, type MessageInsert, type MessageUpdate } from './message.schema'
 
 export const messageRepository = definePodRepository<
   typeof messageTable,
@@ -12,6 +12,3 @@ export const messageRepository = definePodRepository<
   searchableFields: ['content'],
   defaultSort: { field: 'createdAt', direction: 'asc' },
 })
-
-
-

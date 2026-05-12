@@ -1,5 +1,5 @@
-import { definePodRepository } from './repository.js'
-import { contactTable, type ContactRow, type ContactInsert, type ContactUpdate } from './contact.schema.js'
+import { definePodRepository } from './repository'
+import { contactTable, type ContactRow, type ContactInsert, type ContactUpdate } from './contact.schema'
 
 export const contactRepository = definePodRepository<
   typeof contactTable,
@@ -12,6 +12,3 @@ export const contactRepository = definePodRepository<
   searchableFields: ['name', 'alias', 'note'],
   defaultSort: { field: 'name', direction: 'asc' },
 })
-
-
-

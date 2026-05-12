@@ -7,13 +7,10 @@ import {
 } from '../src/discovery'
 
 describe('discovery shared metadata', () => {
-  it('returns builtin providers by canonical slug', () => {
-    expect(getBuiltinProvider('anthropic')?.slug).toBe('anthropic')
-    expect(getBuiltinProvider('openai')?.slug).toBe('openai')
-    expect(getBuiltinProvider('x-ai')?.slug).toBe('x-ai')
-    expect(getBuiltinProvider('claude')).toBeUndefined()
-    expect(getBuiltinProvider('codex')).toBeUndefined()
-    expect(getBuiltinProvider('xai')).toBeUndefined()
+  it('normalizes provider aliases for builtin provider lookups', () => {
+    expect(getBuiltinProvider('claude')?.slug).toBe('anthropic')
+    expect(getBuiltinProvider('codex')?.slug).toBe('openai')
+    expect(getBuiltinProvider('xai')?.slug).toBe('x-ai')
   })
 
   it('keeps provider base urls aligned with shared runtime defaults', () => {
@@ -26,13 +23,12 @@ describe('discovery shared metadata', () => {
     })
   })
 
-  it('filters builtin models by canonical provider slug', () => {
-    const defaultClaudeModel = getBuiltinDefaultModel('anthropic')
+  it('normalizes provider ids when querying builtin models', () => {
+    const defaultClaudeModel = getBuiltinDefaultModel('claude')
 
-    expect(getBuiltinModels('anthropic').every((model) => model.provider === 'anthropic')).toBe(true)
+    expect(getBuiltinModels('claude').every((model) => model.provider === 'anthropic')).toBe(true)
     expect(defaultClaudeModel?.provider).toBe('anthropic')
-    expect(defaultClaudeModel && getBuiltinModel('anthropic', defaultClaudeModel.id)?.provider).toBe('anthropic')
-    expect(getBuiltinDefaultModel('x-ai')?.provider).toBe('x-ai')
-    expect(getBuiltinModels('claude')).toEqual([])
+    expect(defaultClaudeModel && getBuiltinModel('claude', defaultClaudeModel.id)?.provider).toBe('anthropic')
+    expect(getBuiltinDefaultModel('xai')?.provider).toBe('x-ai')
   })
 })

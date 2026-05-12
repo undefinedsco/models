@@ -11,46 +11,37 @@ import {
   MessageVocab,
   ContactVocab,
   ThreadVocab,
-  WorkspaceVocab,
-  resolveWorkspaceContainerUri,
-  parseWorkspaceIdFromContainerUri,
-  buildLocalWorkspaceUri,
-  parseLocalWorkspaceUri,
-  isLocalWorkspaceUri,
-  parseMessageRichContent,
-  serializeMessageRichContent,
 } from '../src/index'
 
 import type { ChatRow } from '../src/chat.schema'
 import type { ThreadRow } from '../src/thread.schema'
 import type { MessageRow } from '../src/message.schema'
 import type { ContactTypeValue } from '../src/contact.schema'
-import type { WorkspaceRow } from '../src/workspace.schema'
 
 import {
   fixtureChatDirectAI,
   fixtureThreadDirectAI,
   fixtureMessageTooling,
-  fixtureToolApprovalRichContentItem,
-  fixtureToolCallRichContentItem,
-  fixtureTaskProgressRichContentItem,
+  fixtureToolApprovalBlock,
+  fixtureToolCallBlock,
+  fixtureTaskProgressBlock,
 } from '../src/fixtures/contracts-chat-contact'
 
 describe('Wave A CP0 contracts: namespaces', () => {
   it('exposes LINX_CHAT/LINX_MSG with expected base URIs and terms', () => {
     // Company-level namespace (udfs:) is used for all Wave A terms.
     // LINX_CHAT/LINX_MSG are kept as aliases for downstream readability/back-compat.
-	    expect(LINX_CHAT.NAMESPACE).toBe('https://undefineds.co/ns#')
-	    expect(LINX_MSG.NAMESPACE).toBe('https://undefineds.co/ns#')
+    expect(LINX_CHAT.NAMESPACE).toBe('https://undefineds.co/ns#')
+    expect(LINX_MSG.NAMESPACE).toBe('https://undefineds.co/ns#')
 
-	    expect(LINX_CHAT.workspace).toBe('https://undefineds.co/ns#workspace')
-	    expect(LINX_CHAT.policyRef).toBe('https://undefineds.co/ns#policyRef')
-	    expect(LINX_CHAT.policyVersion).toBe('https://undefineds.co/ns#policyVersion')
-	    expect(LINX_CHAT.parentThreadId).toBe('https://undefineds.co/ns#parentThreadId')
+    expect(LINX_CHAT.workspace).toBe('https://undefineds.co/ns#workspace')
+    expect(LINX_CHAT.policyRef).toBe('https://undefineds.co/ns#policyRef')
+    expect(LINX_CHAT.policyVersion).toBe('https://undefineds.co/ns#policyVersion')
+    expect(LINX_CHAT.parentThreadId).toBe('https://undefineds.co/ns#parentThreadId')
 
-	    expect(LINX_MSG.coordinationId).toBe('https://undefineds.co/ns#coordinationId')
-  	  })
-	})
+    expect(LINX_MSG.coordinationId).toBe('https://undefineds.co/ns#coordinationId')
+  })
+})
 
 describe('Wave A CP0 contracts: vocab ttl files', () => {
   it('includes TTL vocab definitions for subclassing and predicates', () => {
@@ -68,14 +59,8 @@ describe('Wave A CP0 contracts: centralized vocabs', () => {
     expect(ChatBaseVocab.participants).toBe(WF.participant)
   })
 
-  it('ThreadVocab exposes workspace container context', () => {
+  it('ThreadVocab exposes workspace context', () => {
     expect(ThreadVocab.workspace).toBe(LINX_CHAT.workspace)
-  })
-
-  it('WorkspaceVocab exposes container metadata fields', () => {
-    expect(WorkspaceVocab.workspaceType).toBe(LINX_CHAT.workspaceType)
-    expect(WorkspaceVocab.kind).toBe(LINX_CHAT.workspaceKind)
-    expect(WorkspaceVocab.rootUri).toBe(LINX_CHAT.rootUri)
   })
 
   it('MessageVocab exposes routing predicates', () => {
@@ -97,28 +82,15 @@ describe('Wave A CP0 contracts: schema types', () => {
     expectTypeOf<ChatRow>().not.toHaveProperty('contact')
   })
 
-  it('ThreadRow contains workspace context and thread lifecycle metadata', () => {
+  it('ThreadRow contains workspace context only', () => {
     expectTypeOf<ThreadRow>().toHaveProperty('workspace')
-    expectTypeOf<ThreadRow>().toHaveProperty('status')
-    expectTypeOf<ThreadRow>().toHaveProperty('metadata')
     expectTypeOf<ThreadRow>().not.toHaveProperty('policyRef')
     expectTypeOf<ThreadRow>().not.toHaveProperty('policyVersion')
     expectTypeOf<ThreadRow>().not.toHaveProperty('parentThreadId')
     expectTypeOf<ThreadRow>().not.toHaveProperty('sessionStatus')
   })
 
-  it('WorkspaceRow captures container metadata for local and remote materialization', () => {
-    expectTypeOf<WorkspaceRow>().toHaveProperty('workspaceType')
-    expectTypeOf<WorkspaceRow>().toHaveProperty('kind')
-    expectTypeOf<WorkspaceRow>().toHaveProperty('rootUri')
-    expectTypeOf<WorkspaceRow>().toHaveProperty('repoRootUri')
-  })
-
   it('MessageRow contains group/routing extensions', () => {
-    expectTypeOf<MessageRow>().toHaveProperty('chat')
-    expectTypeOf<MessageRow>().toHaveProperty('thread')
-    expectTypeOf<MessageRow>().not.toHaveProperty('chatId')
-    expectTypeOf<MessageRow>().not.toHaveProperty('threadId')
     expectTypeOf<MessageRow>().toHaveProperty('senderName')
     expectTypeOf<MessageRow>().toHaveProperty('mentions')
     expectTypeOf<MessageRow>().toHaveProperty('coordinationId')
@@ -138,32 +110,8 @@ describe('Wave A CP0 fixtures compile and are stable', () => {
 
     expect(fixtureMessageTooling.richContent).toContain('tool_approval')
 
-    expect(fixtureToolCallRichContentItem.type).toBe('tool')
-    expect(fixtureToolApprovalRichContentItem.type).toBe('tool_approval')
-    expect(fixtureTaskProgressRichContentItem.type).toBe('task_progress')
-  })
-
-  it('derives workspace container URIs deterministically', () => {
-    const workspaceUri = resolveWorkspaceContainerUri('https://pod.example', 'thread-001')
-    expect(workspaceUri).toBe('https://pod.example/.data/workspaces/thread-001/')
-    expect(parseWorkspaceIdFromContainerUri(workspaceUri)).toBe('thread-001')
-  })
-
-  it('builds local workspace URIs with node identity', () => {
-    const workspaceUri = buildLocalWorkspaceUri('node-123', '/Users/ganlu/develop/linx')
-    expect(workspaceUri).toBe('linx://node-123/Users/ganlu/develop/linx')
-    expect(isLocalWorkspaceUri(workspaceUri)).toBe(true)
-    expect(parseLocalWorkspaceUri(workspaceUri)).toEqual({
-      nodeId: 'node-123',
-      path: '/Users/ganlu/develop/linx',
-    })
-  })
-
-  it('normalizes richContent payloads to items', () => {
-    const parsed = parseMessageRichContent(fixtureMessageTooling.richContent)
-
-    expect(parsed.items).toHaveLength(3)
-    expect(parsed.items?.[0]?.type).toBe('tool')
-    expect(serializeMessageRichContent(parsed)).toContain('"items"')
+    expect(fixtureToolCallBlock.type).toBe('tool')
+    expect(fixtureToolApprovalBlock.type).toBe('tool_approval')
+    expect(fixtureTaskProgressBlock.type).toBe('task_progress')
   })
 })

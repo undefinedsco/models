@@ -1,6 +1,6 @@
 /**
  * Discovery Service Types
- * 
+ *
  * 可扩展的发现服务体系，用于提供：
  * - Providers (AI 供应商)
  * - Models (模型列表)
@@ -135,18 +135,18 @@ export interface DiscoveryService {
   // Providers
   getProviders(): Promise<ProviderMetadata[]>
   getProvider(slug: string): Promise<ProviderMetadata | undefined>
-  
+
   // Models
   getModels(provider?: string): Promise<ModelMetadata[]>
   getModel(provider: string, modelId: string): Promise<ModelMetadata | undefined>
   getDefaultModel(provider: string): Promise<ModelMetadata | undefined>
-  
+
   // Tools (future)
   getTools?(): Promise<ToolMetadata[]>
-  
+
   // Agents (future)
   getAgentTemplates?(): Promise<AgentTemplate[]>
-  
+
   // Prompts (future)
   getPromptTemplates?(): Promise<PromptTemplate[]>
 }

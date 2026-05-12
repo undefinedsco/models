@@ -1,4 +1,4 @@
-import { DCTerms, SCHEMA, UDFS, WF } from '../namespaces.js'
+import { DCTerms, SCHEMA, UDFS, WF } from '../namespaces'
 
 /** Chat channel vocab (thin place/container). */
 export const ChatBaseVocab = {
@@ -18,7 +18,7 @@ export const ChatBaseVocab = {
 
   // Activity
   lastActiveAt: UDFS.lastActiveAt,
-  lastMessageId: WF.message,
+  lastMessageId: UDFS.lastMessage,
   lastMessagePreview: SCHEMA.text,
 
   // Timestamps

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { SolidDatabase } from '../src/repository'
-import { createRepositoryDescriptor } from '../src/repository'
+import { createRepositoryDescriptor, type SolidDatabase } from '@undefineds.co/drizzle-solid'
 import {
   chatTable,
   type ChatInsert,
@@ -48,6 +47,11 @@ class MockMutationBuilder {
     return this
   }
 
+  whereByIri(iri: string) {
+    this.whereArgs.push({ '@id': iri })
+    return this
+  }
+
   async execute() {
     return []
   }
@@ -59,51 +63,9 @@ class MockDatabase<Row> {
   lastUpdateBuilder: MockMutationBuilder | null = null
   lastDeleteBuilder: MockMutationBuilder | null = null
   lastInsertInput: unknown = null
-  lastFindTarget: unknown = null
-  lastUpdateTarget: unknown = null
-  lastDeleteTarget: unknown = null
 
   setSelectRows(rows: Row[]) {
     this.selectRows = rows
-  }
-
-  async findByIri(_table: unknown, iri: string) {
-    this.lastFindTarget = { iri }
-    return this.selectRows.find((row) => (row as Record<string, unknown>)['@id'] === iri) ?? null
-  }
-
-  async findByLocator(_table: unknown, locator: Record<string, unknown>) {
-    this.lastFindTarget = { locator }
-    return this.selectRows.find((row) =>
-      Object.entries(locator).every(([key, value]) => (row as Record<string, unknown>)[key] === value),
-    ) ?? null
-  }
-
-  async updateByIri(_table: unknown, iri: string, payload: ChatUpdate) {
-    this.lastUpdateTarget = { iri }
-    return ({
-      ...(this.selectRows[0] as object),
-      ...payload,
-      '@id': iri,
-    }) as Row
-  }
-
-  async updateByLocator(_table: unknown, locator: Record<string, unknown>, payload: ChatUpdate) {
-    this.lastUpdateTarget = { locator }
-    return ({
-      ...(this.selectRows[0] as object),
-      ...payload,
-    }) as Row
-  }
-
-  async deleteByIri(_table: unknown, iri: string) {
-    this.lastDeleteTarget = { iri }
-    return true
-  }
-
-  async deleteByLocator(_table: unknown, locator: Record<string, unknown>) {
-    this.lastDeleteTarget = { locator }
-    return true
   }
 
   select() {
@@ -143,6 +105,27 @@ class MockDatabase<Row> {
     }
   }
 
+  async findByIri(_table: unknown, iri: string) {
+    return this.selectRows.find((row) => (row as Record<string, unknown>)['@id'] === iri) ?? null
+  }
+
+  async updateByIri(_table: unknown, iri: string, _data: Record<string, unknown>) {
+    return this.selectRows.find((row) => (row as Record<string, unknown>)['@id'] === iri) ?? null
+  }
+
+  async deleteByIri() {
+    return true
+  }
+
+  resolveRowIri(_table: unknown, row: Record<string, unknown>) {
+    if (typeof row['@id'] === 'string') return row['@id']
+    return typeof row.source === 'string' ? row.source : `generated/${String(row.id)}`
+  }
+
+  resolveRowId(_table: unknown, row: Record<string, unknown>) {
+    return typeof row.id === 'string' ? row.id : String(row['@id'] ?? row.source ?? '')
+  }
+
   delete() {
     const builder = new MockMutationBuilder()
     this.lastDeleteBuilder = builder
@@ -163,7 +146,6 @@ const descriptor = createRepositoryDescriptor<
 })
 
 const baseChatRow = {
-  id: 'chat-1',
   '@id': 'chat-1',
   title: 'Sample Chat',
   description: 'Hello world',
@@ -197,7 +179,7 @@ describe('createRepositoryDescriptor', () => {
     const row = await descriptor.detail(db as unknown as SolidDatabase, 'chat-1')
 
     expect(row).toEqual(baseChatRow)
-    expect(db.lastFindTarget).toEqual({ locator: { id: 'chat-1' } })
+    expect(db.lastSelectQuery).toBeNull()
   })
 
   it('creates rows via insert and returns the created object', async () => {
@@ -236,9 +218,9 @@ describe('createRepositoryDescriptor', () => {
       { title: 'Updated' } as ChatUpdate,
     )
 
-    expect(db.lastUpdateTarget).toEqual({ locator: { id: 'chat-1' } })
+    expect(db.lastUpdateBuilder).toBeNull()
 
     await descriptor.remove?.(db as unknown as SolidDatabase, 'chat-1')
-    expect(db.lastDeleteTarget).toEqual({ locator: { id: 'chat-1' } })
+    expect(db.lastDeleteBuilder).toBeNull()
   })
 })

@@ -1,22 +1,22 @@
 /**
  * Discovery Service
- * 
+ *
  * 提供 AI 供应商、模型等元数据的发现服务
  * 支持内置数据 + 远程 API 获取（有 Key 时）
  */
 
-export * from './types.js'
+export * from './types'
 
-import { extractAIConfigProviderId } from '../ai-config.js'
-import type { 
-  ProviderMetadata, 
-  ModelMetadata, 
+import { normalizeAIConfigProviderId } from '../ai-config'
+import type {
+  ProviderMetadata,
+  ModelMetadata,
   DiscoveryService
-} from './types.js'
+} from './types'
 
 // 导入内置数据
-import providersData from './providers.json' with { type: 'json' }
-import modelsData from './models.json' with { type: 'json' }
+import providersData from './providers.json'
+import modelsData from './models.json'
 
 // ============================================================================
 // Builtin Data (内置数据)
@@ -26,7 +26,7 @@ const builtinProviders: ProviderMetadata[] = providersData.providers as Provider
 const builtinModels: ModelMetadata[] = modelsData.models as ModelMetadata[]
 
 function normalizeProviderSlug(slug?: string | null): string {
-  return extractAIConfigProviderId(slug)
+  return normalizeAIConfigProviderId(slug)
 }
 
 function findBuiltinProvider(slug: string): ProviderMetadata | undefined {
@@ -53,31 +53,31 @@ function filterBuiltinModels(provider?: string): ModelMetadata[] {
 // ============================================================================
 
 class BuiltinDiscoveryService implements DiscoveryService {
-  
+
   // -------------------------------------------------------------------------
   // Providers
   // -------------------------------------------------------------------------
-  
+
   async getProviders(): Promise<ProviderMetadata[]> {
     return builtinProviders
   }
-  
+
   async getProvider(slug: string): Promise<ProviderMetadata | undefined> {
     return findBuiltinProvider(slug)
   }
-  
+
   // -------------------------------------------------------------------------
   // Models
   // -------------------------------------------------------------------------
-  
+
   async getModels(provider?: string): Promise<ModelMetadata[]> {
     return filterBuiltinModels(provider)
   }
-  
+
   async getModel(provider: string, modelId: string): Promise<ModelMetadata | undefined> {
     return filterBuiltinModels(provider).find((model) => model.id === modelId)
   }
-  
+
   async getDefaultModel(provider: string): Promise<ModelMetadata | undefined> {
     const providerModels = filterBuiltinModels(provider)
     return providerModels.find(m => m.isDefault) || providerModels[0]
@@ -98,30 +98,30 @@ class SmartDiscoveryService implements DiscoveryService {
   private options: SmartDiscoveryOptions
   private modelCache = new Map<string, { models: ModelMetadata[], timestamp: number }>()
   private cacheTTL = 5 * 60 * 1000 // 5 minutes
-  
+
   constructor(options: SmartDiscoveryOptions = {}) {
     this.options = options
   }
-  
+
   async getProviders(): Promise<ProviderMetadata[]> {
     return this.builtin.getProviders()
   }
-  
+
   async getProvider(slug: string): Promise<ProviderMetadata | undefined> {
     return this.builtin.getProvider(slug)
   }
-  
+
   async getModels(provider?: string): Promise<ModelMetadata[]> {
     if (!provider) {
       return this.builtin.getModels()
     }
-    
+
     // 检查缓存
     const cached = this.modelCache.get(provider)
     if (cached && Date.now() - cached.timestamp < this.cacheTTL) {
       return cached.models
     }
-    
+
     // 尝试从 API 获取（如果有 Key）
     if (this.options.getApiKey && this.options.fetchModelsFromApi) {
       try {
@@ -140,21 +140,21 @@ class SmartDiscoveryService implements DiscoveryService {
         console.warn(`Failed to fetch models from API for ${provider}, falling back to builtin`, error)
       }
     }
-    
+
     // Fallback 到内置列表
     return this.builtin.getModels(provider)
   }
-  
+
   async getModel(provider: string, modelId: string): Promise<ModelMetadata | undefined> {
     const models = await this.getModels(provider)
     return models.find(m => m.id === modelId)
   }
-  
+
   async getDefaultModel(provider: string): Promise<ModelMetadata | undefined> {
     const models = await this.getModels(provider)
     return models.find(m => m.isDefault) || models[0]
   }
-  
+
   clearCache(provider?: string) {
     if (provider) {
       this.modelCache.delete(provider)
@@ -178,10 +178,10 @@ export function createDiscoveryService(options?: SmartDiscoveryOptions): Discove
 
 // 便捷方法：直接获取内置数据
 export const getBuiltinProviders = () => builtinProviders
-export const getBuiltinModels = (provider?: string) => 
+export const getBuiltinModels = (provider?: string) =>
   filterBuiltinModels(provider)
 export const getBuiltinProvider = (slug: string) => findBuiltinProvider(slug)
-export const getBuiltinModel = (provider: string, modelId: string) => 
+export const getBuiltinModel = (provider: string, modelId: string) =>
   filterBuiltinModels(provider).find(m => m.id === modelId)
 export const getBuiltinDefaultModel = (provider: string) => {
   const providerModels = filterBuiltinModels(provider)

@@ -1,5 +1,5 @@
-import { definePodRepository } from './repository.js'
-import { agentTable, type AgentRow, type AgentInsert, type AgentUpdate } from './agent.schema.js'
+import { definePodRepository } from './repository'
+import { agentTable, type AgentRow, type AgentInsert, type AgentUpdate } from './agent.schema'
 
 export const agentRepository = definePodRepository<
   typeof agentTable,
@@ -11,6 +11,3 @@ export const agentRepository = definePodRepository<
   table: agentTable,
   searchableFields: ['name', 'description', 'instructions'],
 })
-
-
-

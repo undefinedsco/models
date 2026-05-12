@@ -1,13 +1,13 @@
-import type { ChatInsert } from '../chat.schema.js'
-import type { ContactInsert } from '../contact.schema.js'
-import type { MessageInsert } from '../message.schema.js'
-import type { ThreadInsert } from '../thread.schema.js'
+import type { ChatInsert } from '../chat.schema'
+import type { ContactInsert } from '../contact.schema'
+import type { MessageInsert } from '../message.schema'
+import type { ThreadInsert } from '../thread.schema'
 import type {
-  ToolApprovalRichContentItem,
-  ToolCallRichContentItem,
-  TaskProgressRichContentItem,
-} from '../types/collaboration-rich-content.js'
-import { ContactClass } from '../contact.schema.js'
+  ToolApprovalBlock,
+  ToolCallBlock,
+  TaskProgressBlock,
+} from '../types/collaboration-blocks'
+import { ContactClass } from '../contact.schema'
 
 export const fixtureContactSolid: ContactInsert = {
   id: 'contact-solid-1',
@@ -42,14 +42,14 @@ export const fixtureChatDirectAI: ChatInsert = {
 
 export const fixtureThreadDirectAI: ThreadInsert = {
   id: 'thread-001',
-  chatId: 'https://pod.example/.data/chat/chat-direct-ai-1/index.ttl#this',
+  chat: 'https://pod.example/.data/chat/chat-direct-ai-1/index.ttl#this',
   title: 'Main thread',
   starred: false,
 
   workspace: 'https://pod.example/.data/agent-workspaces/secretary/ws-main/',
 } satisfies ThreadInsert
 
-export const fixtureToolCallRichContentItem: ToolCallRichContentItem = {
+export const fixtureToolCallBlock: ToolCallBlock = {
   type: 'tool',
   toolCallId: 'toolcall-1',
   toolName: 'write_file',
@@ -58,7 +58,7 @@ export const fixtureToolCallRichContentItem: ToolCallRichContentItem = {
   duration: 123,
 }
 
-export const fixtureToolApprovalRichContentItem: ToolApprovalRichContentItem = {
+export const fixtureToolApprovalBlock: ToolApprovalBlock = {
   type: 'tool_approval',
   toolCallId: 'toolcall-1',
   toolName: 'write_file',
@@ -69,7 +69,7 @@ export const fixtureToolApprovalRichContentItem: ToolApprovalRichContentItem = {
   decisionRole: 'human',
 }
 
-export const fixtureTaskProgressRichContentItem: TaskProgressRichContentItem = {
+export const fixtureTaskProgressBlock: TaskProgressBlock = {
   type: 'task_progress',
   taskId: 'task-1',
   title: 'CP0 contract baseline',
@@ -89,11 +89,7 @@ export const fixtureMessageTooling: MessageInsert = {
   role: 'assistant',
   content: 'I will write a file after approval.',
   richContent: JSON.stringify({
-    items: [
-      fixtureToolCallRichContentItem,
-      fixtureToolApprovalRichContentItem,
-      fixtureTaskProgressRichContentItem,
-    ],
+    blocks: [fixtureToolCallBlock, fixtureToolApprovalBlock, fixtureTaskProgressBlock],
   }),
   status: 'sent',
 } satisfies MessageInsert

@@ -1,21 +1,51 @@
 import { describe, expect, it } from 'vitest'
 import {
-  aiConfigModelUri,
-  aiConfigProviderUri,
+  aiConfigModelRef,
+  aiConfigProviderRef,
   buildAIConfigMutationPlan,
   buildAIConfigProviderStateMap,
-  extractAIConfigProviderId,
-  extractAIConfigResourceId,
-  sameAIConfigProviderId,
+  getAIConfigProviderFamilyIds,
+  getAIConfigProviderMetadata,
+  normalizeAIConfigModelId,
+  normalizeAIConfigProviderId,
+  normalizeAIConfigResourceId,
+  sameAIConfigProviderFamily,
 } from '../src/ai-config'
 
 describe('ai-config shared core', () => {
-  it('extracts ids from provider and model uris without alias remapping', () => {
-    expect(extractAIConfigProviderId('https://pod.example/settings/ai/providers.ttl#anthropic')).toBe('anthropic')
-    expect(extractAIConfigProviderId(' X-AI ')).toBe('x-ai')
-    expect(extractAIConfigResourceId('https://pod.example/settings/ai/models.ttl#gpt-4o-mini')).toBe('gpt-4o-mini')
-    expect(sameAIConfigProviderId('https://pod.example/settings/ai/providers.ttl#anthropic', 'anthropic')).toBe(true)
-    expect(sameAIConfigProviderId('claude', 'anthropic')).toBe(false)
+  it('normalizes provider aliases to canonical ids', () => {
+    expect(normalizeAIConfigProviderId('claude')).toBe('anthropic')
+    expect(normalizeAIConfigProviderId('codex')).toBe('openai')
+    expect(normalizeAIConfigProviderId('xai')).toBe('x-ai')
+    expect(getAIConfigProviderFamilyIds('claude')).toEqual(['anthropic', 'claude'])
+    expect(getAIConfigProviderFamilyIds('openai')).toEqual(['openai', 'codex'])
+    expect(getAIConfigProviderFamilyIds('xai')).toEqual(['x-ai', 'xai'])
+    expect(sameAIConfigProviderFamily('https://pod.example/settings/ai/providers.ttl#claude', 'anthropic')).toBe(true)
+    expect(sameAIConfigProviderFamily('xai', 'https://pod.example/settings/ai/providers.ttl#x-ai')).toBe(true)
+  })
+
+  it('keeps LinX cloud models out of Pod-backed user AI config defaults', () => {
+    expect(normalizeAIConfigProviderId('undefineds')).toBe('undefineds')
+
+    const states = buildAIConfigProviderStateMap({
+      providerRows: [],
+      credentialRows: [],
+      modelRows: [],
+    })
+
+    expect(getAIConfigProviderMetadata('undefineds')).toMatchObject({
+      id: 'undefineds',
+      displayName: 'Undefineds',
+    })
+    expect(states.undefineds).toBeUndefined()
+  })
+
+  it('normalizes provider-qualified model ids only in provider context', () => {
+    expect(normalizeAIConfigResourceId('undefineds/linx')).toBe('undefineds/linx')
+    expect(normalizeAIConfigModelId('anthropic/claude-sonnet-4', 'anthropic')).toBe('claude-sonnet-4')
+    expect(normalizeAIConfigModelId('openrouter/openai/gpt-4o-mini', 'openrouter')).toBe('openai/gpt-4o-mini')
+    expect(normalizeAIConfigModelId('https://pod.example/settings/ai/models/anthropic.ttl#claude-sonnet-4', 'anthropic')).toBe('claude-sonnet-4')
+    expect(aiConfigModelRef('anthropic', 'claude-sonnet-4')).toBe('/settings/ai/models/anthropic.ttl#claude-sonnet-4')
   })
 
   it('builds provider state from split AI config tables', () => {
@@ -25,13 +55,13 @@ describe('ai-config shared core', () => {
         {
           id: 'anthropic',
           baseUrl: 'https://api.anthropic.com/v1',
-          hasModel: '/settings/ai/models.ttl#claude-sonnet-4',
+          hasModel: '/settings/ai/models/anthropic.ttl#claude-sonnet-4',
         },
       ],
       credentialRows: [
         {
           id: 'anthropic-default',
-          provider: '/settings/ai/providers.ttl#anthropic',
+          provider: '/settings/ai/providers.ttl#claude',
           service: 'ai',
           status: 'active',
           apiKey: 'sk-ant-test',
@@ -39,7 +69,7 @@ describe('ai-config shared core', () => {
       ],
       modelRows: [
         {
-          id: 'claude-sonnet-4',
+          id: 'anthropic.ttl#claude-sonnet-4',
           displayName: 'Claude Sonnet 4',
           isProvidedBy: '/settings/ai/providers.ttl#anthropic',
           status: 'active',
@@ -67,7 +97,7 @@ describe('ai-config shared core', () => {
 
   it('creates a shared mutation plan for provider, credential, and model writes', () => {
     const plan = buildAIConfigMutationPlan({
-      providerId: 'anthropic',
+      providerId: 'claude',
       currentProviderRows: [],
       currentCredentialRows: [],
       currentModelRows: [],
@@ -89,11 +119,11 @@ describe('ai-config shared core', () => {
     expect(plan.providerPayload).toMatchObject({
       id: 'anthropic',
       baseUrl: 'https://api.anthropic.com/v1',
-      hasModel: aiConfigModelUri('claude-sonnet-4'),
+      hasModel: aiConfigModelRef('anthropic', 'claude-sonnet-4'),
     })
     expect(plan.credentialPayload).toMatchObject({
       id: 'anthropic-default',
-      provider: aiConfigProviderUri('anthropic'),
+      provider: aiConfigProviderRef('anthropic'),
       service: 'ai',
       status: 'active',
       apiKey: 'sk-ant-test',
@@ -102,7 +132,7 @@ describe('ai-config shared core', () => {
     expect(plan.modelUpserts[0]).toMatchObject({
       id: 'claude-sonnet-4',
       displayName: 'Claude Sonnet 4',
-      isProvidedBy: aiConfigProviderUri('anthropic'),
+      isProvidedBy: aiConfigProviderRef('anthropic'),
       status: 'active',
     })
     expect(plan.modelDeleteIds).toEqual([])

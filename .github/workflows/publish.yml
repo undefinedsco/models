@@ -40,7 +40,23 @@ jobs:
       - name: Test
         run: yarn test
 
+      - name: Check npm version
+        id: npm-version
+        run: |
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          if npm view "@undefineds.co/models@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "@undefineds.co/models@${PACKAGE_VERSION} already exists on npm; skipping publish."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pack release
+        if: steps.npm-version.outputs.exists != 'true'
+        run: yarn pack:release
+
       - name: Publish to npm
+        if: steps.npm-version.outputs.exists != 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish
+        run: npm publish --access public "preview/undefineds-co-models-$(node -p "require('./package.json').version").tgz"
