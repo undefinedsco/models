@@ -263,13 +263,25 @@ export { extensionSchema } from './extension'
 
 // xpod AI schema
 export {
+  apiKeyCredentialResource,
+  apiKeyCredentialTable,
+  credentialResource,
   credentialTable,
+  oauthCredentialResource,
+  oauthCredentialTable,
+  type ApiKeyCredentialRow,
+  type ApiKeyCredentialInsert,
+  type ApiKeyCredentialUpdate,
   type CredentialRow,
   type CredentialInsert,
   type CredentialUpdate,
+  type OAuthCredentialRow,
+  type OAuthCredentialInsert,
+  type OAuthCredentialUpdate,
 } from "./credential.schema";
 
 export {
+  aiProviderResource,
   aiProviderTable,
   type AIProviderRow,
   type AIProviderInsert,
@@ -277,11 +289,35 @@ export {
 } from "./ai-provider.schema";
 
 export {
+  aiModelResource,
   aiModelTable,
   type AIModelRow,
   type AIModelInsert,
   type AIModelUpdate,
 } from "./ai-model.schema";
+
+export {
+  agentStatusResource,
+  agentStatusTable,
+  aiConfigResource,
+  aiConfigTable,
+  indexedFileResource,
+  indexedFileTable,
+  vectorStoreResource,
+  vectorStoreTable,
+  type AgentStatusRow,
+  type AgentStatusInsert,
+  type AgentStatusUpdate,
+  type AIConfigRow,
+  type AIConfigInsert,
+  type AIConfigUpdate as AIConfigResourceUpdate,
+  type IndexedFileRow,
+  type IndexedFileInsert,
+  type IndexedFileUpdate,
+  type VectorStoreRow,
+  type VectorStoreInsert,
+  type VectorStoreUpdate,
+} from './ai-runtime.schema'
 
 export {
   aiConfigModelRef,

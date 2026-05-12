@@ -2,6 +2,7 @@
   "include": [
     "src/index.ts",
     "src/ai-config/index.ts",
+    "src/ai-runtime.schema.ts",
     "src/client/index.ts",
     "src/discovery/index.ts",
     "src/namespaces.ts",

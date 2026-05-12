@@ -1,11 +1,21 @@
 import { agentTable } from './agent.schema'
+import {
+  agentStatusResource,
+  agentStatusTable,
+  aiConfigResource,
+  aiConfigTable,
+  indexedFileResource,
+  indexedFileTable,
+  vectorStoreResource,
+  vectorStoreTable,
+} from './ai-runtime.schema'
 import { approvalResource, approvalTable } from './approval.schema'
 import { auditResource, auditTable } from './audit.schema'
-import { aiModelTable } from './ai-model.schema'
-import { aiProviderTable } from './ai-provider.schema'
+import { aiModelResource, aiModelTable } from './ai-model.schema'
+import { aiProviderResource, aiProviderTable } from './ai-provider.schema'
 import { chatResource, chatTable } from './chat.schema'
 import { contactTable } from './contact.schema'
-import { credentialTable } from './credential.schema'
+import { credentialResource, credentialTable } from './credential.schema'
 import { favoriteTable } from './favorite/favorite.schema'
 import { fileTable } from './file/file.schema'
 import { grantResource, grantTable } from './grant.schema'
@@ -24,9 +34,13 @@ export const solidResources = {
   sessionResource,
   threadResource,
   messageResource,
-  credentialTable,
-  aiProviderTable,
-  aiModelTable,
+  credentialResource,
+  aiProviderResource,
+  aiModelResource,
+  aiConfigResource,
+  vectorStoreResource,
+  indexedFileResource,
+  agentStatusResource,
   fileTable,
   favoriteTable,
   settingsTable,
@@ -50,6 +64,10 @@ export const solidSchema = {
   credentialTable,
   aiProviderTable,
   aiModelTable,
+  aiConfigTable,
+  vectorStoreTable,
+  indexedFileTable,
+  agentStatusTable,
   fileTable,
   favoriteTable,
   settingsTable,
