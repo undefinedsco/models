@@ -59,4 +59,4 @@ jobs:
         if: steps.npm-version.outputs.exists != 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public "preview/undefineds-co-models-$(node -p "require('./package.json').version").tgz"
+        run: npm publish --access public "./preview/undefineds-co-models-$(node -p "require('./package.json').version").tgz"
