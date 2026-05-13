@@ -254,15 +254,6 @@ export const UDFS = createNamespace('udfs', 'https://undefineds.co/ns#', {
 
 export const UDFS_NAMESPACE = UDFS.NAMESPACE
 
-// Legacy alias: existing code may still import LINQ.
-// Keep as alias to avoid churn.
-export const LINQ = UDFS
-
-// Wave A contracts: unified under company namespace (UDFS).
-// Keep legacy names as aliases to avoid downstream churn.
-export const LINX_CHAT = UDFS
-export const LINX_MSG = UDFS
-
 export const XPOD_CREDENTIAL = createNamespace('cred', 'https://vocab.xpod.dev/credential#', {
   Credential: 'Credential',
   ApiKeyCredential: 'ApiKeyCredential',
@@ -274,6 +265,7 @@ export const XPOD_CREDENTIAL = createNamespace('cred', 'https://vocab.xpod.dev/c
   baseUrl: 'baseUrl',
   proxyUrl: 'proxyUrl',
   label: 'label',
+  isDefault: 'isDefault',
   lastUsedAt: 'lastUsedAt',
   failCount: 'failCount',
   rateLimitResetAt: 'rateLimitResetAt',

@@ -2,13 +2,8 @@
 // 命名空间和词汇表
 // ============================================
 export {
-  // Legacy + Wave A aliases
-  LINQ,
   UDFS,
   UDFS_NAMESPACE,
-  // Wave A contracts
-  LINX_CHAT,
-  LINX_MSG,
   // Standard vocabs
   SIOC,
   DCTerms,
@@ -339,7 +334,9 @@ export {
   normalizeAIConfigModelId,
   normalizeAIConfigResourceId,
   sameAIConfigProviderFamily,
+  selectAIConfigCredential,
   type AIConfigModel,
+  type AIConfigCredentialSelection,
   type AIConfigMutationPlan,
   type AIConfigProviderCatalogEntry,
   type AIConfigProviderState,

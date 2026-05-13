@@ -1,4 +1,4 @@
-import { id, integer, podTable, string, timestamp, uri } from "@undefineds.co/drizzle-solid"
+import { boolean, id, integer, podTable, string, timestamp, uri } from "@undefineds.co/drizzle-solid"
 import { XPOD_CREDENTIAL } from "./namespaces"
 
 export const credentialResource = podTable("credential", {
@@ -10,6 +10,7 @@ export const credentialResource = podTable("credential", {
   baseUrl: string("baseUrl").predicate(XPOD_CREDENTIAL.baseUrl),
   proxyUrl: string("proxyUrl").predicate(XPOD_CREDENTIAL.proxyUrl),
   label: string("label").predicate(XPOD_CREDENTIAL.label),
+  isDefault: boolean("isDefault").predicate(XPOD_CREDENTIAL.isDefault).default(false),
   lastUsedAt: timestamp("lastUsedAt").predicate(XPOD_CREDENTIAL.lastUsedAt),
   failCount: integer("failCount").predicate(XPOD_CREDENTIAL.failCount).default(0),
   rateLimitResetAt: timestamp("rateLimitResetAt").predicate(XPOD_CREDENTIAL.rateLimitResetAt),

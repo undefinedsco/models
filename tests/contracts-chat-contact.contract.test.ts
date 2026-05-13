@@ -4,8 +4,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 import {
-  LINX_CHAT,
-  LINX_MSG,
+  UDFS,
   WF,
   ChatBaseVocab,
   MessageVocab,
@@ -28,18 +27,16 @@ import {
 } from '../src/fixtures/contracts-chat-contact'
 
 describe('Wave A CP0 contracts: namespaces', () => {
-  it('exposes LINX_CHAT/LINX_MSG with expected base URIs and terms', () => {
+  it('exposes UDFS with expected base URI and terms', () => {
     // Company-level namespace (udfs:) is used for all Wave A terms.
-    // LINX_CHAT/LINX_MSG are kept as aliases for downstream readability/back-compat.
-    expect(LINX_CHAT.NAMESPACE).toBe('https://undefineds.co/ns#')
-    expect(LINX_MSG.NAMESPACE).toBe('https://undefineds.co/ns#')
+    expect(UDFS.NAMESPACE).toBe('https://undefineds.co/ns#')
 
-    expect(LINX_CHAT.workspace).toBe('https://undefineds.co/ns#workspace')
-    expect(LINX_CHAT.policyRef).toBe('https://undefineds.co/ns#policyRef')
-    expect(LINX_CHAT.policyVersion).toBe('https://undefineds.co/ns#policyVersion')
-    expect(LINX_CHAT.parentThreadId).toBe('https://undefineds.co/ns#parentThreadId')
+    expect(UDFS.workspace).toBe('https://undefineds.co/ns#workspace')
+    expect(UDFS.policyRef).toBe('https://undefineds.co/ns#policyRef')
+    expect(UDFS.policyVersion).toBe('https://undefineds.co/ns#policyVersion')
+    expect(UDFS.parentThreadId).toBe('https://undefineds.co/ns#parentThreadId')
 
-    expect(LINX_MSG.coordinationId).toBe('https://undefineds.co/ns#coordinationId')
+    expect(UDFS.coordinationId).toBe('https://undefineds.co/ns#coordinationId')
   })
 })
 
@@ -60,13 +57,13 @@ describe('Wave A CP0 contracts: centralized vocabs', () => {
   })
 
   it('ThreadVocab exposes workspace context', () => {
-    expect(ThreadVocab.workspace).toBe(LINX_CHAT.workspace)
+    expect(ThreadVocab.workspace).toBe(UDFS.workspace)
   })
 
   it('MessageVocab exposes routing predicates', () => {
-    expect(MessageVocab.routedBy).toBe(LINX_MSG.routedBy)
-    expect(MessageVocab.routeTargetAgentId).toBe(LINX_MSG.routeTargetAgentId)
-    expect(MessageVocab.coordinationId).toBe(LINX_MSG.coordinationId)
+    expect(MessageVocab.routedBy).toBe(UDFS.routedBy)
+    expect(MessageVocab.routeTargetAgentId).toBe(UDFS.routeTargetAgentId)
+    expect(MessageVocab.coordinationId).toBe(UDFS.coordinationId)
   })
 
   it('ContactVocab remains stable for core fields', () => {

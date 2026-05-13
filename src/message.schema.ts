@@ -1,5 +1,5 @@
 import { podTable, uri, string, text, timestamp, id } from '@undefineds.co/drizzle-solid'
-import { UDFS, DCTerms, FOAF, LINX_MSG, MEETING, SCHEMA, SIOC, WF } from './namespaces'
+import { UDFS, DCTerms, FOAF, MEETING, SCHEMA, SIOC, WF } from './namespaces'
 import { chatResource } from './chat.schema'
 import { threadResource } from './thread.schema'
 
@@ -45,15 +45,15 @@ export const messageResource = podTable(
     deletedAt: timestamp('deletedAt').predicate(SCHEMA.dateDeleted),
 
     // Group message extensions
-    senderName: string('senderName').predicate(LINX_MSG.senderName),
-    senderAvatarUrl: uri('senderAvatarUrl').predicate(LINX_MSG.senderAvatarUrl),
-    mentions: uri('mentions').array().predicate(LINX_MSG.mentions),
-    replyTo: uri('replyTo').predicate(LINX_MSG.replyTo),
+    senderName: string('senderName').predicate(UDFS.senderName),
+    senderAvatarUrl: uri('senderAvatarUrl').predicate(UDFS.senderAvatarUrl),
+    mentions: uri('mentions').array().predicate(UDFS.mentions),
+    replyTo: uri('replyTo').predicate(UDFS.replyTo),
 
     // Multi-AI routing
-    routedBy: uri('routedBy').predicate(LINX_MSG.routedBy),
-    routeTargetAgentId: string('routeTargetAgentId').predicate(LINX_MSG.routeTargetAgentId),
-    coordinationId: string('coordinationId').predicate(LINX_MSG.coordinationId),
+    routedBy: uri('routedBy').predicate(UDFS.routedBy),
+    routeTargetAgentId: string('routeTargetAgentId').predicate(UDFS.routeTargetAgentId),
+    coordinationId: string('coordinationId').predicate(UDFS.coordinationId),
 
     createdAt: timestamp('createdAt').predicate(DCTerms.created).notNull().defaultNow(),
     updatedAt: timestamp('updatedAt').predicate(DCTerms.modified),

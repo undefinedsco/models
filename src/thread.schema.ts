@@ -1,5 +1,5 @@
 import { uri, boolean, object, podTable, string, timestamp, id } from '@undefineds.co/drizzle-solid'
-import { UDFS, DCTerms, SIOC, LINX_CHAT } from './namespaces'
+import { UDFS, DCTerms, SIOC } from './namespaces'
 import { chatResource } from './chat.schema'
 
 /**
@@ -37,7 +37,7 @@ export const threadResource = podTable(
     starred: boolean('starred').predicate(UDFS.favorite).default(false),
 
     // Storage-layer execution context reference: container/resource URI
-    workspace: uri('workspace').predicate(LINX_CHAT.workspace),
+    workspace: uri('workspace').predicate(UDFS.workspace),
 
     // Generic execution metadata shared by CLI/App runtimes.
     metadata: object('metadata').predicate(UDFS.metadata),

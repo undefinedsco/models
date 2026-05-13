@@ -76,6 +76,7 @@ describe('AI runtime resources', () => {
       oauthExpiresAt: expect.anything(),
       projectId: expect.anything(),
       organizationId: expect.anything(),
+      isDefault: expect.anything(),
     })
 
     expect(columnsOf(aiProviderResource)).toMatchObject({

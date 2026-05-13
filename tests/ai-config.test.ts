@@ -10,6 +10,7 @@ import {
   normalizeAIConfigProviderId,
   normalizeAIConfigResourceId,
   sameAIConfigProviderFamily,
+  selectAIConfigCredential,
 } from '../src/ai-config'
 
 describe('ai-config shared core', () => {
@@ -82,6 +83,7 @@ describe('ai-config shared core', () => {
       enabled: true,
       apiKey: 'sk-ant-test',
       baseUrl: 'https://api.anthropic.com/v1',
+      credentialId: 'anthropic-default',
       selectedModelId: 'claude-sonnet-4',
     })
     expect(states.anthropic?.models).toEqual([
@@ -93,6 +95,61 @@ describe('ai-config shared core', () => {
         isCustom: true,
       },
     ])
+  })
+
+  it('selects the default credential before round-robin candidates', () => {
+    const selected = selectAIConfigCredential('openai', [
+      {
+        id: 'openai-oldest',
+        provider: '/settings/ai/providers.ttl#openai',
+        service: 'ai',
+        status: 'active',
+        apiKey: 'sk-oldest',
+        lastUsedAt: new Date('2026-05-13T01:00:00.000Z'),
+      },
+      {
+        id: 'openai-default',
+        provider: '/settings/ai/providers.ttl#openai',
+        service: 'ai',
+        status: 'active',
+        apiKey: 'sk-default',
+        isDefault: true,
+        lastUsedAt: new Date('2026-05-13T02:00:00.000Z'),
+      },
+    ])
+
+    expect(selected).toMatchObject({
+      credentialId: 'openai-default',
+      apiKey: 'sk-default',
+      isDefault: true,
+    })
+  })
+
+  it('round-robins non-default credentials by oldest lastUsedAt', () => {
+    const selected = selectAIConfigCredential('openai', [
+      {
+        id: 'openai-newer',
+        provider: '/settings/ai/providers.ttl#openai',
+        service: 'ai',
+        status: 'active',
+        apiKey: 'sk-newer',
+        lastUsedAt: new Date('2026-05-13T02:00:00.000Z'),
+      },
+      {
+        id: 'openai-older',
+        provider: '/settings/ai/providers.ttl#openai',
+        service: 'ai',
+        status: 'active',
+        apiKey: 'sk-older',
+        lastUsedAt: new Date('2026-05-13T01:00:00.000Z'),
+      },
+    ])
+
+    expect(selected).toMatchObject({
+      credentialId: 'openai-older',
+      apiKey: 'sk-older',
+      isDefault: false,
+    })
   })
 
   it('creates a shared mutation plan for provider, credential, and model writes', () => {
@@ -127,6 +184,7 @@ describe('ai-config shared core', () => {
       service: 'ai',
       status: 'active',
       apiKey: 'sk-ant-test',
+      isDefault: true,
     })
     expect(plan.modelUpserts).toHaveLength(1)
     expect(plan.modelUpserts[0]).toMatchObject({

@@ -1,4 +1,4 @@
-import { DCTerms, FOAF, LINX_MSG, SCHEMA, SIOC, UDFS, WF } from '../namespaces'
+import { DCTerms, FOAF, SCHEMA, SIOC, UDFS, WF } from '../namespaces'
 
 export const MessageVocab = {
   // Existing
@@ -15,13 +15,13 @@ export const MessageVocab = {
   updatedAt: DCTerms.modified,
 
   // Group message extensions
-  senderName: LINX_MSG.senderName,
-  senderAvatarUrl: LINX_MSG.senderAvatarUrl,
-  mentions: LINX_MSG.mentions,
-  replyTo: LINX_MSG.replyTo,
+  senderName: UDFS.senderName,
+  senderAvatarUrl: UDFS.senderAvatarUrl,
+  mentions: UDFS.mentions,
+  replyTo: UDFS.replyTo,
 
   // Multi-AI routing
-  routedBy: LINX_MSG.routedBy,
-  routeTargetAgentId: LINX_MSG.routeTargetAgentId,
-  coordinationId: LINX_MSG.coordinationId,
+  routedBy: UDFS.routedBy,
+  routeTargetAgentId: UDFS.routeTargetAgentId,
+  coordinationId: UDFS.coordinationId,
 } as const
