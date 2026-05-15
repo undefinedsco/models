@@ -1,6 +1,6 @@
 {
   "name": "@undefineds.co/models",
-  "version": "0.2.23",
+  "version": "0.2.24",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
@@ -80,7 +80,7 @@
     "@inrupt/vocab-common-rdf": "^1.0.5",
     "drizzle-orm": "^0.32.0",
     "n3": "^1.26.0",
-    "@undefineds.co/drizzle-solid": "^0.3.11",
+    "@undefineds.co/drizzle-solid": "^0.3.12",
     "zod": "^3.22.4"
   },
   "devDependencies": {
