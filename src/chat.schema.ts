@@ -16,7 +16,7 @@ export interface ChatMetadata {
  *   where a runtime executes.
  * - Runtime/workspace/place/session context belongs on Thread.
  * - Direct LinX CLI entry should use a chat representing the AI secretary.
- * - Watch entry should use a chat representing the watched agent/tool, such as
+ * - Auto-mode entry should use a chat representing the controlled agent/tool, such as
  *   Codex, Claude Code, or a concrete AI identity when available.
  *
  * Storage structure (aligned with xpod):

@@ -98,7 +98,7 @@ needed.
 Representative storage:
 
 ```text
-/.data/sessions/{yyyy}/{MM}.ttl#{sessionId}
+/.data/sessions/{yyyy}/{MM}/{dd}/{sessionId}.ttl
 /.data/workspaces/{workspaceId}/
 /.data/workspaces/{workspaceId}/.meta
 /.data/repositories/{repositoryId}.ttl
@@ -142,8 +142,8 @@ Credential selection is centralized in `selectAIConfigCredential`:
 Representative storage:
 
 ```text
-/settings/ai/providers.ttl#{providerId}
-/settings/ai/models/{providerId}.ttl#{modelId}
+/settings/providers/{providerId}.ttl
+/settings/providers/{providerId}.ttl#{modelId}
 /settings/credentials.ttl#{credentialId}
 ```
 

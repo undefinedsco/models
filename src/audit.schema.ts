@@ -1,6 +1,15 @@
 import { extractPodResourceTemplateValue, podTable, uri, string, timestamp, id } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms } from './namespaces'
 
+export function buildAuditSubjectPath(auditId: string, createdAt: Date | string | number = new Date()): string {
+  const date = createdAt instanceof Date ? createdAt : new Date(createdAt)
+  const safeDate = Number.isFinite(date.getTime()) ? date : new Date()
+  const yyyy = String(safeDate.getUTCFullYear())
+  const mm = String(safeDate.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(safeDate.getUTCDate()).padStart(2, '0')
+  return `/.data/audits/${yyyy}/${mm}/${dd}.ttl#${encodeURIComponent(auditId)}`
+}
+
 // Append-only audit entry resource (separate from Solid inbox notifications).
 // Audit entries are independent events; session/chat/thread are optional relations,
 // not storage ownership boundaries.
@@ -41,6 +50,9 @@ export const auditResource = podTable(
 )
 
 export function extractAuditIdFromAuditRef(auditRef: string | null | undefined): string | null {
+  if (auditRef && !/[/:#]/.test(auditRef)) {
+    return auditRef
+  }
   return extractPodResourceTemplateValue(auditResource, auditRef)
 }
 

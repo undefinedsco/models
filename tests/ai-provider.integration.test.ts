@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import { afterAll, describe, expect, it } from 'vitest'
 import { Session } from '@inrupt/solid-client-authn-node'
-import { drizzle, type SolidDatabase } from '@undefineds.co/drizzle-solid'
+import { drizzle, extractPodResourceTemplateValue, type SolidDatabase } from '@undefineds.co/drizzle-solid'
 import { aiProviderTable } from '../src/ai-provider.schema'
 import { solidSchema } from '../src/schema'
 import { startLocalXpod, type LocalXpodTestPod } from './utils/local-xpod'
@@ -74,16 +74,17 @@ describe('Solid Pod AIProvider CRUD', () => {
         id: providerId,
         baseUrl: 'https://api.test.com/v1',
         proxyUrl: 'https://proxy.test.com/v1',
-        hasModel: `/settings/ai/models/${providerId}.ttl#test-model`,
+        hasModel: `/settings/providers/${providerId}.ttl#test-model`,
       })
       .execute()
 
     const subject = (created as any)?.['@id'] || (created as any)?.source
     if (subject) createdIds.push(subject)
 
-    const record = await database.findByLocator(aiProviderTable, { id: providerId })
+    const record = await database.findById(aiProviderTable, providerId)
 
-    expect(record?.id).toBe(providerId)
+    expect(record?.id).toBe(`${providerId}.ttl`)
+    expect(extractPodResourceTemplateValue(aiProviderTable, record?.id)).toBe(providerId)
     expect(record?.baseUrl).toBe('https://api.test.com/v1')
     expect(record?.proxyUrl).toBe('https://proxy.test.com/v1')
     expect(record?.hasModel).toContain('#test-model')
@@ -105,13 +106,13 @@ describe('Solid Pod AIProvider CRUD', () => {
     const subject = (created as any)?.['@id'] || (created as any)?.source
     if (subject) createdIds.push(subject)
 
-    const updated = await database.updateByLocator(aiProviderTable, { id: providerId }, {
+    const updated = await database.updateById(aiProviderTable, providerId, {
       baseUrl: 'https://api.updated.com/v1',
     })
 
     expect(updated?.baseUrl).toBe('https://api.updated.com/v1')
 
-    await expect(database.deleteByLocator(aiProviderTable, { id: providerId })).resolves.toBe(true)
-    await expect(database.findByLocator(aiProviderTable, { id: providerId })).resolves.toBeNull()
+    await expect(database.deleteById(aiProviderTable, providerId)).resolves.toBe(true)
+    await expect(database.findById(aiProviderTable, providerId)).resolves.toBeNull()
   })
 })

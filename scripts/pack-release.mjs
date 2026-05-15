@@ -99,10 +99,6 @@ function createPublishablePackage(packageJson, packageVersion) {
         types: './dist/vocab/sidecar.vocab.d.ts',
         default: './dist/vocab/sidecar.vocab.js',
       },
-      './watch': {
-        types: './dist/watch/index.d.ts',
-        default: './dist/watch/index.js',
-      },
     },
     publishConfig: {
       access: 'public',

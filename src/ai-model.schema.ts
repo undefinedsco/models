@@ -12,7 +12,7 @@ export const aiModelResource = podTable("aiModel", {
   createdAt: timestamp("createdAt").predicate(XPOD_AI.createdAt).notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").predicate(XPOD_AI.updatedAt).notNull().defaultNow(),
 }, {
-  base: "/settings/ai/models/",
+  base: "/settings/providers/",
   type: XPOD_AI.Model,
   namespace: XPOD_AI,
   subjectTemplate: "{isProvidedBy|id}.ttl#{id}",

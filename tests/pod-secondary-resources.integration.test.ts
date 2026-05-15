@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from 'vitest'
 import { Session } from '@inrupt/solid-client-authn-node'
-import { drizzle, eq, type SolidDatabase } from '@undefineds.co/drizzle-solid'
+import { drizzle, eq, extractPodResourceTemplateValue, type SolidDatabase } from '@undefineds.co/drizzle-solid'
 import { aiModelTable } from '../src/ai-model.schema'
 import { aiProviderTable } from '../src/ai-provider.schema'
 import { approvalResource } from '../src/approval.schema'
@@ -107,9 +107,14 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       failCount: 0,
     }).execute()
     await expect(database.findByIri(credentialTable, credentialIri)).resolves.toMatchObject({
-      id: credentialId,
+      id: `#${credentialId}`,
       label: 'Smoke credential',
     })
+    await expect(database.findById(credentialTable, credentialId)).resolves.toMatchObject({
+      id: `#${credentialId}`,
+      label: 'Smoke credential',
+    })
+    expect(extractPodResourceTemplateValue(credentialTable, credentialIri)).toBe(credentialId)
     await expect(database.updateByIri(credentialTable, credentialIri, {
       label: 'Smoke credential updated',
       failCount: 1,
@@ -130,7 +135,7 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       updatedAt: now,
     }).execute()
     await expect(database.findByIri(aiModelTable, modelIri)).resolves.toMatchObject({
-      id: modelId,
+      id: `${providerId}.ttl#${modelId}`,
       displayName: 'Smoke Model',
     })
     await expect(database.updateByIri(aiModelTable, modelIri, {
@@ -190,9 +195,10 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       starred: false,
     }).execute()
     await expect(database.findByIri(fileTable, fileIri)).resolves.toMatchObject({
-      id: fileId,
+      id: `${fileId}.ttl`,
       name: 'smoke.txt',
     })
+    expect(extractPodResourceTemplateValue(fileTable, fileIri)).toBe(fileId)
     await expect(database.updateByIri(fileTable, fileIri, {
       name: 'smoke-updated.txt',
       size: 13,
@@ -217,9 +223,10 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       updatedAt: now,
     }).execute()
     await expect(database.findByIri(favoriteTable, favoriteIri)).resolves.toMatchObject({
-      id: favoriteId,
+      id: `${favoriteId}.ttl`,
       title: 'Smoke Favorite',
     })
+    expect(extractPodResourceTemplateValue(favoriteTable, favoriteIri)).toBe(favoriteId)
     await expect(database.updateByIri(favoriteTable, favoriteIri, {
       title: 'Smoke Favorite updated',
       updatedAt: now,
@@ -236,9 +243,10 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       createdAt: now,
     }).execute()
     await expect(database.findByIri(inboxNotificationTable, inboxIri)).resolves.toMatchObject({
-      id: inboxId,
+      id: `${inboxId}.ttl`,
       object: approvalObjectIri,
     })
+    expect(extractPodResourceTemplateValue(inboxNotificationTable, inboxIri)).toBe(inboxId)
     await expect(database.updateByIri(inboxNotificationTable, inboxIri, {
       actor: `${podBase}/profile/card#updated`,
       createdAt: now,

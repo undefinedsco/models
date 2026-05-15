@@ -294,7 +294,7 @@ Actual Pod resource subjects should be user-owned Pod URLs, for example:
 </.data/agents/secretary/>
 </.data/repositories/linx.ttl>
 </.data/workspaces/linx-feature-login/>
-</.data/sessions/2026/05.ttl#sess-123>
+</.data/sessions/2026/05/14/sess-123.ttl>
 ```
 
 The namespace identifies predicate semantics. The Pod URL identifies the user's

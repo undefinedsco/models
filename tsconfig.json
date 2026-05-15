@@ -9,8 +9,7 @@
     "src/n3.d.ts",
     "src/profile.ts",
     "src/profile.repository.ts",
-    "src/profile.schema.ts",
-    "src/watch/index.ts"
+    "src/profile.schema.ts"
   ],
   "compilerOptions": {
     "target": "ES2020",

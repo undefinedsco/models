@@ -9,10 +9,10 @@ export const aiProviderResource = podTable("aiProvider", {
   hasModel: uri("hasModel").predicate(XPOD_AI.hasModel).link("aiModel"),
   defaultModel: uri("defaultModel").predicate(XPOD_AI.defaultModel).link("aiModel"),
 }, {
-  base: "/settings/ai/providers.ttl",
+  base: "/settings/providers/",
   type: XPOD_AI.Provider,
   namespace: XPOD_AI,
-  subjectTemplate: "#{id}",
+  subjectTemplate: "{id}.ttl",
 })
 
 // Compatibility alias. New model code should prefer `aiProviderResource`.

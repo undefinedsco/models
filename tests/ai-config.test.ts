@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   aiConfigModelRef,
   aiConfigProviderRef,
+  buildAIConfigDisconnectPlan,
   buildAIConfigMutationPlan,
   buildAIConfigProviderStateMap,
   getAIConfigProviderFamilyIds,
@@ -21,8 +22,13 @@ describe('ai-config shared core', () => {
     expect(getAIConfigProviderFamilyIds('claude')).toEqual(['anthropic', 'claude'])
     expect(getAIConfigProviderFamilyIds('openai')).toEqual(['openai', 'codex'])
     expect(getAIConfigProviderFamilyIds('xai')).toEqual(['x-ai', 'xai'])
-    expect(sameAIConfigProviderFamily('https://pod.example/settings/ai/providers.ttl#claude', 'anthropic')).toBe(true)
-    expect(sameAIConfigProviderFamily('xai', 'https://pod.example/settings/ai/providers.ttl#x-ai')).toBe(true)
+    expect(sameAIConfigProviderFamily('https://pod.example/settings/providers/claude.ttl', 'anthropic')).toBe(true)
+    expect(sameAIConfigProviderFamily('claude.ttl', 'anthropic')).toBe(true)
+    expect(sameAIConfigProviderFamily('settings/providers/claude.ttl', 'anthropic')).toBe(true)
+    expect(sameAIConfigProviderFamily('xai', 'https://pod.example/settings/providers/x-ai.ttl')).toBe(true)
+    expect(normalizeAIConfigResourceId('credentials.ttl#openai-default')).toBe('openai-default')
+    expect(normalizeAIConfigResourceId('/settings/providers/openai.ttl')).toBe('openai')
+    expect(normalizeAIConfigResourceId('settings/providers/openai.ttl')).toBe('openai')
   })
 
   it('keeps LinX cloud models out of Pod-backed user AI config defaults', () => {
@@ -44,25 +50,26 @@ describe('ai-config shared core', () => {
   it('normalizes provider-qualified model ids only in provider context', () => {
     expect(normalizeAIConfigResourceId('undefineds/linx')).toBe('undefineds/linx')
     expect(normalizeAIConfigModelId('anthropic/claude-sonnet-4', 'anthropic')).toBe('claude-sonnet-4')
+    expect(normalizeAIConfigModelId('anthropic.ttl#claude-sonnet-4', 'anthropic')).toBe('claude-sonnet-4')
     expect(normalizeAIConfigModelId('openrouter/openai/gpt-4o-mini', 'openrouter')).toBe('openai/gpt-4o-mini')
-    expect(normalizeAIConfigModelId('https://pod.example/settings/ai/models/anthropic.ttl#claude-sonnet-4', 'anthropic')).toBe('claude-sonnet-4')
-    expect(aiConfigModelRef('anthropic', 'claude-sonnet-4')).toBe('/settings/ai/models/anthropic.ttl#claude-sonnet-4')
+    expect(normalizeAIConfigModelId('https://pod.example/settings/providers/anthropic.ttl#claude-sonnet-4', 'anthropic')).toBe('claude-sonnet-4')
+    expect(aiConfigModelRef('anthropic', 'claude-sonnet-4')).toBe('/settings/providers/anthropic.ttl#claude-sonnet-4')
   })
 
-  it('builds provider state from split AI config tables', () => {
+  it('builds provider state from provider-scoped AI config resources', () => {
     const states = buildAIConfigProviderStateMap({
       fallbackToCatalogModels: false,
       providerRows: [
         {
           id: 'anthropic',
           baseUrl: 'https://api.anthropic.com/v1',
-          hasModel: '/settings/ai/models/anthropic.ttl#claude-sonnet-4',
+          hasModel: '/settings/providers/anthropic.ttl#claude-sonnet-4',
         },
       ],
       credentialRows: [
         {
-          id: 'anthropic-default',
-          provider: '/settings/ai/providers.ttl#claude',
+          id: 'credentials.ttl#anthropic-default',
+          provider: '/settings/providers/claude.ttl',
           service: 'ai',
           status: 'active',
           apiKey: 'sk-ant-test',
@@ -72,7 +79,7 @@ describe('ai-config shared core', () => {
         {
           id: 'anthropic.ttl#claude-sonnet-4',
           displayName: 'Claude Sonnet 4',
-          isProvidedBy: '/settings/ai/providers.ttl#anthropic',
+          isProvidedBy: '/settings/providers/anthropic.ttl',
           status: 'active',
         },
       ],
@@ -101,7 +108,7 @@ describe('ai-config shared core', () => {
     const selected = selectAIConfigCredential('openai', [
       {
         id: 'openai-oldest',
-        provider: '/settings/ai/providers.ttl#openai',
+        provider: '/settings/providers/openai.ttl',
         service: 'ai',
         status: 'active',
         apiKey: 'sk-oldest',
@@ -109,7 +116,7 @@ describe('ai-config shared core', () => {
       },
       {
         id: 'openai-default',
-        provider: '/settings/ai/providers.ttl#openai',
+        provider: '/settings/providers/openai.ttl',
         service: 'ai',
         status: 'active',
         apiKey: 'sk-default',
@@ -129,7 +136,7 @@ describe('ai-config shared core', () => {
     const selected = selectAIConfigCredential('openai', [
       {
         id: 'openai-newer',
-        provider: '/settings/ai/providers.ttl#openai',
+        provider: '/settings/providers/openai.ttl',
         service: 'ai',
         status: 'active',
         apiKey: 'sk-newer',
@@ -137,7 +144,7 @@ describe('ai-config shared core', () => {
       },
       {
         id: 'openai-older',
-        provider: '/settings/ai/providers.ttl#openai',
+        provider: '/settings/providers/openai.ttl',
         service: 'ai',
         status: 'active',
         apiKey: 'sk-older',
@@ -194,5 +201,39 @@ describe('ai-config shared core', () => {
       status: 'active',
     })
     expect(plan.modelDeleteIds).toEqual([])
+  })
+
+  it('builds a shared disconnect plan for provider alias credentials', () => {
+    const plan = buildAIConfigDisconnectPlan({
+      providerId: 'claude',
+      currentCredentialRows: [
+        {
+          id: 'credentials.ttl#anthropic-default',
+          provider: '/settings/providers/anthropic.ttl',
+          service: 'ai',
+          status: 'active',
+          apiKey: 'sk-ant-test',
+        },
+        {
+          id: 'claude-default',
+          provider: '/settings/providers/claude.ttl',
+          service: 'ai',
+          status: 'active',
+          apiKey: 'sk-claude-test',
+        },
+        {
+          id: 'openai-default',
+          provider: '/settings/providers/openai.ttl',
+          service: 'ai',
+          status: 'active',
+          apiKey: 'sk-openai-test',
+        },
+      ],
+    })
+
+    expect(plan).toEqual({
+      providerId: 'anthropic',
+      credentialDeleteIds: ['anthropic-default', 'claude-default'],
+    })
   })
 })

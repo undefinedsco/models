@@ -6,6 +6,19 @@ import { threadResource } from '../thread.schema'
 export type SessionType = 'direct' | 'group' | 'imported-readonly'
 export type SessionStatus = 'active' | 'paused' | 'completed' | 'error' | 'archived'
 
+export function buildSessionResourceId(sessionId: string, createdAt: Date | string | number = new Date()): string {
+  const date = createdAt instanceof Date ? createdAt : new Date(createdAt)
+  const safeDate = Number.isFinite(date.getTime()) ? date : new Date()
+  const yyyy = String(safeDate.getUTCFullYear())
+  const mm = String(safeDate.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(safeDate.getUTCDate()).padStart(2, '0')
+  return `${yyyy}/${mm}/${dd}/${encodeURIComponent(sessionId)}.ttl`
+}
+
+export function buildSessionSubjectPath(sessionId: string, createdAt: Date | string | number = new Date()): string {
+  return `/.data/sessions/${buildSessionResourceId(sessionId, createdAt)}`
+}
+
 export function buildRuntimeSessionIri(sessionId: string): string {
   return `urn:linx:runtime-session:${sessionId}`
 }
@@ -14,7 +27,26 @@ export function extractRuntimeSessionId(sessionRef: string | null | undefined): 
   if (!sessionRef) return null
   const runtimeMatch = sessionRef.match(/^urn:linx:runtime-session:(.+)$/)
   if (runtimeMatch?.[1]) return runtimeMatch[1]
-  return extractPodResourceTemplateValue(sessionResource, sessionRef)
+  return extractSessionIdFromSessionRef(sessionRef)
+}
+
+export function extractSessionIdFromSessionRef(sessionRef: string | null | undefined): string | null {
+  if (!sessionRef) return null
+
+  const templateId = extractPodResourceTemplateValue(sessionResource, sessionRef)
+  if (templateId) return templateId
+
+  const legacyFragmentMatch = sessionRef.match(/\.ttl#([^/?#]+)$/)
+  if (legacyFragmentMatch?.[1]) {
+    return decodeURIComponent(legacyFragmentMatch[1])
+  }
+
+  const documentMatch = sessionRef.match(/\/([^/?#]+)\.ttl(?:$|[?#])/)
+  if (documentMatch?.[1]) {
+    return decodeURIComponent(documentMatch[1])
+  }
+
+  return null
 }
 
 /**
@@ -27,7 +59,7 @@ export function extractRuntimeSessionId(sessionRef: string | null | undefined): 
  * - the durable conversation timeline, which is Thread
  *
  * Storage structure:
- * - Location: /.data/sessions/{yyyy}/{MM}.ttl#{id}
+ * - Location: /.data/sessions/{yyyy}/{MM}/{dd}/{id}.ttl
  * - Primary use: runtime lifecycle projection for a concrete Thread
  *
  * Contract notes:
@@ -54,6 +86,7 @@ export const sessionResource = podTable(
     status: string('status').predicate(UDFS.sessionStatus).notNull().default('active'),
     tool: string('tool').predicate(UDFS.sessionTool),
     tokenUsage: integer('tokenUsage').predicate(UDFS.tokenUsage).default(0),
+    messageResources: uri('messageResources').predicate(UDFS.messageResource).array(),
 
     policy: uri('policy').predicate(UDFS.policy),
     policyVersion: string('policyVersion').predicate(UDFS.policyVersion),
@@ -69,7 +102,7 @@ export const sessionResource = podTable(
     sparqlEndpoint: '/.data/sessions/-/sparql',
     type: UDFS.term('Session'),
     namespace: UDFS,
-    subjectTemplate: '{yyyy}/{MM}.ttl#{id}',
+    subjectTemplate: '{yyyy}/{MM}/{dd}/{id}.ttl',
   },
 )
 

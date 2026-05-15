@@ -103,8 +103,8 @@ provider, and which credential should be used for a provider call?
 The resources are:
 
 ```text
-aiProviderResource   /settings/ai/providers.ttl#{providerId}
-aiModelResource      /settings/ai/models/{providerId}.ttl#{modelId}
+aiProviderResource   /settings/providers/{providerId}.ttl
+aiModelResource      /settings/providers/{providerId}.ttl#{modelId}
 credentialResource   /settings/credentials.ttl#{credentialId}
 ```
 
@@ -201,9 +201,9 @@ Representative paths:
 /.data/chat/{chatId}/index.ttl#{threadId}
 /.data/chat/{chatId}/{yyyy}/{MM}/{dd}/messages.ttl#{messageId}
 /.data/agents/{agentId}/profile.ttl
-/.data/sessions/{yyyy}/{MM}.ttl#{sessionId}
-/settings/ai/providers.ttl#{providerId}
-/settings/ai/models/{providerId}.ttl#{modelId}
+/.data/sessions/{yyyy}/{MM}/{dd}/{sessionId}.ttl
+/settings/providers/{providerId}.ttl
+/settings/providers/{providerId}.ttl#{modelId}
 /settings/credentials.ttl#{credentialId}
 ```
 

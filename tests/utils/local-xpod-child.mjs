@@ -2,7 +2,15 @@ import fs from 'node:fs'
 import path from 'node:path'
 import net from 'node:net'
 import process from 'node:process'
-import { getFreePort, startXpodRuntime } from '@undefineds.co/xpod/runtime'
+
+async function loadXpodRuntime() {
+  if (process.env.LINX_XPOD_RUNTIME_SOURCE === 'local') {
+    return await import('../../../../../xpod/dist/runtime/index.js')
+  }
+  return await import('@undefineds.co/xpod/runtime')
+}
+
+const { getFreePort, startXpodRuntime } = await loadXpodRuntime()
 
 const readyPrefix = 'LINX_XPOD_READY '
 const runtimeRoot = process.env.LINX_XPOD_RUNTIME_ROOT

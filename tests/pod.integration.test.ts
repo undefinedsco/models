@@ -135,7 +135,9 @@ describe('Solid Pod live CRUD core surfaces', () => {
     const auditId = testId('audit')
 
     const chatIri = database.resolveLocatorIri(chatTable, { id: chatId })
+    const chatResourceId = database.resolveResourceId(chatTable, chatIri)
     const threadIri = database.resolveLocatorIri(threadTable, { id: threadId, chat: chatIri })
+    const threadResourceId = database.resolveResourceId(threadTable, threadIri)
 
     await step('chat.create', () => database.insert(chatTable).values({
       id: chatId,
@@ -147,7 +149,7 @@ describe('Solid Pod live CRUD core surfaces', () => {
       lastActiveAt: now,
     }).execute())
     await step('chat.read', async () => expect(database.findByIri(chatTable, chatIri)).resolves.toMatchObject({
-      id: chatId,
+      id: chatResourceId,
       title: 'Pod CRUD chat',
     }))
     await step('chat.update', async () => expect(database.updateByIri(chatTable, chatIri, {
@@ -165,7 +167,7 @@ describe('Solid Pod live CRUD core surfaces', () => {
       updatedAt: now,
     }).execute())
     await step('thread.read', async () => expect(database.findByIri(threadTable, threadIri)).resolves.toMatchObject({
-      id: threadId,
+      id: threadResourceId,
       title: 'Pod CRUD thread',
     }))
     await step('thread.update', async () => expect(database.updateByIri(threadTable, threadIri, {
@@ -185,8 +187,15 @@ describe('Solid Pod live CRUD core surfaces', () => {
       updatedAt: now,
     }).execute())
     const messageIri = database.resolveLocatorIri(messageTable, { id: messageId, chat: chatIri, createdAt: now })
+    const messageResourceId = database.resolveResourceId(messageTable, messageIri)
     const messageDocUrl = messageIri.split('#')[0]
     await step('message.read', async () => expectResourceContains(session!, messageDocUrl, 'Pod CRUD message'))
+    await step('message.read-resource-id', async () => expect(database.findById(messageTable, messageResourceId)).resolves.toMatchObject({
+      content: 'Pod CRUD message',
+    }))
+    await step('message.read-naked-id', async () => expect(database.findById(messageTable, messageId)).resolves.toMatchObject({
+      content: 'Pod CRUD message',
+    }))
     await step('message.update', async () => {
       const result = await database.update(messageTable).set({
         content: 'Pod CRUD message updated',
@@ -199,6 +208,7 @@ describe('Solid Pod live CRUD core surfaces', () => {
     await step('message.verify-update', async () => expectResourceContains(session!, messageDocUrl, 'Pod CRUD message updated'))
 
     const runtimeSessionIri = database.resolveLocatorIri(sessionTable, { id: runtimeSessionId, createdAt: now })
+    const runtimeSessionResourceId = database.resolveResourceId(sessionTable, runtimeSessionIri)
     const [createdSession] = await step('session.create', () => database.insert(sessionTable).values({
       id: runtimeSessionId,
       ownerWebId: webId,
@@ -215,12 +225,28 @@ describe('Solid Pod live CRUD core surfaces', () => {
     }).execute())
     expect(subjectIri(createdSession as Record<string, unknown>)).toBe(runtimeSessionIri.split('#')[0])
     await step('session.read', async () => expect(database.findByIri(sessionTable, runtimeSessionIri)).resolves.toMatchObject({
-      id: runtimeSessionId,
+      id: runtimeSessionResourceId,
       chat: chatIri,
       thread: threadIri,
       status: 'active',
       tokenUsage: 12,
     }))
+    await step('session.read-resource-id', async () => expect(database.findById(sessionTable, runtimeSessionResourceId)).resolves.toMatchObject({
+      chat: chatIri,
+      thread: threadIri,
+      status: 'active',
+      tokenUsage: 12,
+    }))
+    await step('session.read-naked-id', async () => expect(database.findById(sessionTable, runtimeSessionId)).resolves.toMatchObject({
+      chat: chatIri,
+      thread: threadIri,
+      status: 'active',
+      tokenUsage: 12,
+    }))
+    await step('session.update-naked-id', async () => expect(database.updateById(sessionTable, runtimeSessionId, {
+      status: 'paused',
+      updatedAt: new Date('2026-01-02T04:06:30.000Z'),
+    })).resolves.toMatchObject({ status: 'paused' }))
     await step('session.update', async () => expect(database.updateByIri(sessionTable, runtimeSessionIri, {
       status: 'completed',
       tokenUsage: 34,
@@ -228,6 +254,7 @@ describe('Solid Pod live CRUD core surfaces', () => {
     })).resolves.toMatchObject({ status: 'completed', tokenUsage: 34 }))
 
     const approvalIri = database.resolveLocatorIri(approvalResource, { id: approvalId, createdAt: now })
+    const approvalResourceId = database.resolveResourceId(approvalResource, approvalIri)
     await step('approval.create', () => database.insert(approvalResource).values({
       id: approvalId,
       session: runtimeSessionIri,
@@ -247,7 +274,7 @@ describe('Solid Pod live CRUD core surfaces', () => {
       expiresAt: new Date('2026-01-02T03:05:05.000Z'),
     }).execute())
     await step('approval.read', async () => expect(database.findByIri(approvalResource, approvalIri)).resolves.toMatchObject({
-      id: approvalId,
+      id: approvalResourceId,
       status: 'pending',
       toolName: 'shell',
       approvalOptions: JSON.stringify([
@@ -255,6 +282,17 @@ describe('Solid Pod live CRUD core surfaces', () => {
         { optionId: 'allow_always', label: 'Always allow', kind: 'allow_always' },
       ]),
     }))
+    await step('approval.read-resource-id', async () => expect(database.findById(approvalResource, approvalResourceId)).resolves.toMatchObject({
+      status: 'pending',
+      toolName: 'shell',
+    }))
+    await step('approval.read-naked-id', async () => expect(database.findById(approvalResource, approvalId)).resolves.toMatchObject({
+      status: 'pending',
+      toolName: 'shell',
+    }))
+    await step('approval.update-naked-id', async () => expect(database.updateById(approvalResource, approvalId, {
+      context: 'short-id update covered by ORM',
+    })).resolves.toMatchObject({ context: 'short-id update covered by ORM' }))
     await step('approval.update', async () => expect(database.updateByIri(approvalResource, approvalIri, {
       status: 'approved',
       decisionBy: webId,
@@ -264,6 +302,7 @@ describe('Solid Pod live CRUD core surfaces', () => {
     })).resolves.toMatchObject({ status: 'approved', decisionBy: webId }))
 
     const grantIri = database.resolveLocatorIri(grantResource, { id: grantId })
+    const grantResourceId = database.resolveResourceId(grantResource, grantIri)
     await step('grant.create', () => database.insert(grantResource).values({
       id: grantId,
       target: `${baseUrl}/workspace/${threadId}/`,
@@ -290,7 +329,7 @@ describe('Solid Pod live CRUD core surfaces', () => {
       createdAt: now,
     }).execute())
     await step('grant.read', async () => expect(database.findByIri(grantResource, grantIri)).resolves.toMatchObject({
-      id: grantId,
+      id: grantResourceId,
       title: 'Integration grant',
       summary: 'Integration test semantic grant wiki page.',
       body: 'Allow semantically equivalent command approvals in this integration session.',
@@ -313,6 +352,7 @@ describe('Solid Pod live CRUD core surfaces', () => {
     })).resolves.toMatchObject({ riskCeiling: 'high', wikiStatus: 'reviewed' }))
 
     const auditIri = database.resolveLocatorIri(auditResource, { id: auditId, createdAt: now })
+    const auditResourceId = database.resolveResourceId(auditResource, auditIri)
     await step('audit.create', () => database.insert(auditResource).values({
       id: auditId,
       action: 'approval_requested',
@@ -326,7 +366,15 @@ describe('Solid Pod live CRUD core surfaces', () => {
       createdAt: now,
     }).execute())
     await step('audit.read', async () => expect(database.findByIri(auditResource, auditIri)).resolves.toMatchObject({
-      id: auditId,
+      id: auditResourceId,
+      action: 'approval_requested',
+      actor: webId,
+    }))
+    await step('audit.read-resource-id', async () => expect(database.findById(auditResource, auditResourceId)).resolves.toMatchObject({
+      action: 'approval_requested',
+      actor: webId,
+    }))
+    await step('audit.read-naked-id', async () => expect(database.findById(auditResource, auditId)).resolves.toMatchObject({
       action: 'approval_requested',
       actor: webId,
     }))

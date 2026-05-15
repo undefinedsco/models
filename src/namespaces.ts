@@ -130,6 +130,7 @@ export const UDFS = createNamespace('udfs', 'https://undefineds.co/ns#', {
   inThread: 'inThread',
   participants: 'participants',
   messageContent: 'messageContent',
+  messageResource: 'messageResource',
   messageType: 'messageType',
   messageStatus: 'messageStatus',
   readBy: 'readBy',

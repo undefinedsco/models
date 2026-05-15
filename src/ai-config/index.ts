@@ -64,6 +64,11 @@ export interface AIConfigMutationPlan {
   modelDeleteIds: string[]
 }
 
+export interface AIConfigDisconnectPlan {
+  providerId: string
+  credentialDeleteIds: string[]
+}
+
 export const UNDEFINEDS_AI_PROVIDER_ID = 'undefineds'
 export const UNDEFINEDS_AI_PROVIDER_DISPLAY_NAME = 'undefineds'
 export const UNDEFINEDS_AI_BASE_URL = 'https://api.undefineds.co/v1'
@@ -226,11 +231,16 @@ export function normalizeAIConfigResourceId(raw?: string | null): string {
     return value
   }
   const clean = value.replace(/\/$/, '')
-  if (!ABSOLUTE_IRI.test(value)) {
-    return clean.endsWith('.ttl') ? clean.slice(0, -4) : clean
-  }
   const tail = clean.split('/').pop() || clean
   return tail.endsWith('.ttl') ? tail.slice(0, -4) : tail
+}
+
+function aiConfigResourceRefToProviderId(raw?: string | null): string {
+  return normalizeAIConfigProviderId(raw)
+}
+
+function aiConfigResourceRefToModelId(raw: string | null | undefined, providerId: string): string {
+  return normalizeAIConfigModelId(raw, providerId)
 }
 
 export function normalizeAIConfigModelId(raw?: string | null, providerId?: string | null): string {
@@ -260,8 +270,20 @@ export function normalizeAIConfigProviderId(raw?: string | null): string {
   return normalized
 }
 
+function aiConfigProviderRowId(row: Partial<AIProviderRow> & Record<string, unknown>): string {
+  return aiConfigResourceRefToProviderId(String(row.id ?? row['@id'] ?? ''))
+}
+
+function aiConfigCredentialProviderId(row: Partial<CredentialRow> & Record<string, unknown>): string {
+  return aiConfigResourceRefToProviderId(String(row.provider ?? row.id ?? ''))
+}
+
+function aiConfigModelProviderId(row: Partial<AIModelRow> & Record<string, unknown>): string {
+  return aiConfigResourceRefToProviderId(String(row.isProvidedBy ?? ''))
+}
+
 function normalizeAIConfigModelStorageId(raw: string | null | undefined, providerId: string): string {
-  return normalizeAIConfigModelId(raw, providerId)
+  return aiConfigResourceRefToModelId(raw, providerId)
 }
 
 export function sameAIConfigProviderFamily(left?: string | null, right?: string | null): boolean {
@@ -284,7 +306,8 @@ export function getDefaultAIConfigCredentialId(providerId: string): string {
 }
 
 export function aiConfigProviderRef(providerId: string): string {
-  return normalizeAIConfigProviderId(providerId)
+  const provider = normalizeAIConfigProviderId(providerId)
+  return provider ? `/settings/providers/${provider}.ttl` : provider
 }
 
 export function aiConfigModelRef(providerId: string, modelId?: string): string {
@@ -294,7 +317,7 @@ export function aiConfigModelRef(providerId: string, modelId?: string): string {
 
   const provider = normalizeAIConfigProviderId(providerId)
   const model = normalizeAIConfigModelStorageId(modelId, provider)
-  return provider && model ? `/settings/ai/models/${provider}.ttl#${model}` : model
+  return provider && model ? `/settings/providers/${provider}.ttl#${model}` : model
 }
 
 export function selectAIConfigCredential(
@@ -333,14 +356,16 @@ export function selectAIConfigCredential(
 
   const defaults = candidates.filter((row) => normalizeOptionalBoolean(row.isDefault))
   const credential = [...(defaults.length > 0 ? defaults : candidates)].sort(sortByRotation)[0]
-  const providerRow = providerRows.find((row) => sameAIConfigProviderFamily(String(row.id ?? row['@id'] ?? ''), provider))
+  const providerRow = providerRows.find((row) => sameAIConfigProviderFamily(aiConfigProviderRowId(row), provider))
   const apiKey = normalizeOptionalText(credential.apiKey)
   if (!apiKey) return undefined
 
   return {
     providerId: provider,
     credential,
-    credentialId: normalizeOptionalText(credential.id) ?? normalizeOptionalText(credential['@id']),
+    credentialId: normalizeAIConfigResourceId(
+      normalizeOptionalText(credential.id) ?? normalizeOptionalText(credential['@id']),
+    ),
     credentialLabel: normalizeOptionalText(credential.label),
     apiKey,
     baseUrl:
@@ -352,6 +377,18 @@ export function selectAIConfigCredential(
   }
 }
 
+// Compatibility aliases for older app/CLI call sites. New code should prefer
+// `aiConfigProviderRef` / `aiConfigModelRef`, which match current resource schemas.
+export function aiConfigProviderUri(providerId: string): string {
+  return aiConfigProviderRef(providerId)
+}
+
+export function aiConfigModelUri(modelId: string, providerId?: string): string {
+  return providerId
+    ? aiConfigModelRef(providerId, modelId)
+    : normalizeAIConfigResourceId(modelId)
+}
+
 export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStateMapOptions): Record<string, AIConfigProviderState> {
   const catalog = options.catalog ?? AI_CONFIG_PROVIDER_CATALOG
   const fallbackToCatalogModels = options.fallbackToCatalogModels ?? true
@@ -360,7 +397,7 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
 
   const providerMap = new Map<string, Partial<AIProviderRow> & Record<string, unknown>>()
   for (const row of options.providerRows) {
-    const providerId = normalizeAIConfigProviderId(String(row.id ?? row['@id'] ?? ''))
+    const providerId = aiConfigProviderRowId(row)
     if (!providerId) continue
     const previous = providerMap.get(providerId) ?? {}
     providerMap.set(providerId, { ...previous, ...row })
@@ -368,14 +405,14 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
 
   const credentialProviderIds = new Set<string>()
   for (const row of options.credentialRows) {
-    const providerId = normalizeAIConfigProviderId(String(row.provider ?? row.id ?? ''))
+    const providerId = aiConfigCredentialProviderId(row)
     if (!providerId) continue
     credentialProviderIds.add(providerId)
   }
 
   const modelMap = new Map<string, AIConfigModel[]>()
   for (const row of options.modelRows) {
-    const providerId = normalizeAIConfigProviderId(String(row.isProvidedBy ?? ''))
+    const providerId = aiConfigModelProviderId(row)
     if (!providerId) continue
 
     const modelId = normalizeAIConfigModelStorageId(String(row.id ?? row['@id'] ?? ''), providerId)
@@ -446,11 +483,11 @@ export function buildAIConfigMutationPlan(input: {
 }): AIConfigMutationPlan {
   const providerId = normalizeAIConfigProviderId(input.providerId)
   const metadata = getAIConfigProviderMetadata(providerId)
-  const existingProvider = input.currentProviderRows.find((row) => sameAIConfigProviderFamily(String(row.id ?? row['@id'] ?? ''), providerId))
+  const existingProvider = input.currentProviderRows.find((row) => sameAIConfigProviderFamily(aiConfigProviderRowId(row), providerId))
   const existingCredential =
     selectAIConfigCredential(providerId, input.currentCredentialRows, input.currentProviderRows)?.credential
-    ?? input.currentCredentialRows.find((row) => sameAIConfigProviderFamily(String(row.provider ?? row.id ?? ''), providerId))
-  const existingModels = input.currentModelRows.filter((row) => sameAIConfigProviderFamily(String(row.isProvidedBy ?? ''), providerId))
+    ?? input.currentCredentialRows.find((row) => sameAIConfigProviderFamily(aiConfigCredentialProviderId(row), providerId))
+  const existingModels = input.currentModelRows.filter((row) => sameAIConfigProviderFamily(aiConfigModelProviderId(row), providerId))
   const hasConfigUpdate = input.updates.enabled !== undefined || input.updates.apiKey !== undefined || input.updates.baseUrl !== undefined
 
   let providerPayload: AIProviderInsert | undefined
@@ -542,5 +579,36 @@ export function buildAIConfigMutationPlan(input: {
     credentialPayload,
     modelUpserts,
     modelDeleteIds,
+  }
+}
+
+export function buildAIConfigDisconnectPlan(input: {
+  providerId: string
+  currentCredentialRows: Array<Partial<CredentialRow> & Record<string, unknown>>
+}): AIConfigDisconnectPlan {
+  const providerId = normalizeAIConfigProviderId(input.providerId)
+  const credentialDeleteIds: string[] = []
+  const seen = new Set<string>()
+
+  for (const row of input.currentCredentialRows) {
+    const rowProvider = normalizeOptionalText(row.provider) ?? normalizeOptionalText(row.id)
+    if (!sameAIConfigProviderFamily(rowProvider, providerId)) {
+      continue
+    }
+
+    const id = normalizeAIConfigResourceId(
+      normalizeOptionalText(row.id) ?? normalizeOptionalText(row['@id']),
+    )
+    if (!id || seen.has(id)) {
+      continue
+    }
+
+    seen.add(id)
+    credentialDeleteIds.push(id)
+  }
+
+  return {
+    providerId,
+    credentialDeleteIds,
   }
 }
