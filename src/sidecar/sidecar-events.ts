@@ -93,7 +93,7 @@ export const SessionStateEventV1Schema = z
     version: z.literal(1).optional(),
 
     sessionId: z.string(),
-    chatId: z.string(),
+    chat: z.string(),
     policy: z.string().optional(),
     policyVersion: z.string().optional(),
     status: SessionStatusSchema,

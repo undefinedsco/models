@@ -93,6 +93,18 @@ export {
 } from './message.schema'
 export { messageRepository } from './message.repository'
 
+// Issue - user-facing work item that can be inspected through chat/thread
+export {
+  issueResource,
+  issueTable,
+  type IssueStatus,
+  type IssuePriority,
+  type IssueRow,
+  type IssueInsert,
+  type IssueUpdate,
+} from './issue.schema'
+export { issueRepository } from './issue.repository'
+
 // Message Block - 消息块类型系统 (Block-based Message System)
 export {
   MessageBlockType,

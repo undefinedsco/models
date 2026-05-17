@@ -17,7 +17,7 @@ export interface AuditPresentation {
   actorRoleLabel: string
 }
 
-type RelatedApproval = Pick<ApprovalRow, 'target' | 'toolName' | 'risk' | 'reason' | 'status' | 'context'> | null | undefined
+type RelatedApproval = Pick<ApprovalRow, 'chat' | 'thread' | 'target' | 'toolName' | 'risk' | 'reason' | 'status' | 'context'> | null | undefined
 
 function formatTimestamp(value: unknown): number {
   if (!value) return 0
@@ -61,6 +61,8 @@ export function buildAuditDetailRecord(
     actorRole: audit.actorRole,
     onBehalfOf: audit.onBehalfOf || undefined,
     session: audit.session || undefined,
+    chat: audit.chat || undefined,
+    thread: audit.thread || undefined,
     entry: audit.entry || undefined,
     toolCallId: audit.toolCallId || undefined,
     toolName: audit.toolName || undefined,
@@ -70,6 +72,8 @@ export function buildAuditDetailRecord(
     createdAt: audit.createdAt,
     relatedApproval: relatedApproval
       ? {
+          chat: relatedApproval.chat || undefined,
+          thread: relatedApproval.thread || undefined,
           target: relatedApproval.target,
           toolName: relatedApproval.toolName,
           risk: relatedApproval.risk,
@@ -138,9 +142,12 @@ export function buildAuditPresentation(
   resolvedAuthTimestampsByKey: Map<string, number[]>,
   relatedApproval?: RelatedApproval,
 ): AuditPresentation {
-  const thread = audit.entry || relatedApproval?.target || null
-  const about = relatedApproval?.target ?? audit.entry ?? audit.approval ?? null
+  const thread = audit.thread || relatedApproval?.thread || audit.entry || relatedApproval?.target || null
+  const chat = audit.chat || relatedApproval?.chat || null
+  const about = relatedApproval?.target ?? audit.entry ?? audit.approval ?? thread ?? null
   const { chatId, threadId } = extractChatThreadRef(thread)
+  const chatRef = extractChatThreadRef(chat)
+  const resolvedChatId = chatId ?? chatRef.chatId
   const actorRoleLabel = formatAuditActorRole(audit.actorRole)
 
   if (audit.action === 'runtime.auth_required') {
@@ -155,7 +162,7 @@ export function buildAuditPresentation(
       description: method ? `运行时需要完成 ${method} 认证后才能继续。` : '运行时需要额外认证后才能继续。',
       category: 'auth_required',
       status: isResolved ? 'resolved' : 'pending',
-      chatId,
+      chatId: resolvedChatId,
       threadId,
       thread,
       about,
@@ -173,7 +180,7 @@ export function buildAuditPresentation(
       description: '运行时认证已完成。',
       category: 'audit',
       status: 'resolved',
-      chatId,
+      chatId: resolvedChatId,
       threadId,
       thread,
       about,
@@ -193,7 +200,7 @@ export function buildAuditPresentation(
       description: [risk, '已进入审批队列'].filter(Boolean).join(' · ') || '工具调用已进入审批队列。',
       category: 'audit',
       status: undefined,
-      chatId,
+      chatId: resolvedChatId,
       threadId,
       thread,
       about,
@@ -210,7 +217,7 @@ export function buildAuditPresentation(
       description: buildApprovalDecisionDescription(audit, relatedApproval, 'approved'),
       category: 'audit',
       status: 'approved',
-      chatId,
+      chatId: resolvedChatId,
       threadId,
       thread,
       about,
@@ -227,7 +234,7 @@ export function buildAuditPresentation(
       description: buildApprovalDecisionDescription(audit, relatedApproval, 'rejected'),
       category: 'audit',
       status: 'rejected',
-      chatId,
+      chatId: resolvedChatId,
       threadId,
       thread,
       about,
@@ -244,7 +251,7 @@ export function buildAuditPresentation(
       description: buildRuntimeSessionDescription(audit, '运行时会话开始执行。'),
       category: 'audit',
       status: 'active',
-      chatId,
+      chatId: resolvedChatId,
       threadId,
       thread,
       about,
@@ -261,7 +268,7 @@ export function buildAuditPresentation(
       description: buildRuntimeSessionDescription(audit, '运行时会话已暂停。'),
       category: 'audit',
       status: 'paused',
-      chatId,
+      chatId: resolvedChatId,
       threadId,
       thread,
       about,
@@ -278,7 +285,7 @@ export function buildAuditPresentation(
       description: buildRuntimeSessionDescription(audit, '运行时会话已完成。'),
       category: 'audit',
       status: 'completed',
-      chatId,
+      chatId: resolvedChatId,
       threadId,
       thread,
       about,
@@ -295,7 +302,7 @@ export function buildAuditPresentation(
       description: buildRuntimeSessionDescription(audit, '运行时会话执行失败。'),
       category: 'audit',
       status: 'error',
-      chatId,
+      chatId: resolvedChatId,
       threadId,
       thread,
       about,
@@ -311,7 +318,7 @@ export function buildAuditPresentation(
     description: actorRoleLabel,
     category: 'audit',
     status: undefined,
-    chatId,
+    chatId: resolvedChatId,
     threadId,
     thread,
     about,

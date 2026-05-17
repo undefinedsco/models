@@ -20,6 +20,7 @@ import { favoriteResource, favoriteTable } from './favorite/favorite.schema'
 import { fileResource, fileTable } from './file/file.schema'
 import { grantResource, grantTable } from './grant.schema'
 import { inboxNotificationResource, inboxNotificationTable } from './inbox-notification.schema'
+import { issueResource, issueTable } from './issue.schema'
 import { messageResource, messageTable } from './message.schema'
 import { solidProfileResource, solidProfileTable } from './profile.schema'
 import { sessionResource, sessionTable } from './session'
@@ -44,6 +45,7 @@ export const solidResources = {
   fileResource,
   favoriteResource,
   settingsResource,
+  issueResource,
 
   // Sidecar collaboration data
   approvalResource,
@@ -72,6 +74,7 @@ export const solidSchema = {
   fileTable,
   favoriteTable,
   settingsTable,
+  issueTable,
 
   // Sidecar collaboration data
   approvalTable,

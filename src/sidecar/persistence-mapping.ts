@@ -18,7 +18,7 @@ import type { ToolCallEvent, InboxApprovalEvent, SessionStateEvent } from './sid
 // ============================================
 
 export type ChatSessionProjection = {
-  chatId: string
+  chat: string
   sessionStatus: 'active' | 'paused' | 'completed' | 'error'
   policy?: string
   policyVersion?: string
@@ -26,7 +26,7 @@ export type ChatSessionProjection = {
 
 export type ApprovalProjectionInsert = Pick<
   ApprovalInsert,
-  'session' | 'toolCallId' | 'toolName' | 'target' | 'action' | 'risk' | 'status' | 'context' | 'approvalOptions' | 'policyVersion' | 'expiresAt'
+  'session' | 'chat' | 'thread' | 'toolCallId' | 'toolName' | 'target' | 'action' | 'risk' | 'status' | 'context' | 'approvalOptions' | 'policyVersion' | 'expiresAt'
 >
 
 export type ApprovalProjectionUpdate = Partial<
@@ -38,7 +38,7 @@ export type ApprovalProjectionUpdate = Partial<
 
 export type AuditProjectionInsert = Pick<
   AuditInsert,
-  'action' | 'actor' | 'actorRole' | 'onBehalfOf' | 'session' | 'entry' | 'toolCallId' | 'toolName' | 'approval' | 'policy' | 'policyVersion'
+  'action' | 'actor' | 'actorRole' | 'onBehalfOf' | 'session' | 'chat' | 'thread' | 'entry' | 'toolCallId' | 'toolName' | 'approval' | 'policy' | 'policyVersion'
 >
 
 export type GrantProjectionInsert = Pick<

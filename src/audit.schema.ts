@@ -1,5 +1,7 @@
 import { extractPodResourceTemplateValue, podTable, uri, string, timestamp, id } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms } from './namespaces'
+import { chatResource } from './chat.schema'
+import { threadResource } from './thread.schema'
 
 export function buildAuditSubjectPath(auditId: string, createdAt: Date | string | number = new Date()): string {
   const date = createdAt instanceof Date ? createdAt : new Date(createdAt)
@@ -28,6 +30,8 @@ export const auditResource = podTable(
 
     // Relations
     session: uri('session').predicate(UDFS.session),
+    chat: uri('chat').predicate(UDFS.conversation).link(chatResource),
+    thread: uri('thread').predicate(UDFS.inThread).link(threadResource),
     entry: uri('entry').predicate(UDFS.entry),
     toolCallId: string('toolCallId').predicate(UDFS.toolCallId),
     toolName: string('toolName').predicate(UDFS.toolName),

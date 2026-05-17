@@ -18,6 +18,8 @@ import {
   grantTable,
   inboxNotificationResource,
   inboxNotificationTable,
+  issueResource,
+  issueTable,
   initSolidResources,
   initSolidTables,
   messageResource,
@@ -43,6 +45,7 @@ describe('shared Solid resources', () => {
     expect(fileResource).toBe(fileTable)
     expect(favoriteResource).toBe(favoriteTable)
     expect(settingsResource).toBe(settingsTable)
+    expect(issueResource).toBe(issueTable)
     expect(approvalResource).toBe(approvalTable)
     expect(auditResource).toBe(auditTable)
     expect(grantResource).toBe(grantTable)
@@ -60,6 +63,7 @@ describe('shared Solid resources', () => {
       fileResource,
       favoriteResource,
       settingsResource,
+      issueResource,
       approvalResource,
       auditResource,
       grantResource,
@@ -75,6 +79,7 @@ describe('shared Solid resources', () => {
     expect((solidResources as any).fileTable).toBeUndefined()
     expect((solidResources as any).favoriteTable).toBeUndefined()
     expect((solidResources as any).settingsTable).toBeUndefined()
+    expect((solidResources as any).issueTable).toBeUndefined()
     expect((solidResources as any).approvalTable).toBeUndefined()
     expect((solidResources as any).auditTable).toBeUndefined()
     expect((solidResources as any).grantTable).toBeUndefined()
@@ -90,6 +95,7 @@ describe('shared Solid resources', () => {
       fileTable,
       favoriteTable,
       settingsTable,
+      issueTable,
       approvalTable,
       auditTable,
       grantTable,
