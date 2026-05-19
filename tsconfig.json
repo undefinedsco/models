@@ -7,9 +7,11 @@
     "src/discovery/index.ts",
     "src/namespaces.ts",
     "src/n3.d.ts",
+    "src/pod-storage-descriptor.ts",
     "src/profile.ts",
     "src/profile.repository.ts",
-    "src/profile.schema.ts"
+    "src/profile.schema.ts",
+    "src/bin/udfs.ts"
   ],
   "compilerOptions": {
     "target": "ES2020",

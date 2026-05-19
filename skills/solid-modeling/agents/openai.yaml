@@ -1,0 +1,6 @@
+interface:
+  display_name: "Solid Modeling"
+  short_description: "Design shared Solid/RDF model schemas"
+  default_prompt: "Use $solid-modeling to review this shared Pod schema for RDF links, id defaults, and resource ownership."
+policy:
+  allow_implicit_invocation: true

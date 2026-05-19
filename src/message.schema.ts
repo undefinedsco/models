@@ -1,7 +1,24 @@
-import { podTable, uri, string, text, timestamp, id } from '@undefineds.co/drizzle-solid'
+import { object, podTable, uri, string, text, timestamp, id } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms, FOAF, MEETING, SCHEMA, SIOC, WF } from './namespaces'
 import { chatResource } from './chat.schema'
 import { threadResource } from './thread.schema'
+import { messageResourceId } from './resource-id-defaults'
+
+export type MessageRoleType = 'user' | 'assistant' | 'system'
+export type MessageStatusType = 'in_progress' | 'completed' | 'incomplete' | 'sent'
+
+export const MessageRole = {
+  USER: 'user',
+  ASSISTANT: 'assistant',
+  SYSTEM: 'system',
+} as const
+
+export const MessageStatus = {
+  IN_PROGRESS: 'in_progress',
+  COMPLETED: 'completed',
+  INCOMPLETE: 'incomplete',
+  SENT: 'sent',
+} as const
 
 
 /**
@@ -20,27 +37,33 @@ import { threadResource } from './thread.schema'
 export const messageResource = podTable(
   'chat_message',
   {
-    id: id('id'),
+    id: id('id').default(messageResourceId),
+
+    commandKind: string('commandKind').predicate(UDFS.commandKind).notNull().default('chat'),
+    surfaceId: string('surfaceId').predicate(UDFS.surfaceId).notNull().default('default'),
 
     // Chat relation. In RDF this is an inverse Solid Chat link: <chat> wf:message <message>.
-    chat: uri('chat').predicate(WF.message).inverse().notNull().link(chatResource),
+    chat: uri('chat').predicate(WF.message).inverse().link(chatResource),
 
     // Thread relation. In RDF this is an inverse Solid Chat/SIOC link: <thread> sioc:has_member <message>.
-    thread: uri('thread').predicate(SIOC.has_member).inverse().notNull().link(threadResource),
+    thread: uri('thread').predicate(SIOC.hasContainer).link(threadResource),
 
     // maker is the entity URI of the message author:
     // - User: their WebID (https://user.pod/profile/card#me)
     // - AI: Agent URI (/.data/agents/{id}.ttl#this)
     // - External: Contact URI (/.data/contacts/{id}.ttl#this)
     // No reference() constraint - accepts any valid URI.
-    maker: uri('maker').predicate(FOAF.maker).notNull(),
+    maker: uri('maker').predicate(FOAF.maker),
 
-    role: string('role').predicate(UDFS.messageType).notNull().default('user'),
+    role: string('role').predicate(UDFS.messageType).notNull().default(MessageRole.USER),
     content: text('content').predicate(SIOC.content).notNull(),
     richContent: text('richContent').predicate(SIOC.richContent),
 
 
-    status: string('status').predicate(UDFS.messageStatus).notNull().default('sent'),
+    status: string('status').predicate(UDFS.messageStatus).notNull().default(MessageStatus.COMPLETED),
+    toolName: string('toolName').predicate(UDFS.toolName),
+    toolCallId: string('toolCallId').predicate(UDFS.toolCallId),
+    metadata: object('metadata').predicate(UDFS.metadata),
     replacedBy: string('replacedBy').predicate(DCTerms.isReplacedBy),
     deletedAt: timestamp('deletedAt').predicate(SCHEMA.dateDeleted),
 
@@ -59,11 +82,10 @@ export const messageResource = podTable(
     updatedAt: timestamp('updatedAt').predicate(DCTerms.modified),
   },
   {
-    base: '/.data/chat/',
-    sparqlEndpoint: '/.data/chat/-/sparql',
+    base: '/.data/',
+    sparqlEndpoint: '/.data/-/sparql',
     type: MEETING.Message,
     namespace: UDFS,
-    subjectTemplate: '{chat|id}/{yyyy}/{MM}/{dd}/messages.ttl#{id}',
   },
 )
 

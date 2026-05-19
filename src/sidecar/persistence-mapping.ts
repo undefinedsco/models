@@ -13,7 +13,7 @@ import type { ToolCallEvent, InboxApprovalEvent, SessionStateEvent } from './sid
 // - Runtime-only fields (timestamp/duration/result/error/etc.) MUST NOT become stable Pod fields.
 //
 // Writer-of-record note:
-// - When integrating with xpod/chatkit (architecture choice B), the service-side adapter is responsible
+// - When integrating with a concrete protocol surface, the service-side adapter is responsible
 //   for executing the action and persisting these projections to the Pod (Approval/Audit/Grant/InboxNotification).
 // ============================================
 

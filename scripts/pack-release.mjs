@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join, relative, sep } from 'node:path'
 import { spawnSync } from 'node:child_process'
@@ -18,6 +18,7 @@ mkdirSync(outRoot, { recursive: true })
 copyPackage(modelsRoot, workRoot)
 fixExtensionlessRelativeImports(join(workRoot, 'dist'))
 fixJsonImportAttributes(join(workRoot, 'dist'))
+ensureExecutableBins(join(workRoot, 'dist'))
 writeJson(join(workRoot, 'package.json'), createPublishablePackage(pkg, version))
 
 const tarball = npmPack(workRoot)
@@ -52,6 +53,9 @@ function createPublishablePackage(packageJson, packageVersion) {
     private: false,
     main: './dist/index.js',
     types: './dist/index.d.ts',
+    bin: {
+      udfs: './dist/bin/udfs.js',
+    },
     dependencies: pickPublishDependencies(packageJson.dependencies ?? {}),
     files: [
       'dist',
@@ -183,6 +187,13 @@ function fixJsonImportAttributes(root) {
       return `${statement} with { type: 'json' }${suffix}`
     })
     writeFileSync(file, source)
+  }
+}
+
+function ensureExecutableBins(root) {
+  const udfsBin = join(root, 'bin', 'udfs.js')
+  if (existsSync(udfsBin)) {
+    chmodSync(udfsBin, 0o755)
   }
 }
 

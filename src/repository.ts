@@ -20,3 +20,9 @@ export type { AnyPodTable }
 // drizzle-solid API still uses table-shaped arguments for compatibility.
 export const initSolidResources = initSolidTables
 export type AnyPodResource = AnyPodTable
+
+type PodResourceTemplateTarget = Parameters<typeof import('@undefineds.co/drizzle-solid').extractPodResourceTemplateValue>[0]
+
+export function asPodResourceTemplateTarget(resource: AnyPodResource): PodResourceTemplateTarget {
+  return resource as unknown as PodResourceTemplateTarget
+}

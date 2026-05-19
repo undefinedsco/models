@@ -1,6 +1,15 @@
 import { uri, boolean, object, podTable, string, timestamp, id } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms, SIOC } from './namespaces'
 import { chatResource } from './chat.schema'
+import { threadResourceId } from './resource-id-defaults'
+
+export type ThreadStatusType = 'active' | 'locked' | 'closed'
+
+export const ThreadStatus = {
+  ACTIVE: 'active',
+  LOCKED: 'locked',
+  CLOSED: 'closed',
+} as const
 
 /**
  * Thread resource.
@@ -27,13 +36,17 @@ import { chatResource } from './chat.schema'
 export const threadResource = podTable(
   'thread',
   {
-    id: id('id'),
+    id: id('id').default(threadResourceId),
+
+    commandKind: string('commandKind').predicate(UDFS.commandKind).notNull().default('chat'),
+    surfaceId: string('surfaceId').predicate(UDFS.surfaceId).notNull().default('default'),
 
     // Belongs to chat/counterpart. Stored as an RDF URI; short ids are resolved via chatResource's URI template by the ORM.
-    chat: uri('chat').predicate(SIOC.has_parent).notNull().link(chatResource),
+    chat: uri('chat').predicate(SIOC.has_parent).link(chatResource),
 
     // Display / state
     title: string('title').predicate(DCTerms.title),
+    status: string('status').predicate(UDFS.status).notNull().default(ThreadStatus.ACTIVE),
     starred: boolean('starred').predicate(UDFS.favorite).default(false),
 
     // Storage-layer execution context reference: container/resource URI
@@ -47,11 +60,10 @@ export const threadResource = podTable(
     updatedAt: timestamp('updatedAt').predicate(DCTerms.modified).notNull().defaultNow(),
   },
   {
-    base: '/.data/chat/',
-    sparqlEndpoint: '/.data/chat/-/sparql',
+    base: '/.data/',
+    sparqlEndpoint: '/.data/-/sparql',
     type: SIOC.Thread,
     namespace: UDFS,
-    subjectTemplate: '{chat|id}/index.ttl#{id}',
   },
 )
 

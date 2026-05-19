@@ -57,10 +57,12 @@ export { contactRepository } from './contact.repository'
 
 // Chat & Message - 聊天和消息
 export {
+  ChatStatus,
   chatResource,
   chatTable,
   type ChatMetadata,
   type ChatMemberRole,
+  type ChatStatusType,
   type ChatRow,
   type ChatInsert,
   type ChatUpdate,
@@ -76,8 +78,10 @@ export {
 } from './chat.utils'
 
 export {
+  ThreadStatus,
   threadResource,
   threadTable,
+  type ThreadStatusType,
   type ThreadRow,
   type ThreadInsert,
   type ThreadUpdate,
@@ -85,13 +89,63 @@ export {
 export { threadRepository } from './thread.repository'
 
 export {
+  MessageRole,
+  MessageStatus,
   messageResource,
   messageTable,
+  type MessageRoleType,
+  type MessageStatusType,
   type MessageRow,
   type MessageInsert,
   type MessageUpdate,
 } from './message.schema'
 export { messageRepository } from './message.repository'
+
+export {
+  TaskStatus,
+  TaskTriggerKind,
+  taskResource,
+  taskTable,
+  type TaskStatusType,
+  type TaskTriggerKindType,
+  type TaskRow,
+  type TaskInsert,
+  type TaskUpdate,
+} from './task.schema'
+
+export {
+  RunStatus,
+  RunStepType,
+  runResource,
+  runStepResource,
+  runTable,
+  runStepTable,
+  type RunStatusType,
+  type RunStepTypeValue,
+  type RunRow,
+  type RunInsert,
+  type RunUpdate,
+  type RunStepRow,
+  type RunStepInsert,
+  type RunStepUpdate,
+} from './run.schema'
+
+export {
+  chatResourceId,
+  commandKindFromResourceId,
+  dateParts,
+  messageResourceId,
+  parentDir,
+  resourceKey,
+  runResourceId,
+  runStepResourceId,
+  surfaceIdFromCommandResourceId,
+  taskResourceId,
+  threadResourceId,
+  type CommandKind,
+  type DateInput,
+  type DateParts,
+} from './resource-id-defaults'
 
 // Issue - user-facing work item that can be inspected through chat/thread
 export {
@@ -369,6 +423,27 @@ export {
 export {
   applySolidComunicaPatches,
 } from './comunica-patches'
+
+export {
+  credentialDescriptor,
+  createPodModelDescriptorRegistry,
+  createPodSchema,
+  createPodStorage,
+  officialPodModelDescriptors,
+  podSchema,
+  type PodModelDescriptor,
+  type PodModelDescriptorSource,
+  type PodModelDescriptorTrustLevel,
+  type PodModelFieldDescriptor,
+  type PodModelFieldType,
+  type PodModelMergePolicy,
+  type PodSchemaClassEntry,
+  type PodSchemaPredicateEntry,
+  type PodSchemaSearchEntry,
+  type PodStorageCommitResult,
+  type PodStorageMutationPlan,
+  type PodStorageValidationResult,
+} from './pod-storage-descriptor'
 
 export {
   createRepositoryDescriptor,

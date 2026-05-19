@@ -2,6 +2,7 @@ import { extractPodResourceTemplateValue, podTable, uri, string, timestamp, id }
 import { UDFS, DCTerms } from './namespaces'
 import { chatResource } from './chat.schema'
 import { threadResource } from './thread.schema'
+import { asPodResourceTemplateTarget } from './repository'
 
 export function buildAuditSubjectPath(auditId: string, createdAt: Date | string | number = new Date()): string {
   const date = createdAt instanceof Date ? createdAt : new Date(createdAt)
@@ -57,7 +58,7 @@ export function extractAuditIdFromAuditRef(auditRef: string | null | undefined):
   if (auditRef && !/[/:#]/.test(auditRef)) {
     return auditRef
   }
-  return extractPodResourceTemplateValue(auditResource, auditRef)
+  return extractPodResourceTemplateValue(asPodResourceTemplateTarget(auditResource), auditRef)
 }
 
 // Compatibility alias. New model code should prefer `auditResource`.

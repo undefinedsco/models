@@ -1,5 +1,5 @@
 import { dirname, join } from 'node:path'
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 const modelsRoot = fileURLToPath(new URL('..', import.meta.url))
@@ -7,6 +7,7 @@ const distRoot = join(modelsRoot, 'dist')
 
 fixExtensionlessRelativeImports(distRoot)
 fixJsonImportAttributes(distRoot)
+ensureExecutableBins(distRoot)
 
 function walkJs(dir, files = []) {
   if (!existsSync(dir)) {
@@ -71,5 +72,12 @@ function fixJsonImportAttributes(root) {
       return `${statement} with { type: 'json' }${suffix}`
     })
     writeFileSync(file, source)
+  }
+}
+
+function ensureExecutableBins(root) {
+  const udfsBin = join(root, 'bin', 'udfs.js')
+  if (existsSync(udfsBin)) {
+    chmodSync(udfsBin, 0o755)
   }
 }

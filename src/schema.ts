@@ -23,8 +23,10 @@ import { inboxNotificationResource, inboxNotificationTable } from './inbox-notif
 import { issueResource, issueTable } from './issue.schema'
 import { messageResource, messageTable } from './message.schema'
 import { solidProfileResource, solidProfileTable } from './profile.schema'
+import { runResource, runStepResource, runTable, runStepTable } from './run.schema'
 import { sessionResource, sessionTable } from './session'
 import { settingsResource, settingsTable } from './settings/settings.schema'
+import { taskResource, taskTable } from './task.schema'
 import { threadResource, threadTable } from './thread.schema'
 
 export const solidResources = {
@@ -35,6 +37,9 @@ export const solidResources = {
   sessionResource,
   threadResource,
   messageResource,
+  taskResource,
+  runResource,
+  runStepResource,
   credentialResource,
   aiProviderResource,
   aiModelResource,
@@ -64,6 +69,9 @@ export const solidSchema = {
   sessionTable,
   threadTable,
   messageTable,
+  taskTable,
+  runTable,
+  runStepTable,
   credentialTable,
   aiProviderTable,
   aiModelTable,

@@ -2,6 +2,7 @@ import { extractPodResourceTemplateValue, podTable, uri, string, text, timestamp
 import { ODRL, UDFS, DCTerms } from './namespaces'
 import { chatResource } from './chat.schema'
 import { threadResource } from './thread.schema'
+import { asPodResourceTemplateTarget } from './repository'
 
 export function buildApprovalSubjectPath(approvalId: string, createdAt: Date | string | number = new Date()): string {
   const date = createdAt instanceof Date ? createdAt : new Date(createdAt)
@@ -16,7 +17,7 @@ export function extractApprovalIdFromApprovalRef(approvalRef: string | null | un
   if (approvalRef && !/[/:#]/.test(approvalRef)) {
     return approvalRef
   }
-  return extractPodResourceTemplateValue(approvalResource, approvalRef)
+  return extractPodResourceTemplateValue(asPodResourceTemplateTarget(approvalResource), approvalRef)
 }
 
 // Approval request resource (separate from Solid inbox notifications).

@@ -1,10 +1,13 @@
 {
   "name": "@undefineds.co/models",
-  "version": "0.2.26",
+  "version": "0.2.27",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
-  "types": "./src/index.ts",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "udfs": "./dist/bin/udfs.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/undefinedsco/models.git"
@@ -15,54 +18,54 @@
   "homepage": "https://github.com/undefinedsco/models#readme",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "node": "./dist/index.js",
-      "default": "./src/index.ts"
+      "default": "./dist/index.js"
     },
     "./ai-config": {
-      "types": "./src/ai-config/index.ts",
+      "types": "./dist/ai-config/index.d.ts",
       "node": "./dist/ai-config/index.js",
-      "default": "./src/ai-config/index.ts"
+      "default": "./dist/ai-config/index.js"
     },
     "./client": {
-      "types": "./src/client/index.ts",
+      "types": "./dist/client/index.d.ts",
       "node": "./dist/client/index.js",
-      "default": "./src/client/index.ts"
+      "default": "./dist/client/index.js"
     },
     "./discovery": {
-      "types": "./src/discovery/index.ts",
+      "types": "./dist/discovery/index.d.ts",
       "node": "./dist/discovery/index.js",
-      "default": "./src/discovery/index.ts"
+      "default": "./dist/discovery/index.js"
     },
     "./namespaces": {
-      "types": "./src/namespaces.ts",
+      "types": "./dist/namespaces.d.ts",
       "node": "./dist/namespaces.js",
-      "default": "./src/namespaces.ts"
+      "default": "./dist/namespaces.js"
     },
     "./profile": {
-      "types": "./src/profile.ts",
+      "types": "./dist/profile.d.ts",
       "node": "./dist/profile.js",
-      "default": "./src/profile.ts"
+      "default": "./dist/profile.js"
     },
     "./profile.repository": {
-      "types": "./src/profile.repository.ts",
+      "types": "./dist/profile.repository.d.ts",
       "node": "./dist/profile.repository.js",
-      "default": "./src/profile.repository.ts"
+      "default": "./dist/profile.repository.js"
     },
     "./profile.schema": {
-      "types": "./src/profile.schema.ts",
+      "types": "./dist/profile.schema.d.ts",
       "node": "./dist/profile.schema.js",
-      "default": "./src/profile.schema.ts"
+      "default": "./dist/profile.schema.js"
     },
     "./vocab": {
-      "types": "./src/vocab/index.ts",
+      "types": "./dist/vocab/index.d.ts",
       "node": "./dist/vocab/index.js",
-      "default": "./src/vocab/index.ts"
+      "default": "./dist/vocab/index.js"
     },
     "./vocab/sidecar": {
-      "types": "./src/vocab/sidecar.vocab.ts",
+      "types": "./dist/vocab/sidecar.vocab.d.ts",
       "node": "./dist/vocab/sidecar.vocab.js",
-      "default": "./src/vocab/sidecar.vocab.ts"
+      "default": "./dist/vocab/sidecar.vocab.js"
     }
   },
   "scripts": {
@@ -70,23 +73,28 @@
     "build": "tsc -p tsconfig.json && node scripts/fix-dist-esm.mjs",
     "lint": "echo \"lint not configured\"",
     "pack:release": "node scripts/pack-release.mjs",
+    "skills:check": "node scripts/check-skills.mjs",
+    "skills:pack": "yarn skills:check && node scripts/pack-skills.mjs",
     "sync:discovery:vercel": "node --experimental-strip-types scripts/sync-discovery-vercel.ts",
     "test": "vitest run",
-    "test:ci": "vitest run tests/ai-config.test.ts tests/ai-runtime-schema.test.ts tests/client.test.ts tests/contracts-chat-contact.contract.test.ts tests/discovery-vercel.test.ts tests/discovery.test.ts tests/issue-schema.test.ts tests/profile.test.ts tests/repository.test.ts tests/resource-utils.test.ts tests/session-schema.test.ts tests/sidecar-events.contract.test.ts tests/resource-schema.test.ts",
+    "test:ci": "vitest run tests/ai-config.test.ts tests/ai-runtime-schema.test.ts tests/client.test.ts tests/contracts-chat-contact.contract.test.ts tests/discovery-vercel.test.ts tests/discovery.test.ts tests/issue-schema.test.ts tests/profile.test.ts tests/repository.test.ts tests/resource-utils.test.ts tests/session-schema.test.ts tests/sidecar-events.contract.test.ts tests/resource-schema.test.ts tests/resource-id-defaults.test.ts tests/pod-storage-descriptor.test.ts tests/udfs-cli.test.ts",
     "test:pod": "dotenv -e ../linx-models/.env -- vitest run tests/pod.integration.test.ts"
   },
   "dependencies": {
     "@comunica/query-sparql-solid": "^4.0.2",
     "@inrupt/vocab-common-rdf": "^1.0.5",
+    "@undefineds.co/drizzle-solid": "^0.3.13",
     "drizzle-orm": "^0.32.0",
     "n3": "^1.26.0",
-    "@undefineds.co/drizzle-solid": "^0.3.12",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "dotenv-cli": "^7.3.0",
     "typescript": "^5.4.0",
     "vitest": "^1.6.0"
+  },
+  "peerDependencies": {
+    "@undefineds.co/drizzle-solid": "^0.3.13"
   },
   "packageManager": "yarn@1.22.22"
 }

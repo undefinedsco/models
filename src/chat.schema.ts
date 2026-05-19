@@ -1,7 +1,15 @@
 import { boolean, object, podTable, string, text, timestamp, uri, id, integer } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms, SCHEMA, MEETING, WF } from './namespaces'
+import { chatResourceId } from './resource-id-defaults'
 
 export type ChatMemberRole = 'owner' | 'admin' | 'member'
+export type ChatStatusType = 'active' | 'archived' | 'deleted'
+
+export const ChatStatus = {
+  ACTIVE: 'active',
+  ARCHIVED: 'archived',
+  DELETED: 'deleted',
+} as const
 
 export interface ChatMetadata {
   memberRoles?: Record<string, ChatMemberRole>
@@ -27,7 +35,7 @@ export interface ChatMetadata {
 export const chatResource = podTable(
   'chats',
   {
-    id: id('id'),
+    id: id('id').default(chatResourceId),
 
     // Display
     title: string('title').predicate(DCTerms.title).notNull(),
@@ -35,6 +43,8 @@ export const chatResource = podTable(
     avatarUrl: uri('avatarUrl').predicate(SCHEMA.image),
 
     // Chat state
+    author: uri('author').predicate(DCTerms.creator),
+    status: string('status').predicate(UDFS.status).notNull().default(ChatStatus.ACTIVE),
     starred: boolean('starred').predicate(UDFS.favorite).default(false),
     muted: boolean('muted').predicate(UDFS.muted).default(false),
     unreadCount: integer('unreadCount').predicate(UDFS.unreadCount).default(0),
@@ -67,7 +77,6 @@ export const chatResource = podTable(
     sparqlEndpoint: '/.data/chat/-/sparql',
     type: MEETING.LongChat,
     namespace: UDFS,
-    subjectTemplate: '{id}/index.ttl#this',
   },
 )
 

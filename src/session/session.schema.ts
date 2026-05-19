@@ -2,6 +2,7 @@ import { extractPodResourceTemplateValue, object, podTable, string, timestamp, u
 import { DCTerms, UDFS } from '../namespaces'
 import { chatResource } from '../chat.schema'
 import { threadResource } from '../thread.schema'
+import { asPodResourceTemplateTarget } from '../repository'
 
 export type SessionType = 'direct' | 'group' | 'imported-readonly'
 export type SessionStatus = 'active' | 'paused' | 'completed' | 'error' | 'archived'
@@ -33,7 +34,7 @@ export function extractRuntimeSessionId(sessionRef: string | null | undefined): 
 export function extractSessionIdFromSessionRef(sessionRef: string | null | undefined): string | null {
   if (!sessionRef) return null
 
-  const templateId = extractPodResourceTemplateValue(sessionResource, sessionRef)
+  const templateId = extractPodResourceTemplateValue(asPodResourceTemplateTarget(sessionResource), sessionRef)
   if (templateId) return templateId
 
   const legacyFragmentMatch = sessionRef.match(/\.ttl#([^/?#]+)$/)
