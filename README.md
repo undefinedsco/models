@@ -31,6 +31,18 @@ import {
 } from '@undefineds.co/models'
 ```
 
+## Pi Package
+
+`@undefineds.co/models` is also a Pi package. It exposes the shared
+`solid-modeling` skill through the package manifest, so Pi users can install it
+from npm or git:
+
+```bash
+pi install npm:@undefineds.co/models
+```
+
+After installation, Pi can load the skill from `skills/solid-modeling/SKILL.md`.
+
 ## Namespaces
 
 LinX-owned predicates and classes use the company namespace:

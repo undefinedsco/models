@@ -1,10 +1,23 @@
 {
   "name": "@undefineds.co/models",
-  "version": "0.2.27",
+  "version": "0.2.28",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "keywords": [
+    "pi-package",
+    "solid",
+    "rdf",
+    "pod",
+    "drizzle-solid",
+    "models"
+  ],
+  "pi": {
+    "skills": [
+      "./skills"
+    ]
+  },
   "bin": {
     "udfs": "./dist/bin/udfs.js"
   },

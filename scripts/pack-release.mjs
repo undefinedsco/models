@@ -59,6 +59,7 @@ function createPublishablePackage(packageJson, packageVersion) {
     dependencies: pickPublishDependencies(packageJson.dependencies ?? {}),
     files: [
       'dist',
+      'skills',
       'README.md',
       'package.json',
     ],

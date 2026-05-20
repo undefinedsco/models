@@ -28,5 +28,14 @@ on `main`:
 npx codex-marketplace add undefinedsco/models/skills/solid-modeling --skill --global
 ```
 
+Pi users can install the same skill through the package manifest:
+
+```bash
+pi install npm:@undefineds.co/models
+```
+
+The npm package includes `skills/` and declares `pi.skills` in `package.json`,
+so Pi discovers `skills/solid-modeling/SKILL.md` as a package skill.
+
 Marketplace-specific submission steps should be added only when the target
 platform has a documented publishing API or CLI.
