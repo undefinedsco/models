@@ -21,6 +21,7 @@ import { fileResource, fileTable } from './file/file.schema'
 import { grantResource, grantTable } from './grant.schema'
 import { inboxNotificationResource, inboxNotificationTable } from './inbox-notification.schema'
 import { issueResource, issueTable } from './issue.schema'
+import { matrixAccountResource, matrixAccountTable, matrixEventResource, matrixEventTable, matrixRoomResource, matrixRoomTable } from './matrix.schema'
 import { messageResource, messageTable } from './message.schema'
 import { solidProfileResource, solidProfileTable } from './profile.schema'
 import { runResource, runStepResource, runTable, runStepTable } from './run.schema'
@@ -51,6 +52,9 @@ export const solidResources = {
   favoriteResource,
   settingsResource,
   issueResource,
+  matrixAccountResource,
+  matrixRoomResource,
+  matrixEventResource,
 
   // Sidecar collaboration data
   approvalResource,
@@ -83,6 +87,9 @@ export const solidSchema = {
   favoriteTable,
   settingsTable,
   issueTable,
+  matrixAccountTable,
+  matrixRoomTable,
+  matrixEventTable,
 
   // Sidecar collaboration data
   approvalTable,

@@ -275,6 +275,26 @@ export const UDFS = createNamespace('udfs', 'https://undefineds.co/ns#', {
   currentStep: 'currentStep',
   totalSteps: 'totalSteps',
 
+  // Matrix protocol adapter
+  MatrixAccount: 'MatrixAccount',
+  MatrixRoom: 'MatrixRoom',
+  MatrixEvent: 'MatrixEvent',
+  matrixUserId: 'matrixUserId',
+  matrixDeviceId: 'matrixDeviceId',
+  matrixAccessTokenHash: 'matrixAccessTokenHash',
+  matrixRoomId: 'matrixRoomId',
+  matrixRoomAlias: 'matrixRoomAlias',
+  matrixRoomVersion: 'matrixRoomVersion',
+  matrixEventId: 'matrixEventId',
+  matrixEventType: 'matrixEventType',
+  matrixStateKey: 'matrixStateKey',
+  matrixSender: 'matrixSender',
+  matrixSenderWebId: 'matrixSenderWebId',
+  matrixTxnId: 'matrixTxnId',
+  matrixDepth: 'matrixDepth',
+  matrixOriginServerTs: 'matrixOriginServerTs',
+  matrixUnsigned: 'matrixUnsigned',
+
   // Favorites V2
   sourceModule: 'sourceModule',
   sourceId: 'sourceId',

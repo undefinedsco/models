@@ -110,3 +110,40 @@ export function runStepResourceId(
   const { yyyy, MM, dd } = dateParts(row?.createdAt as DateInput)
   return `${commandKind}/${surfaceId}/${yyyy}/${MM}/${dd}/runs.ttl#${localKey}`
 }
+
+function sanitizePathSlot(value: string | undefined, fallback: string): string {
+  const raw = value && value.length > 0 ? value : resourceKey(undefined, fallback)
+  return encodeURIComponent(raw)
+    .replace(/[!'()*]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`)
+    .replace(/%/g, '~')
+}
+
+export function matrixAccountResourceId(
+  key: string | undefined,
+  row?: Record<string, unknown>,
+): string {
+  const matrixUserId = typeof row?.matrixUserId === 'string' ? row.matrixUserId : undefined
+  const localKey = sanitizePathSlot(key ?? matrixUserId, 'matrix-user')
+  return `accounts/${localKey}.ttl#this`
+}
+
+export function matrixRoomResourceId(
+  key: string | undefined,
+  row?: Record<string, unknown>,
+): string {
+  const matrixRoomId = typeof row?.matrixRoomId === 'string' ? row.matrixRoomId : undefined
+  const localKey = sanitizePathSlot(key ?? matrixRoomId, 'matrix-room')
+  return `rooms/${localKey}/index.ttl#this`
+}
+
+export function matrixEventResourceId(
+  key: string | undefined,
+  row?: Record<string, unknown>,
+): string {
+  const matrixEventId = typeof row?.matrixEventId === 'string' ? row.matrixEventId : undefined
+  const matrixRoomId = typeof row?.matrixRoomId === 'string' ? row.matrixRoomId : undefined
+  const localKey = sanitizePathSlot(key ?? matrixEventId, 'matrix-event')
+  const roomSlot = sanitizePathSlot(matrixRoomId, 'matrix-room')
+  const { yyyy, MM, dd } = dateParts(row?.createdAt as DateInput ?? row?.originServerTs as DateInput)
+  return `rooms/${roomSlot}/${yyyy}/${MM}/${dd}/events.ttl#${localKey}`
+}

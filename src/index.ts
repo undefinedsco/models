@@ -114,6 +114,33 @@ export {
 } from './task.schema'
 
 export {
+  MatrixMembership,
+  MatrixRoomVisibility,
+  matrixAccountResource,
+  matrixAccountTable,
+  matrixRoomResource,
+  matrixRoomTable,
+  matrixEventResource,
+  matrixEventTable,
+  type MatrixAccountRow,
+  type MatrixAccountInsert,
+  type MatrixAccountUpdate,
+  type MatrixRoomRow,
+  type MatrixRoomInsert,
+  type MatrixRoomUpdate,
+  type MatrixEventRow,
+  type MatrixEventInsert,
+  type MatrixEventUpdate,
+  type MatrixMembershipType,
+  type MatrixRoomVisibilityType,
+} from './matrix.schema'
+export {
+  matrixAccountRepository,
+  matrixRoomRepository,
+  matrixEventRepository,
+} from './matrix.repository'
+
+export {
   RunStatus,
   RunStepType,
   runResource,
@@ -135,6 +162,9 @@ export {
   commandKindFromResourceId,
   dateParts,
   messageResourceId,
+  matrixAccountResourceId,
+  matrixEventResourceId,
+  matrixRoomResourceId,
   parentDir,
   resourceKey,
   runResourceId,

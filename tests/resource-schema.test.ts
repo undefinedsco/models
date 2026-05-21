@@ -20,6 +20,12 @@ import {
   inboxNotificationTable,
   issueResource,
   issueTable,
+  matrixAccountResource,
+  matrixAccountTable,
+  matrixEventResource,
+  matrixEventTable,
+  matrixRoomResource,
+  matrixRoomTable,
   initSolidResources,
   initSolidTables,
   messageResource,
@@ -55,6 +61,9 @@ describe('shared Solid resources', () => {
     expect(favoriteResource).toBe(favoriteTable)
     expect(settingsResource).toBe(settingsTable)
     expect(issueResource).toBe(issueTable)
+    expect(matrixAccountResource).toBe(matrixAccountTable)
+    expect(matrixRoomResource).toBe(matrixRoomTable)
+    expect(matrixEventResource).toBe(matrixEventTable)
     expect(approvalResource).toBe(approvalTable)
     expect(auditResource).toBe(auditTable)
     expect(grantResource).toBe(grantTable)
@@ -76,6 +85,9 @@ describe('shared Solid resources', () => {
       favoriteResource,
       settingsResource,
       issueResource,
+      matrixAccountResource,
+      matrixRoomResource,
+      matrixEventResource,
       approvalResource,
       auditResource,
       grantResource,
@@ -95,6 +107,9 @@ describe('shared Solid resources', () => {
     expect((solidResources as any).favoriteTable).toBeUndefined()
     expect((solidResources as any).settingsTable).toBeUndefined()
     expect((solidResources as any).issueTable).toBeUndefined()
+    expect((solidResources as any).matrixAccountTable).toBeUndefined()
+    expect((solidResources as any).matrixRoomTable).toBeUndefined()
+    expect((solidResources as any).matrixEventTable).toBeUndefined()
     expect((solidResources as any).approvalTable).toBeUndefined()
     expect((solidResources as any).auditTable).toBeUndefined()
     expect((solidResources as any).grantTable).toBeUndefined()
@@ -114,6 +129,9 @@ describe('shared Solid resources', () => {
       favoriteTable,
       settingsTable,
       issueTable,
+      matrixAccountTable,
+      matrixRoomTable,
+      matrixEventTable,
       approvalTable,
       auditTable,
       grantTable,
@@ -138,5 +156,8 @@ describe('shared Solid resources', () => {
     expect(taskResource.config.base).toBe('/.data/task/')
     expect(runResource.config.base).toBe('/.data/')
     expect(runStepResource.config.base).toBe('/.data/')
+    expect(matrixAccountResource.config.base).toBe('/.data/matrix/')
+    expect(matrixRoomResource.config.base).toBe('/.data/matrix/')
+    expect(matrixEventResource.config.base).toBe('/.data/matrix/')
   })
 })

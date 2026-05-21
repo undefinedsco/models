@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
-  chatResource,
   chatResourceId,
+  matrixAccountResourceId,
+  matrixEventResourceId,
+  matrixRoomResourceId,
   messageResourceId,
   runResourceId,
   runStepResourceId,
@@ -30,6 +32,17 @@ describe('command resource id defaults', () => {
     expect(runStepResourceId('step_1', {
       runId: 'task/secretary/2026/05/18/runs.ttl#run_1',
     })).toBe('task/secretary/2026/05/18/runs.ttl#step_1')
+    expect(matrixAccountResourceId(undefined, {
+      matrixUserId: '@alice:example.com',
+    })).toBe('accounts/~40alice~3Aexample.com.ttl#this')
+    expect(matrixRoomResourceId(undefined, {
+      matrixRoomId: '!room:example.com',
+    })).toBe('rooms/~21room~3Aexample.com/index.ttl#this')
+    expect(matrixEventResourceId(undefined, {
+      matrixRoomId: '!room:example.com',
+      matrixEventId: '$event:example.com',
+      createdAt: new Date('2026-05-18T01:02:03.000Z'),
+    })).toBe('rooms/~21room~3Aexample.com/2026/05/18/events.ttl#~24event~3Aexample.com')
   })
 
   it('accepts seconds and milliseconds numeric timestamps', () => {
@@ -46,9 +59,7 @@ describe('command resource id defaults', () => {
     })).toBe('task/secretary/2026/05/18/runs.ttl#run_millis')
   })
 
-  it('keeps explicit ids exact and leaves schema subjectTemplate empty', () => {
-    expect(chatResource.resolveUri('default/index.ttl#this'))
-      .toBe('/.data/chat/default/index.ttl#this')
-    expect(chatResource.getSubjectTemplate()).toBeUndefined()
+  it('keeps explicit resource id helpers exact', () => {
+    expect(chatResourceId('default')).toBe('default/index.ttl#this')
   })
 })
