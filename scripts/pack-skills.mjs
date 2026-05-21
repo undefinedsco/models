@@ -88,14 +88,17 @@ function packClaudePluginArchive(outFile) {
   cpSync(skillSource, join(workRoot, 'skills', skillName), { recursive: true })
   writeFileSync(join(workRoot, '.claude-plugin', 'plugin.json'), `${JSON.stringify({
     name: 'solid-modeling',
-    description: 'Shared Solid/RDF modeling guidance for @undefineds.co/models and Pod-facing products.',
     version,
     author: {
       name: 'Undefineds',
+      email: 'developer@undefineds.co',
     },
+    description: 'Shared Solid/RDF modeling guidance for @undefineds.co/models and Pod-facing products.',
     homepage: 'https://github.com/undefinedsco/models',
     repository: 'https://github.com/undefinedsco/models',
     license: 'MIT',
+    keywords: ['solid', 'rdf', 'pod', 'drizzle-solid', 'models'],
+    skills: ['./skills/solid-modeling'],
   }, null, 2)}\n`)
   tar(outFile, workRoot)
 }

@@ -1,0 +1,22 @@
+{
+  "name": "solid-modeling",
+  "version": "0.2.31",
+  "description": "Shared Solid/RDF modeling guidance for @undefineds.co/models and Pod-facing products.",
+  "author": {
+    "name": "Undefineds",
+    "email": "developer@undefineds.co"
+  },
+  "homepage": "https://github.com/undefinedsco/models",
+  "repository": "https://github.com/undefinedsco/models",
+  "license": "MIT",
+  "keywords": [
+    "solid",
+    "rdf",
+    "pod",
+    "drizzle-solid",
+    "models"
+  ],
+  "skills": [
+    "./skills/solid-modeling"
+  ]
+}
