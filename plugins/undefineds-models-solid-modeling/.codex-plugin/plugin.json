@@ -1,0 +1,40 @@
+{
+  "name": "undefineds-models-solid-modeling",
+  "version": "0.2.29",
+  "description": "Shared Solid/RDF modeling guidance for @undefineds.co/models and Pod-facing products.",
+  "author": {
+    "name": "Undefineds",
+    "email": "developer@undefineds.co",
+    "url": "https://github.com/undefinedsco"
+  },
+  "homepage": "https://github.com/undefinedsco/models",
+  "repository": "https://github.com/undefinedsco/models",
+  "license": "MIT",
+  "keywords": [
+    "solid",
+    "rdf",
+    "pod",
+    "drizzle-solid",
+    "models"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Solid Modeling",
+    "shortDescription": "Design shared Solid/RDF model schemas",
+    "longDescription": "Reusable modeling guidance for Solid Pod resources, RDF links, base-relative ids, drizzle-solid schemas, and shared @undefineds.co/models ownership.",
+    "developerName": "Undefineds",
+    "category": "Engineering",
+    "capabilities": [
+      "Knowledge",
+      "Workflow"
+    ],
+    "websiteURL": "https://github.com/undefinedsco/models",
+    "defaultPrompt": [
+      "Use $solid-modeling to review this Pod schema.",
+      "Check this model for id and URI mistakes.",
+      "Align this Xpod schema with shared models."
+    ],
+    "brandColor": "#2563EB",
+    "screenshots": []
+  }
+}

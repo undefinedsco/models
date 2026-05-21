@@ -18,14 +18,22 @@ Release automation validates this directory and packages:
 - a Claude Code plugin archive that contains the same skill source
 
 The publish workflow uploads those artifacts to the GitHub Release for the
-version tag. It does not directly submit entries to Codex Marketplace or Claude
-Code Marketplace.
+version tag. The repo also contains a Codex marketplace manifest under
+`.agents/plugins/marketplace.json`, so Codex can register the models repo as a
+Git marketplace and install the bundled plugin directly.
 
 Codex users can install the skill from the repository path once these files are
 on `main`:
 
 ```bash
 npx codex-marketplace add undefinedsco/models/skills/solid-modeling --skill --global
+```
+
+Codex plugin users can register the Git marketplace and then install the plugin:
+
+```bash
+codex plugin marketplace add undefinedsco/models --ref main
+codex plugin add undefineds-models-solid-modeling@undefineds-models
 ```
 
 Pi users can install the same skill through the package manifest:
