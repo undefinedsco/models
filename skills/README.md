@@ -33,7 +33,7 @@ Codex plugin users can register the Git marketplace and then install the plugin:
 
 ```bash
 codex plugin marketplace add undefinedsco/models --ref main
-codex plugin add solid-modeling@undefineds-co
+codex plugin add solid-modeling@undefineds
 ```
 
 Claude Code users can register the same Git marketplace and install the plugin
@@ -41,7 +41,7 @@ with the matching selector:
 
 ```bash
 claude plugin marketplace add undefinedsco/models
-claude plugin install solid-modeling@undefineds-co
+claude plugin install solid-modeling@undefineds
 ```
 
 Pi users can install the same skill through the package manifest:
