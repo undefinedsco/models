@@ -1,6 +1,6 @@
 {
-  "name": "undefineds-models-solid-modeling",
-  "version": "0.2.29",
+  "name": "solid-modeling",
+  "version": "0.2.30",
   "description": "Shared Solid/RDF modeling guidance for @undefineds.co/models and Pod-facing products.",
   "author": {
     "name": "Undefineds",

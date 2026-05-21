@@ -49,7 +49,7 @@ function packCodexPluginArchive(outFile) {
   mkdirSync(join(workRoot, 'skills'), { recursive: true })
   cpSync(skillSource, join(workRoot, 'skills', skillName), { recursive: true })
   writeFileSync(join(workRoot, '.codex-plugin', 'plugin.json'), `${JSON.stringify({
-    name: 'undefineds-models-solid-modeling',
+    name: 'solid-modeling',
     version,
     description: 'Shared Solid/RDF modeling guidance for @undefineds.co/models and Pod-facing products.',
     author: {
@@ -87,7 +87,7 @@ function packClaudePluginArchive(outFile) {
   mkdirSync(join(workRoot, 'skills'), { recursive: true })
   cpSync(skillSource, join(workRoot, 'skills', skillName), { recursive: true })
   writeFileSync(join(workRoot, '.claude-plugin', 'plugin.json'), `${JSON.stringify({
-    name: 'undefineds-models-solid-modeling',
+    name: 'solid-modeling',
     description: 'Shared Solid/RDF modeling guidance for @undefineds.co/models and Pod-facing products.',
     version,
     author: {

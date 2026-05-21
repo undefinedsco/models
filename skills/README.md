@@ -33,7 +33,7 @@ Codex plugin users can register the Git marketplace and then install the plugin:
 
 ```bash
 codex plugin marketplace add undefinedsco/models --ref main
-codex plugin add undefineds-models-solid-modeling@undefineds-models
+codex plugin add solid-modeling@undefineds-models
 ```
 
 Pi users can install the same skill through the package manifest:

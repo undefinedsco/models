@@ -5,10 +5,10 @@
   },
   "plugins": [
     {
-      "name": "undefineds-models-solid-modeling",
+      "name": "solid-modeling",
       "source": {
         "source": "local",
-        "path": "./plugins/undefineds-models-solid-modeling"
+        "path": "./plugins/solid-modeling"
       },
       "policy": {
         "installation": "AVAILABLE",
