@@ -5,9 +5,6 @@ import { fileURLToPath } from 'node:url'
 const root = fileURLToPath(new URL('..', import.meta.url))
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
 const skillsRoot = join(root, 'skills')
-const marketplacePath = join(root, '.agents', 'plugins', 'marketplace.json')
-const claudeMarketplacePath = join(root, '.claude-plugin', 'marketplace.json')
-const marketplaceName = 'undefineds'
 const codexPluginName = 'solid-modeling'
 const codexPluginRoot = join(root, 'plugins', codexPluginName)
 const codexPluginManifestPath = join(codexPluginRoot, '.codex-plugin', 'plugin.json')
@@ -26,8 +23,8 @@ if (!existsSync(skillsRoot)) {
   }
 }
 
-validateCodexMarketplace()
-validateClaudeMarketplace()
+validateCodexPlugin()
+validateClaudePlugin()
 
 if (errors.length > 0) {
   console.error(errors.map((error) => `- ${error}`).join('\n'))
@@ -86,46 +83,10 @@ function validateSkill(name, dir) {
   }
 }
 
-function validateCodexMarketplace() {
-  if (!existsSync(marketplacePath)) {
-    errors.push('.agents/plugins/marketplace.json is missing')
-    return
-  }
-
+function validateCodexPlugin() {
   if (!existsSync(codexPluginManifestPath)) {
     errors.push(`${codexPluginName}: .codex-plugin/plugin.json is missing`)
     return
-  }
-
-  const marketplace = readJson(marketplacePath, 'marketplace')
-  if (marketplace?.name !== marketplaceName) {
-    errors.push(`marketplace name must be ${marketplaceName}`)
-  }
-  if (marketplace?.interface?.displayName !== 'Undefineds Models') {
-    errors.push('marketplace interface.displayName must be Undefineds Models')
-  }
-
-  const entry = Array.isArray(marketplace?.plugins)
-    ? marketplace.plugins.find((plugin) => plugin?.name === codexPluginName)
-    : null
-  if (!entry) {
-    errors.push(`${codexPluginName}: marketplace entry is missing`)
-  } else {
-    if (entry.source?.source !== 'local') {
-      errors.push(`${codexPluginName}: marketplace source.source must be local`)
-    }
-    if (entry.source?.path !== `./plugins/${codexPluginName}`) {
-      errors.push(`${codexPluginName}: marketplace source.path must point to ./plugins/${codexPluginName}`)
-    }
-    if (entry.policy?.installation !== 'AVAILABLE') {
-      errors.push(`${codexPluginName}: marketplace policy.installation must be AVAILABLE`)
-    }
-    if (entry.policy?.authentication !== 'ON_INSTALL') {
-      errors.push(`${codexPluginName}: marketplace policy.authentication must be ON_INSTALL`)
-    }
-    if (!entry.category) {
-      errors.push(`${codexPluginName}: marketplace category is required`)
-    }
   }
 
   const manifest = readJson(codexPluginManifestPath, 'codex plugin manifest')
@@ -142,43 +103,10 @@ function validateCodexMarketplace() {
   validateSkillMirror('solid-modeling')
 }
 
-function validateClaudeMarketplace() {
-  if (!existsSync(claudeMarketplacePath)) {
-    errors.push('.claude-plugin/marketplace.json is missing')
-    return
-  }
-
+function validateClaudePlugin() {
   if (!existsSync(claudePluginManifestPath)) {
     errors.push(`${codexPluginName}: .claude-plugin/plugin.json is missing`)
     return
-  }
-
-  const marketplace = readJson(claudeMarketplacePath, 'Claude marketplace')
-  if (marketplace?.name !== marketplaceName) {
-    errors.push(`Claude marketplace name must be ${marketplaceName}`)
-  }
-  if (marketplace?.owner?.name !== 'Undefineds') {
-    errors.push('Claude marketplace owner.name must be Undefineds')
-  }
-  if (marketplace?.metadata?.version !== pkg.version) {
-    errors.push('Claude marketplace metadata.version must match package.json version')
-  }
-
-  const entry = Array.isArray(marketplace?.plugins)
-    ? marketplace.plugins.find((plugin) => plugin?.name === codexPluginName)
-    : null
-  if (!entry) {
-    errors.push(`${codexPluginName}: Claude marketplace entry is missing`)
-  } else {
-    if (entry.version !== pkg.version) {
-      errors.push(`${codexPluginName}: Claude marketplace entry version must match package.json version`)
-    }
-    if (entry.source !== `./plugins/${codexPluginName}`) {
-      errors.push(`${codexPluginName}: Claude marketplace source must point to ./plugins/${codexPluginName}`)
-    }
-    if (!entry.description) {
-      errors.push(`${codexPluginName}: Claude marketplace description is required`)
-    }
   }
 
   const manifest = readJson(claudePluginManifestPath, 'Claude plugin manifest')
