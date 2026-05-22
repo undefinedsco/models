@@ -130,8 +130,8 @@ function validateMarketplace() {
   }
 
   const manifest = readJson(marketplaceManifestPath, 'marketplace manifest')
-  if (manifest?.name !== 'undefineds') {
-    errors.push('marketplace: name must be undefineds')
+  if (manifest?.name !== 'undefineds-models') {
+    errors.push('marketplace: name must be undefineds-models')
   }
 
   const plugin = Array.isArray(manifest?.plugins)
