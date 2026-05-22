@@ -19,6 +19,9 @@ keys.
   or the random key passed into an id default function.
 - Treat durable `id` values as base-relative resource ids. If the storage path
   or fragment is part of identity, the `id` must include it.
+- Prefer modeling human affairs and durable relationships first. Do not fully
+  model app or protocol artifacts when a human-transaction model already
+  covers the durable state.
 - Do not let a field named `xxxId` secretly behave like an RDF link.
 - Prefer semantic relation names: `chat`, `thread`, `message`, `maker`,
   `replyTo`, `workspace`, `task`, `run`, `agent`.

@@ -9,6 +9,7 @@ const codexPluginName = 'solid-modeling'
 const codexPluginRoot = join(root, 'plugins', codexPluginName)
 const codexPluginManifestPath = join(codexPluginRoot, '.codex-plugin', 'plugin.json')
 const claudePluginManifestPath = join(codexPluginRoot, '.claude-plugin', 'plugin.json')
+const marketplaceManifestPath = join(root, '.agents', 'plugins', 'marketplace.json')
 const namePattern = /^[a-z0-9][a-z0-9-]{0,62}[a-z0-9]$|^[a-z0-9]$/
 
 const errors = []
@@ -25,6 +26,7 @@ if (!existsSync(skillsRoot)) {
 
 validateCodexPlugin()
 validateClaudePlugin()
+validateMarketplace()
 
 if (errors.length > 0) {
   console.error(errors.map((error) => `- ${error}`).join('\n'))
@@ -118,6 +120,43 @@ function validateClaudePlugin() {
   }
   if (!Array.isArray(manifest?.skills) || !manifest.skills.includes('./skills/solid-modeling')) {
     errors.push(`${codexPluginName}: Claude plugin manifest skills must include ./skills/solid-modeling`)
+  }
+}
+
+function validateMarketplace() {
+  if (!existsSync(marketplaceManifestPath)) {
+    errors.push('marketplace: .agents/plugins/marketplace.json is missing')
+    return
+  }
+
+  const manifest = readJson(marketplaceManifestPath, 'marketplace manifest')
+  if (manifest?.name !== 'undefineds-models') {
+    errors.push('marketplace: name must be undefineds-models')
+  }
+
+  const plugin = Array.isArray(manifest?.plugins)
+    ? manifest.plugins.find((entry) => entry?.name === codexPluginName)
+    : null
+
+  if (!plugin) {
+    errors.push(`marketplace: missing ${codexPluginName} plugin entry`)
+    return
+  }
+
+  if (plugin?.source?.source !== 'local' || plugin?.source?.path !== './plugins/solid-modeling') {
+    errors.push(`marketplace: ${codexPluginName} source must be local ./plugins/solid-modeling`)
+  }
+
+  if (plugin?.policy?.installation !== 'AVAILABLE') {
+    errors.push(`marketplace: ${codexPluginName} installation policy must be AVAILABLE`)
+  }
+
+  if (plugin?.policy?.authentication !== 'ON_INSTALL') {
+    errors.push(`marketplace: ${codexPluginName} authentication policy must be ON_INSTALL`)
+  }
+
+  if (!plugin?.category) {
+    errors.push(`marketplace: ${codexPluginName} category is required`)
   }
 }
 
