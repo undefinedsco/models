@@ -4,12 +4,12 @@ import {
   createPodModelDescriptorRegistry,
   createPodSchema,
   createPodStorage,
-  XPOD_CREDENTIAL,
+  UDFS,
 } from '../src'
 
 describe('pod storage descriptors', () => {
   it('describes the official credential model', () => {
-    expect(credentialDescriptor.uri).toBe(XPOD_CREDENTIAL.Credential)
+    expect(credentialDescriptor.uri).toBe(UDFS.Credential)
     expect(credentialDescriptor.storage.base).toBe('/settings/credentials.ttl')
     expect(credentialDescriptor.storage.resourceIdPattern).toBe('#{id}')
     expect(credentialDescriptor.storage.subjectTemplate).toBe('#{id}')
@@ -19,8 +19,8 @@ describe('pod storage descriptors', () => {
 
   it('lists local descriptors without natural-language matching', () => {
     const podSchema = createPodSchema(createPodModelDescriptorRegistry())
-    expect(podSchema.list().map((descriptor) => descriptor.uri)).toEqual([XPOD_CREDENTIAL.Credential])
-    expect(podSchema.describe({ uri: XPOD_CREDENTIAL.Credential })?.examples[0]).toEqual({
+    expect(podSchema.list().map((descriptor) => descriptor.uri)).toEqual([UDFS.Credential])
+    expect(podSchema.describe({ uri: UDFS.Credential })?.examples[0]).toEqual({
       request: '保存 Cloudflare tunnel token',
       match: {
         service: 'infra',
@@ -32,18 +32,18 @@ describe('pod storage descriptors', () => {
 
   it('queries RDF classes and field predicates deterministically', () => {
     const podSchema = createPodSchema(createPodModelDescriptorRegistry())
-    expect(podSchema.classes({ uri: XPOD_CREDENTIAL.Credential })).toEqual([
+    expect(podSchema.classes({ uri: UDFS.Credential })).toEqual([
       expect.objectContaining({
-        schemaUri: XPOD_CREDENTIAL.Credential,
+        schemaUri: UDFS.Credential,
         resourceKind: 'credential',
-        class: XPOD_CREDENTIAL.Credential,
+        class: UDFS.Credential,
       }),
     ])
-    expect(podSchema.predicates({ uri: XPOD_CREDENTIAL.Credential, field: 'apiKey' })).toEqual([
+    expect(podSchema.predicates({ uri: UDFS.Credential, field: 'apiKey' })).toEqual([
       expect.objectContaining({
-        schemaUri: XPOD_CREDENTIAL.Credential,
+        schemaUri: UDFS.Credential,
         field: 'apiKey',
-        predicate: XPOD_CREDENTIAL.apiKey,
+        predicate: UDFS.apiKey,
         secret: true,
       }),
     ])
@@ -52,7 +52,7 @@ describe('pod storage descriptors', () => {
   it('validates and commits a descriptor-backed Cloudflare tunnel token plan', () => {
     const podStorage = createPodStorage()
     const validation = podStorage.validate({
-      schemaUri: XPOD_CREDENTIAL.Credential,
+      schemaUri: UDFS.Credential,
       operation: 'upsert',
       match: {
         service: 'infra',
@@ -74,7 +74,7 @@ describe('pod storage descriptors', () => {
     expect(committed.ok).toBe(true)
     if (!committed.ok) throw new Error(committed.error.message)
     expect(committed.resource).toMatchObject({
-      schemaUri: XPOD_CREDENTIAL.Credential,
+      schemaUri: UDFS.Credential,
       service: 'infra',
       providerId: 'cloudflare',
       secretType: 'tunnel-token',
@@ -83,5 +83,10 @@ describe('pod storage descriptors', () => {
       resourceId: '#infra-cloudflare-tunnel-token',
       resourceUri: '/settings/credentials.ttl#infra-cloudflare-tunnel-token',
     })
+  })
+
+  it('uses UDFS predicates as the primary credential contract', () => {
+    expect(credentialDescriptor.uri).toBe(UDFS.Credential)
+    expect(credentialDescriptor.fields.apiKey.predicate).toBe(UDFS.apiKey)
   })
 })

@@ -57,7 +57,7 @@ export const chatResource = podTable(
       .array()
       .predicate(WF.participant),
 
-    // Structured chat metadata.
+    // Opaque protocol/local/UI metadata only. Shared relations must be explicit URI fields.
     metadata: object('metadata').predicate(UDFS.metadata),
 
 
@@ -65,7 +65,7 @@ export const chatResource = podTable(
     lastActiveAt: timestamp('lastActiveAt').predicate(UDFS.lastActiveAt),
     // Latest-message pointer. Do not reuse WF.message here: WF.message is the
     // Solid Chat containment relation used by message.chat inverse links.
-    lastMessageId: uri('lastMessageId').predicate(UDFS.lastMessage),
+    lastMessage: uri('lastMessage').predicate(UDFS.lastMessage),
     lastMessagePreview: text('lastMessagePreview').predicate(SCHEMA.text),
 
     // Timestamps

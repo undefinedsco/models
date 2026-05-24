@@ -1,28 +1,28 @@
 import { boolean, id, integer, podTable, string, timestamp, uri } from "@undefineds.co/drizzle-solid"
-import { XPOD_CREDENTIAL } from "./namespaces"
+import { UDFS } from "./namespaces"
 
 export const credentialResource = podTable("credential", {
   id: id("id"),
-  provider: uri("provider").predicate(XPOD_CREDENTIAL.provider).link("aiProvider"),
-  service: string("service").predicate(XPOD_CREDENTIAL.service).notNull().default("ai"),
-  status: string("status").predicate(XPOD_CREDENTIAL.status).notNull().default("active"),
-  apiKey: string("apiKey").predicate(XPOD_CREDENTIAL.apiKey),
-  baseUrl: string("baseUrl").predicate(XPOD_CREDENTIAL.baseUrl),
-  proxyUrl: string("proxyUrl").predicate(XPOD_CREDENTIAL.proxyUrl),
-  label: string("label").predicate(XPOD_CREDENTIAL.label),
-  isDefault: boolean("isDefault").predicate(XPOD_CREDENTIAL.isDefault).default(false),
-  lastUsedAt: timestamp("lastUsedAt").predicate(XPOD_CREDENTIAL.lastUsedAt),
-  failCount: integer("failCount").predicate(XPOD_CREDENTIAL.failCount).default(0),
-  rateLimitResetAt: timestamp("rateLimitResetAt").predicate(XPOD_CREDENTIAL.rateLimitResetAt),
-  oauthRefreshToken: string("oauthRefreshToken").predicate(XPOD_CREDENTIAL.oauthRefreshToken),
-  oauthAccessToken: string("oauthAccessToken").predicate(XPOD_CREDENTIAL.oauthAccessToken),
-  oauthExpiresAt: timestamp("oauthExpiresAt").predicate(XPOD_CREDENTIAL.oauthExpiresAt),
-  projectId: string("projectId").predicate(XPOD_CREDENTIAL.projectId),
-  organizationId: string("organizationId").predicate(XPOD_CREDENTIAL.organizationId),
+  provider: uri("provider").predicate(UDFS.provider).link("aiProvider"),
+  service: string("service").predicate(UDFS.service).notNull().default("ai"),
+  status: string("status").predicate(UDFS.status).notNull().default("active"),
+  apiKey: string("apiKey").predicate(UDFS.apiKey),
+  baseUrl: string("baseUrl").predicate(UDFS.baseUrl),
+  proxyUrl: string("proxyUrl").predicate(UDFS.proxyUrl),
+  label: string("label").predicate(UDFS.label),
+  isDefault: boolean("isDefault").predicate(UDFS.isDefault).default(false),
+  lastUsedAt: timestamp("lastUsedAt").predicate(UDFS.lastUsedAt),
+  failCount: integer("failCount").predicate(UDFS.failCount).default(0),
+  rateLimitResetAt: timestamp("rateLimitResetAt").predicate(UDFS.rateLimitResetAt),
+  oauthRefreshToken: string("oauthRefreshToken").predicate(UDFS.oauthRefreshToken),
+  oauthAccessToken: string("oauthAccessToken").predicate(UDFS.oauthAccessToken),
+  oauthExpiresAt: timestamp("oauthExpiresAt").predicate(UDFS.oauthExpiresAt),
+  projectId: string("projectId").predicate(UDFS.projectId),
+  organizationId: string("organizationId").predicate(UDFS.organizationId),
 }, {
   base: "/settings/credentials.ttl",
-  type: XPOD_CREDENTIAL.Credential,
-  namespace: XPOD_CREDENTIAL,
+  type: UDFS.Credential,
+  namespace: UDFS,
   subjectTemplate: "#{id}",
 })
 

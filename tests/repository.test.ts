@@ -155,7 +155,7 @@ const baseChatRow = {
   starred: false,
   participants: ['https://pod.example/profile#me'],
   lastActiveAt: new Date('2024-01-01T00:00:00Z'),
-  lastMessageId: 'message-1',
+  lastMessage: 'https://pod.example/.data/chat/chat-1/2024/01/01/messages.ttl#message-1',
   lastMessagePreview: 'Hi',
   createdAt: new Date('2024-01-01T00:00:00Z'),
   updatedAt: new Date('2024-01-01T00:00:00Z'),
@@ -183,7 +183,7 @@ describe('createRepositoryDescriptor', () => {
   })
 
   it('creates rows via insert and returns the created object', async () => {
-  const newRow = { ...baseChatRow, '@id': 'chat-99', title: 'New Chat' }
+    const newRow = { ...baseChatRow, '@id': 'chat-99', title: 'New Chat' }
     const db = new MockDatabase<ChatRow>([], newRow as ChatRow)
 
     const created = await descriptor.create?.(
@@ -197,7 +197,7 @@ describe('createRepositoryDescriptor', () => {
         starred: false,
         participants: ['https://pod.example/profile#me'],
         lastActiveAt: new Date('2024-01-02T00:00:00Z'),
-        lastMessageId: 'message-2',
+        lastMessage: 'https://pod.example/.data/chat/chat-1/2024/01/02/messages.ttl#message-2',
         lastMessagePreview: 'hello',
         createdAt: new Date('2024-01-02T00:00:00Z'),
         updatedAt: new Date('2024-01-02T00:00:00Z'),

@@ -1,64 +1,66 @@
 import { id, integer, podTable, string, timestamp, uri } from '@undefineds.co/drizzle-solid'
+import { agentResource } from './agent.schema'
 import { aiModelResource } from './ai-model.schema'
-import { XPOD_AI } from './namespaces'
+import { UDFS } from './namespaces'
+import { taskResource } from './task.schema'
 
 export const aiConfigResource = podTable('aiConfig', {
   id: id('id'),
-  embeddingModel: uri('embeddingModel').predicate(XPOD_AI.embeddingModel).link(aiModelResource),
-  previousModel: uri('previousModel').predicate(XPOD_AI.previousModel).link(aiModelResource),
-  migrationStatus: string('migrationStatus').predicate(XPOD_AI.migrationStatus),
-  migrationProgress: integer('migrationProgress').predicate(XPOD_AI.migrationProgress),
-  updatedAt: timestamp('updatedAt').predicate(XPOD_AI.updatedAt),
+  embeddingModel: uri('embeddingModel').predicate(UDFS.embeddingModel).link(aiModelResource),
+  previousModel: uri('previousModel').predicate(UDFS.previousModel).link(aiModelResource),
+  migrationStatus: string('migrationStatus').predicate(UDFS.migrationStatus),
+  migrationProgress: integer('migrationProgress').predicate(UDFS.migrationProgress),
+  updatedAt: timestamp('updatedAt').predicate(UDFS.updatedAt),
 }, {
   base: '/settings/ai/config.ttl',
-  type: XPOD_AI.AIConfig,
-  namespace: XPOD_AI,
+  type: UDFS.AIConfig,
+  namespace: UDFS,
   subjectTemplate: '#{id}',
 })
 
 export const vectorStoreResource = podTable('vectorStore', {
   id: id('id'),
-  name: string('name').predicate(XPOD_AI.name),
-  container: uri('container').predicate(XPOD_AI.container),
-  chunkingStrategy: string('chunkingStrategy').predicate(XPOD_AI.chunkingStrategy),
-  status: string('status').predicate(XPOD_AI.status),
-  createdAt: timestamp('createdAt').predicate(XPOD_AI.createdAt),
-  lastActiveAt: timestamp('lastActiveAt').predicate(XPOD_AI.lastActiveAt),
+  name: string('name').predicate(UDFS.name),
+  container: uri('container').predicate(UDFS.container),
+  chunkingStrategy: string('chunkingStrategy').predicate(UDFS.chunkingStrategy),
+  status: string('status').predicate(UDFS.status),
+  createdAt: timestamp('createdAt').predicate(UDFS.createdAt),
+  lastActiveAt: timestamp('lastActiveAt').predicate(UDFS.lastActiveAt),
 }, {
   base: '/settings/ai/vector-stores.ttl',
-  type: XPOD_AI.VectorStore,
-  namespace: XPOD_AI,
+  type: UDFS.VectorStore,
+  namespace: UDFS,
   subjectTemplate: '#{id}',
 })
 
 export const indexedFileResource = podTable('indexedFile', {
   id: id('id'),
-  fileUrl: uri('fileUrl').predicate(XPOD_AI.fileUrl),
-  vectorId: integer('vectorId').predicate(XPOD_AI.vectorId),
-  chunkingStrategy: string('chunkingStrategy').predicate(XPOD_AI.chunkingStrategy),
-  status: string('status').predicate(XPOD_AI.status),
-  usageBytes: integer('usageBytes').predicate(XPOD_AI.usageBytes),
-  lastError: string('lastError').predicate(XPOD_AI.lastError),
-  indexedAt: timestamp('indexedAt').predicate(XPOD_AI.indexedAt),
+  fileUrl: uri('fileUrl').predicate(UDFS.fileUrl),
+  vectorId: integer('vectorId').predicate(UDFS.vectorId),
+  chunkingStrategy: string('chunkingStrategy').predicate(UDFS.chunkingStrategy),
+  status: string('status').predicate(UDFS.status),
+  usageBytes: integer('usageBytes').predicate(UDFS.usageBytes),
+  lastError: string('lastError').predicate(UDFS.lastError),
+  indexedAt: timestamp('indexedAt').predicate(UDFS.indexedAt),
 }, {
   base: '/settings/ai/indexed-files.ttl',
-  type: XPOD_AI.IndexedFile,
-  namespace: XPOD_AI,
+  type: UDFS.IndexedFile,
+  namespace: UDFS,
   subjectTemplate: '#{id}',
 })
 
 export const agentStatusResource = podTable('agentStatus', {
   id: id('id'),
-  agentId: string('agentId').predicate(XPOD_AI.agentId),
-  status: string('status').predicate(XPOD_AI.status),
-  startedAt: timestamp('startedAt').predicate(XPOD_AI.startedAt),
-  lastActivityAt: timestamp('lastActivityAt').predicate(XPOD_AI.lastActivityAt),
-  currentTaskId: string('currentTaskId').predicate(XPOD_AI.currentTaskId),
-  errorMessage: string('errorMessage').predicate(XPOD_AI.errorMessage),
+  agent: uri('agent').predicate(UDFS.agent).link(agentResource),
+  status: string('status').predicate(UDFS.status),
+  startedAt: timestamp('startedAt').predicate(UDFS.startedAt),
+  lastActivityAt: timestamp('lastActivityAt').predicate(UDFS.lastActivityAt),
+  currentTask: uri('currentTask').predicate(UDFS.task).link(taskResource),
+  errorMessage: string('errorMessage').predicate(UDFS.errorMessage),
 }, {
   base: '/settings/ai/agent-status.ttl',
-  type: XPOD_AI.AgentStatus,
-  namespace: XPOD_AI,
+  type: UDFS.AgentStatus,
+  namespace: UDFS,
   subjectTemplate: '#{id}',
 })
 

@@ -18,12 +18,22 @@ import {
   oauthCredentialTable,
   solidResources,
   solidSchema,
+  UDFS,
   vectorStoreResource,
   vectorStoreTable,
 } from '../src'
 
 function columnsOf(resource: unknown): Record<string, unknown> {
   return ((resource as any)?._?.columns ?? (resource as any)?.columns) as Record<string, unknown>
+}
+
+function resourceConfigOf(resource: unknown): { type?: string; namespace?: unknown } {
+  return ((resource as any)?._?.config ?? (resource as any)?.config) as { type?: string; namespace?: unknown }
+}
+
+function predicateOf(resource: unknown, field: string): string {
+  const column = columnsOf(resource)[field] as { getPredicate?: (namespace?: unknown) => string }
+  return column.getPredicate?.(resourceConfigOf(resource).namespace) ?? ''
 }
 
 describe('AI runtime resources', () => {
@@ -101,8 +111,27 @@ describe('AI runtime resources', () => {
     })
 
     expect(columnsOf(agentStatusResource)).toMatchObject({
-      agentId: expect.anything(),
+      agent: expect.anything(),
       lastActivityAt: expect.anything(),
     })
+  })
+
+  it('uses UDFS as the primary AI and credential storage contract', () => {
+    expect(resourceConfigOf(credentialResource)).toMatchObject({ type: UDFS.Credential, namespace: UDFS })
+    expect(resourceConfigOf(aiProviderResource)).toMatchObject({ type: UDFS.Provider, namespace: UDFS })
+    expect(resourceConfigOf(aiModelResource)).toMatchObject({ type: UDFS.Model, namespace: UDFS })
+    expect(resourceConfigOf(aiConfigResource)).toMatchObject({ type: UDFS.AIConfig, namespace: UDFS })
+    expect(resourceConfigOf(vectorStoreResource)).toMatchObject({ type: UDFS.VectorStore, namespace: UDFS })
+    expect(resourceConfigOf(indexedFileResource)).toMatchObject({ type: UDFS.IndexedFile, namespace: UDFS })
+    expect(resourceConfigOf(agentStatusResource)).toMatchObject({ type: UDFS.AgentStatus, namespace: UDFS })
+
+    expect(predicateOf(credentialResource, 'apiKey')).toBe(UDFS.apiKey)
+    expect(predicateOf(aiProviderResource, 'hasModel')).toBe(UDFS.hasModel)
+    expect(predicateOf(aiModelResource, 'isProvidedBy')).toBe(UDFS.isProvidedBy)
+    expect(predicateOf(aiConfigResource, 'embeddingModel')).toBe(UDFS.embeddingModel)
+    expect(predicateOf(vectorStoreResource, 'chunkingStrategy')).toBe(UDFS.chunkingStrategy)
+    expect(predicateOf(indexedFileResource, 'fileUrl')).toBe(UDFS.fileUrl)
+    expect(predicateOf(agentStatusResource, 'agent')).toBe(UDFS.agent)
+    expect(predicateOf(agentStatusResource, 'currentTask')).toBe(UDFS.task)
   })
 })

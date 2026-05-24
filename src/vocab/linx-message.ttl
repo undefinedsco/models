@@ -30,9 +30,9 @@ udfs:routedBy a rdf:Property ;
   rdfs:domain mee:Message ;
   rdfs:range rdfs:Resource .
 
-udfs:routeTargetAgentId a rdf:Property ;
+udfs:routeTargetAgent a rdf:Property ;
   rdfs:domain mee:Message ;
-  rdfs:range rdfs:Literal .
+  rdfs:range rdfs:Resource .
 
 udfs:coordinationId a rdf:Property ;
   rdfs:domain mee:Message ;

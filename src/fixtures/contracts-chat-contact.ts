@@ -14,7 +14,7 @@ export const fixtureContactSolid: ContactInsert = {
   name: 'Alice',
   rdfType: ContactClass.PERSON,
   contactType: 'solid',
-  entityUri: 'https://pod.example/profile/card#me',
+  entity: 'https://pod.example/profile/card#me',
   isPublic: false,
 } satisfies ContactInsert
 
@@ -23,7 +23,7 @@ export const fixtureContactAgentWorkspace: ContactInsert = {
   name: 'Secretary@linx',
   rdfType: ContactClass.AGENT,
   contactType: 'agent',
-  entityUri: 'https://pod.example/.data/agents/secretary.ttl#this',
+  entity: 'https://pod.example/.data/agents/secretary.ttl#this',
   isPublic: false,
 } satisfies ContactInsert
 
@@ -71,7 +71,7 @@ export const fixtureToolApprovalBlock: ToolApprovalBlock = {
 
 export const fixtureTaskProgressBlock: TaskProgressBlock = {
   type: 'task_progress',
-  taskId: 'task-1',
+  task: 'https://pod.example/.data/task/index.ttl#task-1',
   title: 'CP0 contract baseline',
   steps: [
     { id: 's1', label: 'Freeze contracts', status: 'done', duration: 10 },

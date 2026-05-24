@@ -97,7 +97,7 @@ describe('Solid Pod Contact CRUD', () => {
         name: testName,
         alias: 'Solid Test Alias',
         contactType: 'solid',
-        entityUri: 'https://test.solidcommunity.net/profile/card#me',
+        entity: 'https://test.solidcommunity.net/profile/card#me',
         isPublic: false,
         starred: true,
         note: 'Integration test - solid contact',
@@ -137,7 +137,7 @@ describe('Solid Pod Contact CRUD', () => {
     const now = new Date()
 
     // CREATE - use absolute URI to avoid relative URI issue
-    // For external contacts, entityUri should be self-referential but absolute
+    // For external contacts, entity should be self-referential but absolute
     const [created] = await database
       .insert(contactTable)
       .values({
@@ -146,7 +146,7 @@ describe('Solid Pod Contact CRUD', () => {
         alias: '微信测试好友',
         contactType: 'external',
         // Use WebID as base to construct absolute URI
-        entityUri: `${env.webId!.replace('/profile/card#me', '')}/.data/contacts/${contactId}.ttl`,
+        entity: `${env.webId!.replace('/profile/card#me', '')}/.data/contacts/${contactId}.ttl`,
         externalPlatform: 'wechat',
         externalId: testExternalId,
         isPublic: false,
@@ -226,7 +226,7 @@ describe('Solid Pod Contact CRUD', () => {
         name: testAgentName,
         alias: 'Test Bot',
         contactType: 'agent',
-        entityUri: agentEntityUri,
+        entity: agentEntityUri,
         isPublic: false,
         starred: true,
         createdAt: now,
@@ -244,8 +244,8 @@ describe('Solid Pod Contact CRUD', () => {
       .where(eq(contactTable.name, testAgentName))
       .execute()
 
-    // Filter to find our specific contact (by entityUri containing our agentId)
-    const ourContact = contactRows.find(c => c.entityUri?.includes(agentId))
+    // Filter to find our specific contact (by entity containing our agentId)
+    const ourContact = contactRows.find(c => c.entity?.includes(agentId))
     expect(ourContact, 'agent contact created').toBeTruthy()
     expect(ourContact!.contactType).toBe('agent')
     expect(ourContact!.alias).toBe('Test Bot')

@@ -1,4 +1,4 @@
-import { XPOD_CREDENTIAL } from './namespaces'
+import { UDFS } from './namespaces'
 
 export type PodModelDescriptorSource = 'official' | 'verified-community' | 'developer' | 'user'
 export type PodModelDescriptorTrustLevel = 'high' | 'medium' | 'low'
@@ -96,12 +96,12 @@ export interface PodSchemaSearchEntry {
 }
 
 export const credentialDescriptor: PodModelDescriptor = {
-  uri: XPOD_CREDENTIAL.Credential,
+  uri: UDFS.Credential,
   version: '1.0.0',
   source: 'official',
   trustLevel: 'high',
-  namespace: XPOD_CREDENTIAL.NAMESPACE,
-  class: XPOD_CREDENTIAL.Credential,
+  namespace: UDFS.NAMESPACE,
+  class: UDFS.Credential,
   resourceKind: 'credential',
   description: 'Generic credential material required by runtimes, tools, MCP servers, and providers.',
   storage: {
@@ -112,42 +112,42 @@ export const credentialDescriptor: PodModelDescriptor = {
   fields: {
     id: {
       type: 'string',
-      predicate: XPOD_CREDENTIAL.term('id'),
+      predicate: UDFS.term('id'),
       required: true,
       description: 'Local credential id.',
     },
     service: {
       type: 'string',
-      predicate: XPOD_CREDENTIAL.service,
+      predicate: UDFS.service,
       required: true,
       description: 'Credential service grouping, for example ai or infra.',
     },
     providerId: {
       type: 'string',
-      predicate: XPOD_CREDENTIAL.provider,
+      predicate: UDFS.provider,
       required: true,
       description: 'Provider identifier such as openai or cloudflare.',
     },
     secretType: {
       type: 'string',
-      predicate: XPOD_CREDENTIAL.term('secretType'),
+      predicate: UDFS.secretType,
       required: true,
       description: 'Provider-specific secret kind such as api-key or tunnel-token.',
     },
     label: {
       type: 'string',
-      predicate: XPOD_CREDENTIAL.label,
+      predicate: UDFS.label,
       description: 'User-facing credential label.',
     },
     apiKey: {
       type: 'string',
-      predicate: XPOD_CREDENTIAL.apiKey,
+      predicate: UDFS.apiKey,
       secret: true,
       description: 'Secret token or API key material.',
     },
     status: {
       type: 'string',
-      predicate: XPOD_CREDENTIAL.status,
+      predicate: UDFS.status,
       description: 'Credential health status.',
     },
   },

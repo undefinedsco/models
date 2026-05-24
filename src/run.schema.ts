@@ -1,5 +1,6 @@
 import { id, object, podTable, string, timestamp, uri } from '@undefineds.co/drizzle-solid'
 import { DCTerms, UDFS } from './namespaces'
+import { deliveryResource } from './delivery.schema'
 import { taskResource } from './task.schema'
 import { threadResource } from './thread.schema'
 import { runResourceId, runStepResourceId } from './resource-id-defaults'
@@ -52,10 +53,11 @@ export const runResource = podTable(
   'run',
   {
     id: id('id').default(runResourceId),
-    commandKind: string('commandKind').predicate(UDFS.commandKind).notNull().default('chat'),
-    surfaceId: string('surfaceId').predicate(UDFS.surfaceId).notNull().default('default'),
 
     task: uri('task').predicate(UDFS.task).link(taskResource),
+    delivery: uri('delivery').predicate(UDFS.delivery).link(deliveryResource),
+    trigger: uri('trigger').predicate(UDFS.trigger),
+    input: uri('input').predicate(UDFS.input),
     thread: uri('thread').predicate(UDFS.inThread).notNull().link(threadResource),
     workspace: uri('workspace').predicate(UDFS.workspace).notNull(),
 
@@ -68,6 +70,7 @@ export const runResource = podTable(
     heartbeatAt: timestamp('heartbeatAt').predicate(UDFS.heartbeatAt),
     cancelRequestedAt: timestamp('cancelRequestedAt').predicate(UDFS.cancelRequestedAt),
     error: string('error').predicate(UDFS.error),
+    // Opaque protocol/local/UI metadata only. Shared relations must be explicit URI fields.
     metadata: object('metadata').predicate(UDFS.metadata),
 
     createdAt: timestamp('createdAt').predicate(DCTerms.created).notNull().defaultNow(),
@@ -86,19 +89,16 @@ export const runResource = podTable(
 /**
  * RunStep resource.
  *
- * Append-only execution facts emitted while a Run executes. `runId` is a
- * denormalized base-relative id for fast lookup; `run` is the semantic RDF
- * relation to the Run.
+ * Append-only execution facts emitted while a Run executes. `run` is the
+ * semantic RDF relation to the Run; storage colocation is derived from that
+ * relation by the id default helper.
  */
 export const runStepResource = podTable(
   'run_step',
   {
     id: id('id').default(runStepResourceId),
-    commandKind: string('commandKind').predicate(UDFS.commandKind).notNull().default('chat'),
-    surfaceId: string('surfaceId').predicate(UDFS.surfaceId).notNull().default('default'),
-    runId: string('runId').predicate(UDFS.runId).notNull(),
     run: uri('run').predicate(UDFS.run).notNull().link(runResource),
-    type: string('type').predicate(UDFS.status).notNull(),
+    stepType: string('stepType').predicate(UDFS.stepType).notNull(),
     message: string('message').predicate(DCTerms.description),
     data: object('data').predicate(UDFS.metadata),
     createdAt: timestamp('createdAt').predicate(DCTerms.created).notNull().defaultNow(),

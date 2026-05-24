@@ -18,10 +18,10 @@ export const ThreadStatus = {
  * - Thread is the concrete conversation timeline/place under a Chat.
  * - AI product runtime sessions map to Thread when they represent a concrete
  *   conversation timeline/place/run.
- * - Thread carries workspace/runtime/place metadata. Chat only identifies the
- *   counterpart/conversation object.
+ * - Thread carries workspace/place relations and runtime metadata. Chat only
+ *   identifies the counterpart/conversation object.
  * - Product/runtime-specific ids should stay in metadata as `runtimeSessionId`,
- *   `runtime`, `surface`, etc. Do not name the generic thread id `piSessionId`.
+ *   `runtime`, etc. Do not name the generic thread id `piSessionId`.
  *
  * Storage structure (aligned with xpod):
  * - Thread stored as fragment in Chat's index.ttl
@@ -38,9 +38,6 @@ export const threadResource = podTable(
   {
     id: id('id').default(threadResourceId),
 
-    commandKind: string('commandKind').predicate(UDFS.commandKind).notNull().default('chat'),
-    surfaceId: string('surfaceId').predicate(UDFS.surfaceId).notNull().default('default'),
-
     // Belongs to chat/counterpart. Stored as an RDF URI; short ids are resolved via chatResource's URI template by the ORM.
     chat: uri('chat').predicate(SIOC.has_parent).link(chatResource),
 
@@ -52,7 +49,7 @@ export const threadResource = podTable(
     // Storage-layer execution context reference: container/resource URI
     workspace: uri('workspace').predicate(UDFS.workspace),
 
-    // Generic execution metadata shared by CLI/App runtimes.
+    // Opaque protocol/local/UI metadata only. Shared relations must be explicit URI fields.
     metadata: object('metadata').predicate(UDFS.metadata),
 
 

@@ -22,6 +22,6 @@ export const MessageVocab = {
 
   // Multi-AI routing
   routedBy: UDFS.routedBy,
-  routeTargetAgentId: UDFS.routeTargetAgentId,
+  routeTargetAgent: UDFS.routeTargetAgent,
   coordinationId: UDFS.coordinationId,
 } as const

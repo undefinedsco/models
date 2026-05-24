@@ -18,7 +18,7 @@ export const ChatBaseVocab = {
 
   // Activity
   lastActiveAt: UDFS.lastActiveAt,
-  lastMessageId: UDFS.lastMessage,
+  lastMessage: UDFS.lastMessage,
   lastMessagePreview: SCHEMA.text,
 
   // Timestamps

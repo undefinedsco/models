@@ -39,14 +39,11 @@ export const messageResource = podTable(
   {
     id: id('id').default(messageResourceId),
 
-    commandKind: string('commandKind').predicate(UDFS.commandKind).notNull().default('chat'),
-    surfaceId: string('surfaceId').predicate(UDFS.surfaceId).notNull().default('default'),
-
     // Chat relation. In RDF this is an inverse Solid Chat link: <chat> wf:message <message>.
     chat: uri('chat').predicate(WF.message).inverse().link(chatResource),
 
     // Thread relation. In RDF this is an inverse Solid Chat/SIOC link: <thread> sioc:has_member <message>.
-    thread: uri('thread').predicate(SIOC.hasContainer).link(threadResource),
+    thread: uri('thread').predicate(SIOC.has_member).inverse().link(threadResource),
 
     // maker is the entity URI of the message author:
     // - User: their WebID (https://user.pod/profile/card#me)
@@ -63,6 +60,7 @@ export const messageResource = podTable(
     status: string('status').predicate(UDFS.messageStatus).notNull().default(MessageStatus.COMPLETED),
     toolName: string('toolName').predicate(UDFS.toolName),
     toolCallId: string('toolCallId').predicate(UDFS.toolCallId),
+    // Opaque protocol/local/UI metadata only. Shared relations must be explicit URI fields.
     metadata: object('metadata').predicate(UDFS.metadata),
     replacedBy: string('replacedBy').predicate(DCTerms.isReplacedBy),
     deletedAt: timestamp('deletedAt').predicate(SCHEMA.dateDeleted),
@@ -75,7 +73,7 @@ export const messageResource = podTable(
 
     // Multi-AI routing
     routedBy: uri('routedBy').predicate(UDFS.routedBy),
-    routeTargetAgentId: string('routeTargetAgentId').predicate(UDFS.routeTargetAgentId),
+    routeTargetAgent: uri('routeTargetAgent').predicate(UDFS.routeTargetAgent),
     coordinationId: string('coordinationId').predicate(UDFS.coordinationId),
 
     createdAt: timestamp('createdAt').predicate(DCTerms.created).notNull().defaultNow(),

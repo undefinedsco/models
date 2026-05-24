@@ -36,7 +36,7 @@ udfs:policyVersion a rdf:Property ;
   rdfs:range rdfs:Literal .
 
 # Lineage (reserved; CP0 does not persist derivation chain)
-udfs:parentThreadId a rdf:Property ;
+udfs:parentThread a rdf:Property ;
   rdfs:domain sioc:Thread ;
   rdfs:range rdfs:Resource .
 

@@ -63,7 +63,7 @@ export const contactResource = podTable(
     avatarUrl: uri('avatarUrl').predicate(VCARD.hasPhoto),
 
     // The actual entity this contact represents
-    entityUri: uri('entityUri').predicate(FOAF.primaryTopic).notNull(),
+    entity: uri('entity').predicate(FOAF.primaryTopic).notNull(),
 
     // Semantic classifier for the represented entity.
     rdfType: uri('rdfType').predicate(RDF.type).notNull().default(ContactClass.PERSON),

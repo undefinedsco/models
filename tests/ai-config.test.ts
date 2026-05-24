@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   aiConfigModelRef,
   aiConfigProviderRef,
+  aiConfigRepository,
   buildAIConfigDisconnectPlan,
   buildAIConfigMutationPlan,
   buildAIConfigProviderStateMap,
@@ -12,6 +13,7 @@ import {
   normalizeAIConfigResourceId,
   sameAIConfigProviderFamily,
   selectAIConfigCredential,
+  selectAIConfigCredentialForBackend,
 } from '../src/ai-config'
 
 describe('ai-config shared core', () => {
@@ -159,6 +161,98 @@ describe('ai-config shared core', () => {
     })
   })
 
+  it('selects custom providers that explicitly support a backend', () => {
+    const selected = selectAIConfigCredentialForBackend('codex', [
+      {
+        id: 'openai-default',
+        provider: '/settings/providers/openai.ttl',
+        service: 'ai',
+        status: 'active',
+        apiKey: 'sk-openai',
+      },
+      {
+        id: 'deepseek-newer',
+        provider: '/settings/providers/deepseek.ttl',
+        service: 'ai',
+        status: 'active',
+        apiKey: 'sk-deepseek-newer',
+        isDefault: true,
+        lastUsedAt: new Date('2026-05-13T03:00:00.000Z'),
+      },
+      {
+        id: 'deepseek-older',
+        provider: '/settings/providers/deepseek.ttl',
+        service: 'ai',
+        status: 'active',
+        apiKey: 'sk-deepseek-older',
+        lastUsedAt: new Date('2026-05-13T01:00:00.000Z'),
+      },
+    ], [
+      {
+        id: 'deepseek',
+        baseUrl: 'https://api.deepseek.com/v1',
+        supportsBackend: 'codex',
+        rotationPolicy: 'round_robin',
+      },
+      {
+        id: 'openai',
+        baseUrl: 'https://api.openai.com/v1',
+      },
+    ])
+
+    expect(selected).toMatchObject({
+      backend: 'codex',
+      providerId: 'deepseek',
+      credentialId: 'deepseek-older',
+      apiKey: 'sk-deepseek-older',
+      baseUrl: 'https://api.deepseek.com/v1',
+      isDefault: false,
+    })
+  })
+
+  it('loads backend credentials through repository credential list plus exact provider reads', async () => {
+    const selected = await aiConfigRepository.loadCredentialForBackend({
+      select() {
+        return {
+          from(resource: unknown) {
+            expect((resource as { config?: { name?: string } }).config?.name).toBe('credential')
+            return {
+              async execute() {
+                return [
+                  {
+                    id: 'deepseek-key-1',
+                    provider: '/settings/providers/deepseek.ttl',
+                    service: 'ai',
+                    status: 'active',
+                    apiKey: 'sk-deepseek',
+                  },
+                ]
+              },
+            }
+          },
+        }
+      },
+      async findById(resource: unknown, id: string) {
+        expect((resource as { config?: { name?: string } }).config?.name).toBe('aiProvider')
+        if (id === 'deepseek') {
+          return {
+            id: 'deepseek',
+            baseUrl: 'https://api.deepseek.com/v1',
+            supportsBackend: 'codex',
+          }
+        }
+        return null
+      },
+    }, 'codex')
+
+    expect(selected).toMatchObject({
+      providerId: 'deepseek',
+      credentialId: 'deepseek-key-1',
+      apiKey: 'sk-deepseek',
+      baseUrl: 'https://api.deepseek.com/v1',
+    })
+  })
+
   it('creates a shared mutation plan for provider, credential, and model writes', () => {
     const plan = buildAIConfigMutationPlan({
       providerId: 'claude',
@@ -201,6 +295,42 @@ describe('ai-config shared core', () => {
       status: 'active',
     })
     expect(plan.modelDeleteIds).toEqual([])
+  })
+
+  it('creates a shared mutation plan for custom codex provider credentials', () => {
+    const plan = buildAIConfigMutationPlan({
+      providerId: 'deepseek',
+      currentProviderRows: [],
+      currentCredentialRows: [],
+      currentModelRows: [],
+      updates: {
+        enabled: true,
+        apiKey: 'sk-deepseek-test',
+        baseUrl: 'https://api.deepseek.com/v1',
+        supportsBackend: 'codex',
+        rotationPolicy: 'round_robin',
+        credentialId: 'deepseek-key-1',
+        credentialLabel: 'DeepSeek Key 1',
+      },
+    })
+
+    expect(plan.providerId).toBe('deepseek')
+    expect(plan.providerPayload).toMatchObject({
+      id: 'deepseek',
+      baseUrl: 'https://api.deepseek.com/v1',
+      supportsBackend: 'codex',
+      rotationPolicy: 'round_robin',
+    })
+    expect(plan.credentialPayload).toMatchObject({
+      id: 'deepseek-key-1',
+      provider: aiConfigProviderRef('deepseek'),
+      service: 'ai',
+      status: 'active',
+      apiKey: 'sk-deepseek-test',
+      label: 'DeepSeek Key 1',
+      isDefault: true,
+    })
+    expect(plan.credentialPayload?.baseUrl).toBeUndefined()
   })
 
   it('builds a shared disconnect plan for provider alias credentials', () => {

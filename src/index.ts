@@ -19,9 +19,6 @@ export {
   VCARD,
   WF,
   LDP,
-  // xpod vocabs
-  XPOD_CREDENTIAL,
-  XPOD_AI,
 } from "./namespaces";
 
 // Wave A: centralized vocab objects (downstream should prefer these over ad-hoc namespaces)
@@ -103,15 +100,25 @@ export { messageRepository } from './message.repository'
 
 export {
   TaskStatus,
-  TaskTriggerKind,
   taskResource,
   taskTable,
   type TaskStatusType,
-  type TaskTriggerKindType,
   type TaskRow,
   type TaskInsert,
   type TaskUpdate,
 } from './task.schema'
+
+export {
+  DeliveryKind,
+  DeliveryStatus,
+  deliveryResource,
+  deliveryTable,
+  type DeliveryKindType,
+  type DeliveryStatusType,
+  type DeliveryRow,
+  type DeliveryInsert,
+  type DeliveryUpdate,
+} from './delivery.schema'
 
 export {
   RunStatus,
@@ -132,17 +139,15 @@ export {
 
 export {
   chatResourceId,
-  commandKindFromResourceId,
   dateParts,
+  deliveryResourceId,
   messageResourceId,
   parentDir,
   resourceKey,
   runResourceId,
   runStepResourceId,
-  surfaceIdFromCommandResourceId,
   taskResourceId,
   threadResourceId,
-  type CommandKind,
   type DateInput,
   type DateParts,
 } from './resource-id-defaults'
@@ -195,15 +200,6 @@ export {
 
 // Wave A CP0: fixtures for downstream parallel development
 export * from "./fixtures/contracts-chat-contact";
-
-// File - 文件管理
-export {
-  fileResource,
-  fileTable,
-  type FileRow,
-  type FileInsert,
-  type FileUpdate,
-} from './file'
 
 // Favorite - 收藏
 export {
@@ -334,7 +330,7 @@ export {
 // Extension - 扩展
 export { extensionSchema } from './extension'
 
-// xpod AI schema
+// AI/Credential shared schema
 export {
   apiKeyCredentialResource,
   apiKeyCredentialTable,
@@ -397,12 +393,14 @@ export {
   aiConfigModelUri,
   aiConfigProviderRef,
   aiConfigProviderUri,
+  aiConfigRepository,
   buildAIConfigDisconnectPlan,
   buildAIConfigMutationPlan,
   buildAIConfigProviderStateMap,
   getAIConfigDefaultBaseUrl,
   getAIConfigProviderCatalog,
   getAIConfigProviderFamilyIds,
+  getAIConfigProviderIdsForBackend,
   getAIConfigProviderMetadata,
   getDefaultAIConfigCredentialId,
   normalizeAIConfigProviderId,
@@ -410,7 +408,9 @@ export {
   normalizeAIConfigResourceId,
   sameAIConfigProviderFamily,
   selectAIConfigCredential,
+  selectAIConfigCredentialForBackend,
   type AIConfigModel,
+  type AIConfigBackendCredentialSelection,
   type AIConfigCredentialSelection,
   type AIConfigDisconnectPlan,
   type AIConfigMutationPlan,

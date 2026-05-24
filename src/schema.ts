@@ -16,8 +16,8 @@ import { aiProviderResource, aiProviderTable } from './ai-provider.schema'
 import { chatResource, chatTable } from './chat.schema'
 import { contactResource, contactTable } from './contact.schema'
 import { credentialResource, credentialTable } from './credential.schema'
+import { deliveryResource, deliveryTable } from './delivery.schema'
 import { favoriteResource, favoriteTable } from './favorite/favorite.schema'
-import { fileResource, fileTable } from './file/file.schema'
 import { grantResource, grantTable } from './grant.schema'
 import { inboxNotificationResource, inboxNotificationTable } from './inbox-notification.schema'
 import { issueResource, issueTable } from './issue.schema'
@@ -38,6 +38,7 @@ export const solidResources = {
   threadResource,
   messageResource,
   taskResource,
+  deliveryResource,
   runResource,
   runStepResource,
   credentialResource,
@@ -47,7 +48,6 @@ export const solidResources = {
   vectorStoreResource,
   indexedFileResource,
   agentStatusResource,
-  fileResource,
   favoriteResource,
   settingsResource,
   issueResource,
@@ -70,6 +70,7 @@ export const solidSchema = {
   threadTable,
   messageTable,
   taskTable,
+  deliveryTable,
   runTable,
   runStepTable,
   credentialTable,
@@ -79,7 +80,6 @@ export const solidSchema = {
   vectorStoreTable,
   indexedFileTable,
   agentStatusTable,
-  fileTable,
   favoriteTable,
   settingsTable,
   issueTable,

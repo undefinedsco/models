@@ -1,8 +1,4 @@
 import { parsePodResourceRef } from '@undefineds.co/drizzle-solid'
-import {
-  commandKindFromResourceId,
-  surfaceIdFromCommandResourceId,
-} from './resource-id-defaults'
 
 export const toTimestamp = (value: unknown, fallback = 0): number => {
   if (value instanceof Date) return value.getTime()
@@ -25,7 +21,8 @@ export function extractChatIdFromChatRef(chatRef: string | null | undefined): st
   const resourceId = parsed?.resourceId ?? chatRef
   const direct = resourceId.match(/^([^/]+)\/index\.ttl#this$/)
   if (direct) return decodeURIComponent(direct[1])
-  return surfaceIdFromCommandResourceId(resourceId)
+  const chatPath = normalizePodDataResourceId(resourceId).match(/^chat\/(.+)\/index\.ttl#this$/)
+  return chatPath?.[1] ? decodeURIComponent(chatPath[1]) : null
 }
 
 export function extractThreadIdFromThreadRef(threadRef: string | null | undefined): string | null {
@@ -42,10 +39,10 @@ export function extractChatThreadRef(uri: string | null | undefined): ChatThread
   if (!uri) return { chatId: null, threadId: null }
   const parsed = parsePodResourceRef({ config: { base: '/.data/' } } as any, uri)
   const resourceId = parsed?.resourceId ?? uri
+  const normalized = normalizePodDataResourceId(resourceId)
+  const chatThread = normalized.match(/^chat\/(.+)\/index\.ttl#([^#/]+)$/)
   return {
-    chatId: commandKindFromResourceId(resourceId) === 'chat'
-      ? surfaceIdFromCommandResourceId(resourceId)
-      : null,
+    chatId: chatThread?.[1] ? decodeURIComponent(chatThread[1]) : null,
     threadId: extractThreadIdFromThreadRef(resourceId),
   }
 }
@@ -54,4 +51,11 @@ export function resolveThreadChatId(
   thread: Pick<Record<string, unknown>, 'chat'> | null | undefined,
 ): string | null {
   return extractChatIdFromChatRef(typeof thread?.chat === 'string' ? thread.chat : null)
+}
+
+function normalizePodDataResourceId(ref: string): string {
+  const dataIndex = ref.indexOf('/.data/')
+  return dataIndex >= 0
+    ? ref.slice(dataIndex + '/.data/'.length)
+    : ref.replace(/^\/?\.data\//, '').replace(/^\/+/, '')
 }

@@ -6,14 +6,14 @@ import { UDFS, DCTerms, SCHEMA, RDF } from "../namespaces";
  * 收藏项 - 基于 Solid Pod 存储
  *
  * 支持收藏：Chat, Thread, Contact, Message 等
- * favoriteType 使用 RDF type URI 标识实体类型
+ * targetType 使用 RDF type URI 标识实体类型
  */
 export const favoriteResource = podTable("favorite", {
   id: id("id"),
 
   // 收藏目标
   targetType: uri("targetType").predicate(RDF.type).notNull(), // RDF type URI (e.g., MEETING.LongChat)
-  targetUri: uri("targetUri").predicate(UDFS.favoriteTarget).notNull(), // 收藏对象的 URI
+  target: uri("target").predicate(UDFS.favoriteTarget).notNull(), // 收藏对象的 URI
 
   // 快照信息（用于快速显示，避免每次查询原始资源）
   title: string("title").predicate(DCTerms.title).notNull(),
@@ -22,7 +22,6 @@ export const favoriteResource = podTable("favorite", {
 
   // V2: 来源追踪
   sourceModule: string("sourceModule").predicate(UDFS.sourceModule),   // 'chat' | 'contacts' | 'files' | 'messages' | 'thread'
-  sourceId: string("sourceId").predicate(UDFS.sourceId),               // 来源对象业务 ID
 
   // V2: 检索
   searchText: text("searchText").predicate(UDFS.searchText),           // 归一化检索文本

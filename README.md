@@ -17,8 +17,6 @@ yarn workspace @undefineds.co/models test
 ```ts
 import {
   UDFS,
-  XPOD_AI,
-  XPOD_CREDENTIAL,
   agentResource,
   aiModelResource,
   aiProviderResource,
@@ -52,13 +50,6 @@ https://undefineds.co/ns#
 ```
 
 Use `udfs:` terms in models-level RDF contracts.
-
-AI service catalog resources currently use the Xpod AI vocabularies:
-
-```text
-https://vocab.xpod.dev/ai#
-https://vocab.xpod.dev/credential#
-```
 
 ## Core Runtime Semantics
 
@@ -169,7 +160,7 @@ AI Secretary has both:
 ```text
 Contact
   contactType: agent
-  entityUri: Agent profile URI
+  entity: Agent profile URI
 
 Agent
   home: /.data/agents/secretary/
@@ -221,7 +212,13 @@ Representative paths:
 
 Schema fields that are RDF relations should store resource URIs, not hidden
 `xxxId` foreign keys. Short ids are acceptable at repository/helper boundaries
-when the helper derives the canonical URI internally.
+when the helper derives the canonical URI internally. If a fact must be
+queried, synced, approved, audited, or used to reconstruct shared state, model
+it as an explicit field or URI relation instead of hiding it in `metadata`.
+`metadata` is only for opaque protocol ids, local cache keys, UI state,
+compatibility data, and non-structural context. Prefer semantic relation names
+such as `chat`, `thread`, `message`, `task`, `delivery`, `session`,
+`workspace`, `source`, and `trigger`.
 
 ## Design Rules
 

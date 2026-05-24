@@ -6,7 +6,7 @@
  * - starred: false → 删除 Favorite 记录
  *
  * 支持的实体类型：Chat, Thread, Contact
- * favoriteType 使用 RDF type URI 标识
+ * targetType 使用 RDF type URI 标识
  */
 import type { HookContext, TableHooks } from '@undefineds.co/drizzle-solid'
 import { favoriteResource, type FavoriteInsert } from './favorite.schema'
@@ -57,10 +57,9 @@ async function createFavorite(
   record: Record<string, unknown>
 ): Promise<void> {
   const { rdfType, sourceModule, extractor } = config
-  const targetUri = (record['@id'] as string) || (record.id as string)
-  const sourceId = (record.id as string) || targetUri
+  const target = (record['@id'] as string) || (record.id as string)
 
-  if (!targetUri) {
+  if (!target) {
     console.warn('[StarredSync] Cannot create favorite: missing target URI')
     return
   }
@@ -69,13 +68,12 @@ async function createFavorite(
   const favoriteData: FavoriteInsert = {
     id: crypto.randomUUID(),
     targetType: rdfType,
-    targetUri,
+    target,
     title,
     snapshotContent: extractor.getContent?.(record),
     snapshotAuthor: extractor.getAuthor?.(record),
     // V2 fields
     sourceModule,
-    sourceId,
     searchText: extractor.getSearchText?.(record) ?? title,
     snapshotMeta: extractor.getSnapshotMeta?.(record),
     favoredAt: new Date(),
@@ -86,7 +84,7 @@ async function createFavorite(
     const db = getDbInstance()
     if (db) {
       await db.insert(favoriteResource).values(favoriteData).execute()
-      console.log(`[StarredSync] Created favorite: ${rdfType} → ${targetUri}`)
+      console.log(`[StarredSync] Created favorite: ${rdfType} → ${target}`)
     } else {
       console.warn('[StarredSync] No db instance registered')
     }
@@ -96,21 +94,21 @@ async function createFavorite(
 }
 
 /**
- * 删除 Favorite 记录（通过 targetUri 查找）
+ * 删除 Favorite 记录（通过 target 查找）
  */
 async function deleteFavorite(
   _ctx: HookContext,
-  targetUri: string
+  target: string
 ): Promise<void> {
-  if (!targetUri) return
+  if (!target) return
 
   try {
     const db = getDbInstance()
     if (db) {
       await db.delete(favoriteResource)
-        .where({ targetUri } as any)
+        .where({ target } as any)
         .execute()
-      console.log(`[StarredSync] Deleted favorite: ${targetUri}`)
+      console.log(`[StarredSync] Deleted favorite: ${target}`)
     }
   } catch (error) {
     console.error('[StarredSync] Failed to delete favorite:', error)
@@ -144,14 +142,14 @@ export function createStarredSyncHook<T = Record<string, unknown>>(
       if (!('starred' in changes)) return
 
       const starred = record.starred as boolean
-      const targetUri = (record['@id'] as string) || (record.id as string)
+      const target = (record['@id'] as string) || (record.id as string)
 
       if (starred) {
         // 标星 → 创建 Favorite
         await createFavorite(ctx, config as StarredSyncConfig, record)
       } else {
         // 取消标星 → 删除 Favorite
-        await deleteFavorite(ctx, targetUri)
+        await deleteFavorite(ctx, target)
       }
     },
   }

@@ -1,13 +1,15 @@
-import { podTable, string, timestamp, integer, boolean, id } from "@undefineds.co/drizzle-solid";
+import { boolean, id, integer, podTable, string, timestamp } from "@undefineds.co/drizzle-solid";
 import { UDFS, DCTerms, SCHEMA } from "../namespaces";
 
 /**
  * @deprecated 文件管理应由 xpod 处理，Pod 本身就是文件系统。
  * 标签、索引等元数据功能由 xpod sidecar 提供。
- * 此 schema 将在未来版本中移除。
+ * 此 schema 只保留在 `@undefineds.co/models/file` 兼容入口中，不再进入
+ * 根导出、solidResources 或 solidSchema。
  *
- * File resource
- * 文件管理模型 - 基于 Solid Pod 存储
+ * Solid file identity is the file IRI itself. Do not wrap first-class Pod files
+ * in a second canonical business resource unless the new resource models
+ * sidecar/index semantics rather than the file.
  *
  * 参考标准：
  * - Schema.org MediaObject
@@ -58,7 +60,7 @@ export const fileResource = podTable("file", {
   namespace: UDFS,
 });
 
-// Compatibility alias. New model code should prefer `fileResource`.
+// Deprecated compatibility alias.
 export const fileTable = fileResource;
 
 export type FileRow = typeof fileResource.$inferSelect;

@@ -210,7 +210,9 @@ export interface ToolApprovalMessageBlock extends BaseMessageBlock {
 // 任务进度块（CP0 合同）
 export interface TaskProgressMessageBlock extends BaseMessageBlock {
   type: MessageBlockType.TASK_PROGRESS
-  taskId: string
+  task: string
+  /** @deprecated Use `task`; retained only for older richContent payloads. */
+  taskId?: string
   title: string
   steps: Array<{
     id: string

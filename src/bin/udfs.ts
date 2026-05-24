@@ -2,7 +2,7 @@
 import {
   createPodStorage,
   podSchema,
-  XPOD_CREDENTIAL,
+  UDFS,
   type PodStorageValidationResult,
 } from '../index'
 
@@ -358,7 +358,7 @@ function coerceResolvedConsensusPayload(payload: unknown): {
 } | null {
   if (!isRecord(payload) || payload.status !== 'resolved') return null
   const schemaUri = stringField(payload, 'schemaUri') ?? stringField(payload, 'uri')
-  if (schemaUri !== XPOD_CREDENTIAL.Credential) return null
+  if (schemaUri !== UDFS.Credential) return null
   if (!isRecord(payload.fieldMapping)) return null
 
   const service = stringField(payload.fieldMapping, 'service')
@@ -421,7 +421,7 @@ function buildConsensusResult(input: {
   }
   const resolved: ConsensusResult['resolved'] = {
     status: 'resolved',
-    schemaUri: XPOD_CREDENTIAL.Credential,
+    schemaUri: UDFS.Credential,
     fieldMapping: {
       service: input.fieldMapping?.service ?? 'infra',
       providerId: input.fieldMapping?.providerId ?? 'cloudflare',

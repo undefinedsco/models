@@ -2,18 +2,18 @@ import { execFile, execFileSync } from 'node:child_process'
 import { createServer } from 'node:http'
 import { promisify } from 'node:util'
 import { describe, expect, it } from 'vitest'
-import { XPOD_CREDENTIAL } from '../src'
+import { UDFS } from '../src'
 
 const execFileAsync = promisify(execFile)
 
 describe('udfs cli', () => {
   it('describes pod schema descriptors', () => {
-    const output = execFileSync(process.execPath, ['dist/bin/udfs.js', 'schema', 'describe', XPOD_CREDENTIAL.Credential], {
+    const output = execFileSync(process.execPath, ['dist/bin/udfs.js', 'schema', 'describe', UDFS.Credential], {
       cwd: new URL('..', import.meta.url),
       encoding: 'utf8',
     })
     const descriptor = JSON.parse(output)
-    expect(descriptor.uri).toBe(XPOD_CREDENTIAL.Credential)
+    expect(descriptor.uri).toBe(UDFS.Credential)
     expect(descriptor.storage.base).toBe('/settings/credentials.ttl')
     expect(descriptor.storage.resourceIdPattern).toBe('#{id}')
   })
@@ -31,8 +31,8 @@ describe('udfs cli', () => {
     })
     const results = JSON.parse(output)
     expect(results[0]).toMatchObject({
-      uri: XPOD_CREDENTIAL.Credential,
-      class: XPOD_CREDENTIAL.Credential,
+      uri: UDFS.Credential,
+      class: UDFS.Credential,
       resourceKind: 'credential',
     })
     expect(results[0].matchedFields).toContain('example')
@@ -44,20 +44,20 @@ describe('udfs cli', () => {
       'schema',
       'classes',
       '--uri',
-      XPOD_CREDENTIAL.Credential,
+      UDFS.Credential,
     ], {
       cwd: new URL('..', import.meta.url),
       encoding: 'utf8',
     })
     const classes = JSON.parse(classesOutput)
-    expect(classes[0].class).toBe(XPOD_CREDENTIAL.Credential)
+    expect(classes[0].class).toBe(UDFS.Credential)
 
     const predicatesOutput = execFileSync(process.execPath, [
       'dist/bin/udfs.js',
       'schema',
       'predicates',
       '--uri',
-      XPOD_CREDENTIAL.Credential,
+      UDFS.Credential,
       '--field',
       'apiKey',
     ], {
@@ -67,9 +67,9 @@ describe('udfs cli', () => {
     const predicates = JSON.parse(predicatesOutput)
     expect(predicates).toEqual([
       expect.objectContaining({
-        schemaUri: XPOD_CREDENTIAL.Credential,
+        schemaUri: UDFS.Credential,
         field: 'apiKey',
-        predicate: XPOD_CREDENTIAL.apiKey,
+        predicate: UDFS.apiKey,
         secret: true,
       }),
     ])
@@ -82,7 +82,7 @@ describe('udfs cli', () => {
       'validate',
       '--input',
       JSON.stringify({
-        schemaUri: XPOD_CREDENTIAL.Credential,
+        schemaUri: UDFS.Credential,
         operation: 'upsert',
         match: {
           service: 'infra',
@@ -124,7 +124,7 @@ describe('udfs cli', () => {
     const result = JSON.parse(output)
     expect(result.session_id).toBe('sess_local_test')
     expect(result.first.status).toBe('needs_clarification')
-    expect(result.resolved.schemaUri).toBe(XPOD_CREDENTIAL.Credential)
+    expect(result.resolved.schemaUri).toBe(UDFS.Credential)
     expect(result.consensusRuntime).toEqual({
       mode: 'local-fallback',
       auth: 'none',
@@ -163,7 +163,7 @@ describe('udfs cli', () => {
                   type: 'output_text',
                   text: JSON.stringify({
                     status: 'resolved',
-                    schemaUri: XPOD_CREDENTIAL.Credential,
+                    schemaUri: UDFS.Credential,
                     fieldMapping: {
                       service: 'infra',
                       providerId: 'cloudflare',

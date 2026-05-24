@@ -211,7 +211,7 @@ describe('Solid Pod live CRUD core surfaces', () => {
     const runtimeSessionResourceId = database.resolveResourceId(sessionTable, runtimeSessionIri)
     const [createdSession] = await step('session.create', () => database.insert(sessionTable).values({
       id: runtimeSessionId,
-      ownerWebId: webId,
+      owner: webId,
       chat: chatIri,
       thread: threadIri,
       sessionType: 'direct',

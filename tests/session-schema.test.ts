@@ -26,7 +26,7 @@ describe('session schema', () => {
 
     expect(columns).toBeDefined()
     expect(columns.id).toBeDefined()
-    expect(columns.ownerWebId).toBeDefined()
+    expect(columns.owner).toBeDefined()
     expect(columns.chat).toBeDefined()
     expect(columns.thread).toBeDefined()
     expect(columns.chatId).toBeUndefined()
@@ -35,7 +35,8 @@ describe('session schema', () => {
     expect(columns.status).toBeDefined()
     expect(columns.tool).toBeDefined()
     expect(columns.tokenUsage).toBeDefined()
-    expect(columns.messageResources).toBeDefined()
+    expect(columns.messages).toBeDefined()
+    expect(columns.messageResources).toBeUndefined()
     expect(columns.metadata).toBeDefined()
   })
 

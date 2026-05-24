@@ -36,7 +36,9 @@ export type TaskProgressStepStatus = 'pending' | 'running' | 'done' | 'error' | 
 export interface TaskProgressBlock {
   type: 'task_progress'
 
-  taskId: string
+  task: string
+  /** @deprecated Use `task`; retained only for reading older richContent payloads. */
+  taskId?: string
   title: string
   steps: Array<{
     id: string

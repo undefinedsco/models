@@ -1,0 +1,161 @@
+@prefix udfs: <https://undefineds.co/ns#> .
+@prefix as: <https://www.w3.org/ns/activitystreams#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<> a owl:Ontology ;
+  rdfs:label "LinX Workflow Vocabulary" ;
+  rdfs:comment "Company-level terms (udfs:) used by Issue/Task/Delivery/Run/RunStep workflow contracts. URI relations use semantic field names; external or local opaque ids are not RDF links." .
+
+# Classes
+udfs:Task a rdfs:Class ;
+  rdfs:label "Task" ;
+  rdfs:comment "Durable executable work unit. It describes what should be done, independent of schedule, runner selection, runtime prompt projection, or a concrete execution attempt." .
+
+udfs:Delivery a rdfs:Class ;
+  rdfs:label "Delivery" ;
+  rdfs:comment "Internal handoff envelope between threads, sessions, agents, and runtimes. It carries task dispatch, runtime intent, reports, or delegated responses without becoming an Inbox item by itself." .
+
+udfs:Run a rdfs:Class ;
+  rdfs:label "Run" ;
+  rdfs:comment "One concrete execution attempt by an agent runtime. A Run records execution state and points back to its task, delivery, trigger, input, thread, and workspace." .
+
+udfs:RunStep a rdfs:Class ;
+  rdfs:label "RunStep" ;
+  rdfs:comment "Append-only execution fact emitted during a Run. Tool calls, text deltas, waiting-input states, errors, and completion events are RunStep facts." .
+
+# Shared workflow relations
+udfs:task a rdf:Property ;
+  rdfs:label "task" ;
+  rdfs:range udfs:Task ;
+  rdfs:comment "Semantic URI relation to the executable Task." .
+
+udfs:delivery a rdf:Property ;
+  rdfs:label "delivery" ;
+  rdfs:range udfs:Delivery ;
+  rdfs:comment "Semantic URI relation to the Delivery that caused or carries the work." .
+
+udfs:run a rdf:Property ;
+  rdfs:label "run" ;
+  rdfs:range udfs:Run ;
+  rdfs:comment "Semantic URI relation from a RunStep to its Run." .
+
+udfs:issue a rdf:Property ;
+  rdfs:label "issue" ;
+  rdfs:comment "Semantic URI relation to the user-facing Issue or product work item that originated the task." .
+
+udfs:message a rdf:Property ;
+  rdfs:label "message" ;
+  rdfs:comment "Semantic URI relation to the Message that originated or represents a task." .
+
+udfs:source a rdf:Property ;
+  rdfs:label "source" ;
+  rdfs:range rdfs:Resource ;
+  rdfs:comment "Originating resource for a task, delivery, grant, or audit item. The object is a resource URI, not a local source id." .
+
+udfs:trigger a rdf:Property ;
+  rdfs:label "trigger" ;
+  rdfs:range rdfs:Resource ;
+  rdfs:comment "Resource that triggered a Run, such as a Message, Delivery, Schedule, AutomationRule, or blocked control event." .
+
+udfs:input a rdf:Property ;
+  rdfs:label "input" ;
+  rdfs:range rdfs:Resource ;
+  rdfs:comment "Resource containing the concrete input or context projection used for a Run." .
+
+udfs:targetThread a rdf:Property ;
+  rdfs:label "target thread" ;
+  rdfs:range rdfs:Resource ;
+  rdfs:comment "Thread that should receive or consume a Delivery." .
+
+udfs:targetSession a rdf:Property ;
+  rdfs:label "target session" ;
+  rdfs:range rdfs:Resource ;
+  rdfs:comment "Runtime session that should receive or consume a Delivery." .
+
+as:target a rdf:Property ;
+  rdfs:label "target" .
+
+as:actor a rdf:Property ;
+  rdfs:label "actor" .
+
+as:object a rdf:Property ;
+  rdfs:label "object" .
+
+# Literal/object properties
+udfs:instruction a rdf:Property ;
+  rdfs:label "instruction" ;
+  rdfs:range rdfs:Literal ;
+  rdfs:comment "Human or Secretary-authored executable instruction for a Task." .
+
+udfs:deliveryKind a rdf:Property ;
+  rdfs:label "delivery kind" ;
+  rdfs:range rdfs:Literal ;
+  rdfs:comment "Delivery category, such as task_dispatch, runtime_intent, delegated_response, report, or input_request." .
+
+udfs:objective a rdf:Property ;
+  rdfs:label "objective" ;
+  rdfs:range rdfs:Literal ;
+  rdfs:comment "Short human-facing objective carried by a Delivery." .
+
+udfs:payload a rdf:Property ;
+  rdfs:label "payload" ;
+  rdfs:comment "Structured delivery payload. It is implementation data, not a replacement for semantic URI relations." .
+
+udfs:projection a rdf:Property ;
+  rdfs:label "projection" ;
+  rdfs:comment "Runtime role/content projection used when a backend needs a role or input shape different from the product-level Message maker." .
+
+udfs:projectedRole a rdf:Property ;
+  rdfs:label "projected role" ;
+  rdfs:range rdfs:Literal ;
+  rdfs:comment "Runtime role after projection, for example user, assistant, system, or tool." .
+
+udfs:runner a rdf:Property ;
+  rdfs:label "runner" ;
+  rdfs:range rdfs:Literal ;
+  rdfs:comment "Runtime implementation selected for a Run, such as codex, claude, codebuddy, or a LinX Cloud runner." .
+
+udfs:externalRunId a rdf:Property ;
+  rdfs:label "external run id" ;
+  rdfs:range rdfs:Literal ;
+  rdfs:comment "Opaque runtime-provider execution id. It is not a resource relation and should not be used as a shared RDF link." .
+
+udfs:stepType a rdf:Property ;
+  rdfs:label "step type" ;
+  rdfs:range rdfs:Literal ;
+  rdfs:comment "Append-only RunStep event type, such as runtime.tool_call, runtime.waiting_input, runtime.error, or run.completed." .
+
+udfs:leaseOwner a rdf:Property ;
+  rdfs:label "lease owner" ;
+  rdfs:range rdfs:Literal .
+
+udfs:leaseExpiresAt a rdf:Property ;
+  rdfs:label "lease expires at" ;
+  rdfs:range rdfs:Literal .
+
+udfs:heartbeatAt a rdf:Property ;
+  rdfs:label "heartbeat at" ;
+  rdfs:range rdfs:Literal .
+
+udfs:cancelRequestedAt a rdf:Property ;
+  rdfs:label "cancel requested at" ;
+  rdfs:range rdfs:Literal .
+
+udfs:startedAt a rdf:Property ;
+  rdfs:label "started at" ;
+  rdfs:range rdfs:Literal .
+
+udfs:consumedAt a rdf:Property ;
+  rdfs:label "consumed at" ;
+  rdfs:range rdfs:Literal .
+
+udfs:completedAt a rdf:Property ;
+  rdfs:label "completed at" ;
+  rdfs:range rdfs:Literal .
+
+udfs:metadata a rdf:Property ;
+  rdfs:label "metadata" ;
+  rdfs:comment "Extension and compatibility data. It may contain protocol/local opaque ids, but must not hide shared RDF relations." .

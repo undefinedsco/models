@@ -1,5 +1,3 @@
-export type CommandKind = 'chat' | 'task'
-
 export type DateInput = Date | string | number | null | undefined
 
 export interface DateParts {
@@ -36,18 +34,6 @@ export function parentDir(id: string | null | undefined): string | null {
   return parts.slice(0, -1).join('/')
 }
 
-export function surfaceIdFromCommandResourceId(id: string | null | undefined): string | null {
-  if (!id) return null
-  const match = id.match(/^(chat|task)\/([^/]+)\//)
-  return match ? decodeURIComponent(match[2]) : null
-}
-
-export function commandKindFromResourceId(id: string | null | undefined): CommandKind | null {
-  if (!id) return null
-  const match = id.match(/^(chat|task)\//)
-  return match?.[1] === 'task' ? 'task' : match?.[1] === 'chat' ? 'chat' : null
-}
-
 export function chatResourceId(key?: string): string {
   return `${resourceKey(key, 'chat')}/index.ttl#this`
 }
@@ -56,16 +42,25 @@ export function taskResourceId(key?: string): string {
   return `index.ttl#${resourceKey(key, 'task')}`
 }
 
+export function deliveryResourceId(
+  key: string | undefined,
+  row?: Record<string, unknown>,
+): string {
+  const localKey = resourceKey(key, 'delivery')
+  const ownerDir = taskDir(row)
+    ?? chatDir(row)
+    ?? threadDir(row)
+    ?? 'deliveries'
+  const { yyyy, MM, dd } = dateParts(row?.createdAt as DateInput)
+  return `${ownerDir}/${yyyy}/${MM}/${dd}/deliveries.ttl#${localKey}`
+}
+
 export function threadResourceId(
   key: string | undefined,
   row?: Record<string, unknown>,
 ): string {
   const localKey = resourceKey(key, 'thread')
-  const commandKind = row?.commandKind === 'task' ? 'task' : 'chat'
-  const surfaceId = typeof row?.surfaceId === 'string' && row.surfaceId.length > 0
-    ? row.surfaceId
-    : surfaceIdFromCommandResourceId(typeof row?.id === 'string' ? row.id : undefined) ?? 'default'
-  return `${commandKind}/${surfaceId}/index.ttl#${localKey}`
+  return `${chatDir(row) ?? 'chat/default'}/index.ttl#${localKey}`
 }
 
 export function messageResourceId(
@@ -73,12 +68,9 @@ export function messageResourceId(
   row?: Record<string, unknown>,
 ): string {
   const localKey = resourceKey(key, 'msg')
-  const commandKind = row?.commandKind === 'task' ? 'task' : 'chat'
-  const surfaceId = typeof row?.surfaceId === 'string' && row.surfaceId.length > 0
-    ? row.surfaceId
-    : surfaceIdFromCommandResourceId(typeof row?.thread === 'string' ? row.thread : undefined) ?? 'default'
+  const ownerDir = chatDir(row) ?? threadDir(row) ?? 'chat/default'
   const { yyyy, MM, dd } = dateParts(row?.createdAt as DateInput)
-  return `${commandKind}/${surfaceId}/${yyyy}/${MM}/${dd}/messages.ttl#${localKey}`
+  return `${ownerDir}/${yyyy}/${MM}/${dd}/messages.ttl#${localKey}`
 }
 
 export function runResourceId(
@@ -86,12 +78,9 @@ export function runResourceId(
   row?: Record<string, unknown>,
 ): string {
   const localKey = resourceKey(key, 'run')
-  const commandKind = row?.commandKind === 'task' ? 'task' : 'chat'
-  const surfaceId = typeof row?.surfaceId === 'string' && row.surfaceId.length > 0
-    ? row.surfaceId
-    : surfaceIdFromCommandResourceId(typeof row?.thread === 'string' ? row.thread : undefined) ?? 'default'
+  const ownerDir = taskDir(row) ?? threadDir(row) ?? chatDir(row) ?? 'runs'
   const { yyyy, MM, dd } = dateParts(row?.createdAt as DateInput)
-  return `${commandKind}/${surfaceId}/${yyyy}/${MM}/${dd}/runs.ttl#${localKey}`
+  return `${ownerDir}/${yyyy}/${MM}/${dd}/runs.ttl#${localKey}`
 }
 
 export function runStepResourceId(
@@ -99,14 +88,50 @@ export function runStepResourceId(
   row?: Record<string, unknown>,
 ): string {
   const localKey = resourceKey(key, 'run-step')
-  const runId = typeof row?.runId === 'string' ? row.runId : undefined
-  if (runId && /^(chat|task)\/[^/]+\/\d{4}\/\d{2}\/\d{2}\/runs\.ttl#[^#/]+$/.test(runId)) {
-    return `${runId.slice(0, runId.lastIndexOf('#') + 1)}${localKey}`
+  const run = typeof row?.run === 'string' ? row.run : undefined
+  if (run && /(?:^|\/)\d{4}\/\d{2}\/\d{2}\/runs\.ttl#[^#/]+$/.test(stripPodDataPrefix(run))) {
+    return `${run.slice(0, run.lastIndexOf('#') + 1)}${localKey}`
   }
-  const commandKind = row?.commandKind === 'task' ? 'task' : 'chat'
-  const surfaceId = typeof row?.surfaceId === 'string' && row.surfaceId.length > 0
-    ? row.surfaceId
-    : 'default'
+  const ownerDir = taskDir(row) ?? threadDir(row) ?? chatDir(row) ?? 'runs'
   const { yyyy, MM, dd } = dateParts(row?.createdAt as DateInput)
-  return `${commandKind}/${surfaceId}/${yyyy}/${MM}/${dd}/runs.ttl#${localKey}`
+  return `${ownerDir}/${yyyy}/${MM}/${dd}/runs.ttl#${localKey}`
+}
+
+function chatDir(row?: Record<string, unknown>): string | null {
+  const chat = typeof row?.chat === 'string' ? row.chat : undefined
+  if (!chat) return null
+  const resourceId = stripPodDataPrefix(chat)
+  const match = resourceId.match(/^chat\/(.+)\/index\.ttl#this$/)
+  return match?.[1] ? `chat/${match[1]}` : null
+}
+
+function threadDir(row?: Record<string, unknown>): string | null {
+  const thread = typeof row?.thread === 'string' ? row.thread : undefined
+  if (!thread) return null
+  const resourceId = stripPodDataPrefix(thread)
+  const match = resourceId.match(/^(chat\/.+)\/index\.ttl#[^#/]+$/)
+  return match?.[1] ?? null
+}
+
+function taskDir(row?: Record<string, unknown>): string | null {
+  const task = typeof row?.task === 'string' ? row.task : undefined
+  if (!task) return null
+  const resourceId = stripPodDataPrefix(task)
+  if (resourceId === 'task/index.ttl#this') return 'task'
+  const legacyIndexMatch = resourceId.match(/^task\/index\.ttl#([^#/]+)$/)
+  if (legacyIndexMatch?.[1]) return `task/${legacyIndexMatch[1]}`
+  const match = resourceId.match(/^task\/(.+)\.ttl(?:#[^#/]+)?$/)
+  return match?.[1] ? `task/${match[1]}` : null
+}
+
+function stripPodDataPrefix(ref: string): string {
+  const hashIndex = ref.indexOf('#')
+  const [documentRef, fragment = ''] = hashIndex >= 0
+    ? [ref.slice(0, hashIndex), ref.slice(hashIndex)]
+    : [ref, '']
+  const dataIndex = documentRef.indexOf('/.data/')
+  const relative = dataIndex >= 0
+    ? documentRef.slice(dataIndex + '/.data/'.length)
+    : documentRef.replace(/^\/?\.data\//, '').replace(/^\/+/, '')
+  return `${relative}${fragment}`
 }

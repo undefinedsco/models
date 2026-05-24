@@ -6,7 +6,6 @@ import { aiProviderTable } from '../src/ai-provider.schema'
 import { approvalResource } from '../src/approval.schema'
 import { credentialTable } from '../src/credential.schema'
 import { favoriteTable } from '../src/favorite/favorite.schema'
-import { fileTable } from '../src/file/file.schema'
 import { inboxNotificationTable } from '../src/inbox-notification.schema'
 import { SCHEMA } from '../src/namespaces'
 import { solidProfileTable } from '../src/profile.schema'
@@ -52,7 +51,6 @@ async function getDb(): Promise<SolidDatabase> {
     aiProviderTable,
     aiModelTable,
     settingsTable,
-    fileTable,
     favoriteTable,
     inboxNotificationTable,
     solidProfileTable,
@@ -75,7 +73,7 @@ afterAll(async () => {
 })
 
 describe('Solid Pod secondary resource CRUD surfaces', () => {
-  it('reads profile and CRUDs settings/credential/model/file/favorite/inbox resources', { timeout: 120_000 }, async () => {
+  it('reads profile and CRUDs settings/credential/model/favorite/inbox resources', { timeout: 120_000 }, async () => {
     const database = await getDb()
     const webId = localXpod!.webId
     const podBase = podBaseUrl(webId)
@@ -107,11 +105,11 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       failCount: 0,
     }).execute()
     await expect(database.findByIri(credentialTable, credentialIri)).resolves.toMatchObject({
-      id: `#${credentialId}`,
+      id: `credentials.ttl#${credentialId}`,
       label: 'Smoke credential',
     })
     await expect(database.findById(credentialTable, credentialId)).resolves.toMatchObject({
-      id: `#${credentialId}`,
+      id: `credentials.ttl#${credentialId}`,
       label: 'Smoke credential',
     })
     expect(extractPodResourceTemplateValue(credentialTable, credentialIri)).toBe(credentialId)
@@ -173,57 +171,23 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
     })).resolves.toMatchObject({ label: 'Smoke Setting updated' })
     await expectDeleted(database, settingsTable, settingIri)
 
-    const fileId = `file-${crypto.randomUUID()}`
-    const fileIri = database.resolveLocatorIri(fileTable, { id: fileId })
-    await database.insert(fileTable).values({
-      id: fileId,
-      name: 'smoke.txt',
-      description: 'Smoke file metadata',
-      mimeType: 'text/plain',
-      size: 12,
-      hash: 'sha256-smoke',
-      podUri: `${podBase}/files/smoke.txt`,
-      localPath: '/tmp/smoke.txt',
-      syncStatus: 'synced',
-      lastSyncedAt: now,
-      owner: webId,
-      sharedWith: JSON.stringify([]),
-      folder: `${podBase}/files/`,
-      tags: JSON.stringify(['smoke']),
-      createdAt: now,
-      modifiedAt: now,
-      starred: false,
-    }).execute()
-    await expect(database.findByIri(fileTable, fileIri)).resolves.toMatchObject({
-      id: `${fileId}.ttl`,
-      name: 'smoke.txt',
-    })
-    expect(extractPodResourceTemplateValue(fileTable, fileIri)).toBe(fileId)
-    await expect(database.updateByIri(fileTable, fileIri, {
-      name: 'smoke-updated.txt',
-      size: 13,
-      modifiedAt: now,
-    })).resolves.toMatchObject({ name: 'smoke-updated.txt', size: 13 })
-    await expectDeleted(database, fileTable, fileIri)
-
     const favoriteId = `favorite-${crypto.randomUUID()}`
     const favoriteIri = database.resolveLocatorIri(favoriteTable, { id: favoriteId })
     await database.insert(favoriteTable).values({
       id: favoriteId,
       targetType: SCHEMA.CreativeWork,
-      targetUri: `${podBase}/.data/chat/favorite-target/index.ttl#this`,
+      target: `${podBase}/.data/chat/favorite-target/index.ttl#this`,
       title: 'Smoke Favorite',
       snapshotContent: 'favorite smoke content',
       snapshotAuthor: webId,
       sourceModule: 'chat',
-      sourceId: 'favorite-target',
       searchText: 'smoke favorite',
       snapshotMeta: JSON.stringify({ smoke: true }),
       favoredAt: now,
       updatedAt: now,
     }).execute()
     await expect(database.findByIri(favoriteTable, favoriteIri)).resolves.toMatchObject({
-      id: `${favoriteId}.ttl`,
+      id: favoriteId,
       title: 'Smoke Favorite',
     })
     expect(extractPodResourceTemplateValue(favoriteTable, favoriteIri)).toBe(favoriteId)

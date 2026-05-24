@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { extractChatThreadRef } from '../src'
 import { extractApprovalIdFromApprovalRef } from '../src/approval.schema'
 
 describe('resource reference helpers', () => {
@@ -8,5 +9,12 @@ describe('resource reference helpers', () => {
 
     expect(extractApprovalIdFromApprovalRef('https://alice.example/.data/workspaces/ws-1/output/report.md')).toBeNull()
     expect(extractApprovalIdFromApprovalRef('https://alice.example/.data/audits/2026/05/12.ttl#audit-1')).toBeNull()
+  })
+
+  it('extracts chat and thread ids from thread resource refs', () => {
+    expect(extractChatThreadRef('https://alice.example/.data/chat/chat-2/index.ttl#thread-2')).toEqual({
+      chatId: 'chat-2',
+      threadId: 'thread-2',
+    })
   })
 })

@@ -1,20 +1,20 @@
 import { id, integer, podTable, string, timestamp, uri } from "@undefineds.co/drizzle-solid"
 import { aiProviderResource } from "./ai-provider.schema"
-import { XPOD_AI } from "./namespaces"
+import { UDFS } from "./namespaces"
 
 export const aiModelResource = podTable("aiModel", {
   id: id("id"),
-  displayName: string("displayName").predicate(XPOD_AI.displayName),
-  modelType: string("modelType").predicate(XPOD_AI.modelType).default("chat"),
-  isProvidedBy: uri("isProvidedBy").predicate(XPOD_AI.isProvidedBy).link(aiProviderResource),
-  dimension: integer("dimension").predicate(XPOD_AI.dimension),
-  status: string("status").predicate(XPOD_AI.status).default("active"),
-  createdAt: timestamp("createdAt").predicate(XPOD_AI.createdAt).notNull().defaultNow(),
-  updatedAt: timestamp("updatedAt").predicate(XPOD_AI.updatedAt).notNull().defaultNow(),
+  displayName: string("displayName").predicate(UDFS.displayName),
+  modelType: string("modelType").predicate(UDFS.modelType).default("chat"),
+  isProvidedBy: uri("isProvidedBy").predicate(UDFS.isProvidedBy).link(aiProviderResource),
+  dimension: integer("dimension").predicate(UDFS.dimension),
+  status: string("status").predicate(UDFS.status).default("active"),
+  createdAt: timestamp("createdAt").predicate(UDFS.createdAt).notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").predicate(UDFS.updatedAt).notNull().defaultNow(),
 }, {
   base: "/settings/providers/",
-  type: XPOD_AI.Model,
-  namespace: XPOD_AI,
+  type: UDFS.Model,
+  namespace: UDFS,
   subjectTemplate: "{isProvidedBy|id}.ttl#{id}",
 })
 

@@ -2,7 +2,7 @@ export type KnowledgeFolderScope = "read" | "contribute";
 
 export const knowledgeFolderSchema = {
   folderId: "uuid",
-  ownerWebId: "uri",
+  owner: "uri",
   storageType: ["solid-pod", "client-local"],
   defaultKnowledgeScope: Boolean
 };

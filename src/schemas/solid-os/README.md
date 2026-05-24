@@ -60,10 +60,16 @@
 
 | Solid Chat | 我们的字段 | 说明 |
 |------------|-----------|------|
-| `flow:message` | `messageResource` | 消息 |
+| `flow:message` | `messageResource` | 消息资源命名；关系本身应由 `chat` / `thread` / `maker` 等语义字段承载 |
 | `terms:created` | `createdAt` | 创建时间 |
 | `foaf:maker` | `maker` | 发送者 WebID |
 | `sioc:content` | `content` | 内容 |
+
+## 建模约束
+
+- 能被跨端查询、同步、审批、审计或恢复的事实，不应塞进 `metadata`。
+- `metadata` 只放 opaque 协议 id、本地 cache key、UI 状态和兼容迁移信息。
+- 外部系统影响 Pod 关系时，优先建成显式 URI relation；不要把关系伪装成 `xxId` 再放进 metadata。
 
 ### Contact
 

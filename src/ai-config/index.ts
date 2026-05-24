@@ -1,5 +1,6 @@
 import type { AIModelInsert, AIModelRow } from '../ai-model.schema'
-import type { AIProviderInsert, AIProviderRow } from '../ai-provider.schema'
+import { aiProviderResource, type AIProviderInsert, type AIProviderRow } from '../ai-provider.schema'
+import { credentialResource } from '../credential.schema'
 import type { CredentialInsert, CredentialRow } from '../credential.schema'
 
 export interface AIConfigProviderCatalogEntry {
@@ -34,6 +35,11 @@ export interface AIConfigUpdate {
   enabled?: boolean
   apiKey?: string
   baseUrl?: string
+  supportsBackend?: string
+  rotationPolicy?: string
+  credentialId?: string
+  credentialLabel?: string
+  credentialBaseUrl?: string
   models?: AIConfigModel[]
 }
 
@@ -54,6 +60,10 @@ export interface AIConfigCredentialSelection {
   baseUrl?: string
   proxyUrl?: string
   isDefault: boolean
+}
+
+export interface AIConfigBackendCredentialSelection extends AIConfigCredentialSelection {
+  backend: string
 }
 
 export interface AIConfigMutationPlan {
@@ -153,6 +163,16 @@ const AI_CONFIG_PROVIDER_MAP = new Map(
 )
 const ABSOLUTE_IRI = /^[a-zA-Z][a-zA-Z\d+.-]*:/
 
+interface AIConfigRepositoryDb {
+  select(): {
+    from(resource: unknown): {
+      execute(): Promise<unknown[]>
+    }
+  }
+  findById<T = unknown>(resource: unknown, id: string): Promise<T | null>
+  updateById?(resource: unknown, id: string, data: Record<string, unknown>): Promise<unknown>
+}
+
 function normalizeText(value: string): string {
   return value.trim().toLowerCase()
 }
@@ -208,6 +228,41 @@ function normalizeOptionalTimestamp(value: unknown): number {
 
 function normalizeOptionalInteger(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
+}
+
+function normalizeBackendId(value?: string | null): string {
+  return normalizeText(String(value ?? ''))
+}
+
+function normalizeRotationPolicy(value: unknown): string {
+  const normalized = normalizeOptionalText(value)?.toLowerCase()
+  return normalized === 'round_robin' || normalized === 'round-robin' ? 'round_robin' : 'default'
+}
+
+function parseBackendList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.flatMap(parseBackendList)
+  }
+  if (typeof value !== 'string') {
+    return []
+  }
+  return value
+    .split(/[\s,;|]+/u)
+    .map(normalizeBackendId)
+    .filter(Boolean)
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return Array.from(new Set(values.filter(Boolean)))
+}
+
+function aiConfigProviderSupportsBackend(
+  row: Partial<AIProviderRow> & Record<string, unknown>,
+  backend: string,
+): boolean {
+  const normalizedBackend = normalizeBackendId(backend)
+  if (!normalizedBackend) return false
+  return parseBackendList(row.supportsBackend).includes(normalizedBackend)
 }
 
 export function getAIConfigProviderCatalog(): readonly AIConfigProviderCatalogEntry[] {
@@ -297,6 +352,10 @@ export function getAIConfigProviderFamilyIds(providerId: string): string[] {
   return [metadata.id, ...(metadata.aliases ?? [])]
 }
 
+export function getAIConfigProviderIdsForBackend(backend: string): string[] {
+  return getAIConfigProviderFamilyIds(backend)
+}
+
 export function getAIConfigDefaultBaseUrl(providerId: string): string | undefined {
   return getAIConfigProviderMetadata(providerId).defaultBaseUrl
 }
@@ -324,6 +383,7 @@ export function selectAIConfigCredential(
   providerId: string,
   credentialRows: Array<Partial<CredentialRow> & Record<string, unknown>>,
   providerRows: Array<Partial<AIProviderRow> & Record<string, unknown>> = [],
+  options: { rotationPolicy?: string } = {},
 ): AIConfigCredentialSelection | undefined {
   const provider = normalizeAIConfigProviderId(providerId)
   if (!provider) return undefined
@@ -354,9 +414,12 @@ export function selectAIConfigCredential(
       .localeCompare(normalizeAIConfigResourceId(String(right.id ?? right['@id'] ?? '')))
   }
 
-  const defaults = candidates.filter((row) => normalizeOptionalBoolean(row.isDefault))
-  const credential = [...(defaults.length > 0 ? defaults : candidates)].sort(sortByRotation)[0]
   const providerRow = providerRows.find((row) => sameAIConfigProviderFamily(aiConfigProviderRowId(row), provider))
+  const rotationPolicy = normalizeRotationPolicy(options.rotationPolicy ?? providerRow?.rotationPolicy)
+  const defaults = rotationPolicy === 'round_robin'
+    ? []
+    : candidates.filter((row) => normalizeOptionalBoolean(row.isDefault))
+  const credential = [...(defaults.length > 0 ? defaults : candidates)].sort(sortByRotation)[0]
   const apiKey = normalizeOptionalText(credential.apiKey)
   if (!apiKey) return undefined
 
@@ -375,6 +438,124 @@ export function selectAIConfigCredential(
     proxyUrl: normalizeOptionalText(credential.proxyUrl) ?? normalizeOptionalText(providerRow?.proxyUrl),
     isDefault: normalizeOptionalBoolean(credential.isDefault),
   }
+}
+
+export function selectAIConfigCredentialForBackend(
+  backend: string,
+  credentialRows: Array<Partial<CredentialRow> & Record<string, unknown>>,
+  providerRows: Array<Partial<AIProviderRow> & Record<string, unknown>> = [],
+): AIConfigBackendCredentialSelection | undefined {
+  const normalizedBackend = normalizeBackendId(backend)
+  if (!normalizedBackend) return undefined
+
+  const explicitProviderIds = providerRows
+    .filter((row) => aiConfigProviderSupportsBackend(row, normalizedBackend))
+    .map(aiConfigProviderRowId)
+    .filter(Boolean)
+
+  const familyProviderIds = getAIConfigProviderIdsForBackend(normalizedBackend)
+  const providerIds = uniqueStrings([...explicitProviderIds, ...familyProviderIds])
+
+  for (const providerId of providerIds) {
+    const providerRow = providerRows.find((row) => sameAIConfigProviderFamily(aiConfigProviderRowId(row), providerId))
+    const selected = selectAIConfigCredential(providerId, credentialRows, providerRows, {
+      rotationPolicy: normalizeOptionalText(providerRow?.rotationPolicy),
+    })
+    if (!selected) continue
+    return {
+      ...selected,
+      backend: normalizedBackend,
+    }
+  }
+
+  return undefined
+}
+
+async function listAIConfigCredentialRows(
+  db: AIConfigRepositoryDb,
+): Promise<Array<Partial<CredentialRow> & Record<string, unknown>>> {
+  return await db.select().from(credentialResource).execute() as Array<Partial<CredentialRow> & Record<string, unknown>>
+}
+
+async function findAIConfigProviderRows(
+  db: AIConfigRepositoryDb,
+  providerIds: string[],
+): Promise<Array<Partial<AIProviderRow> & Record<string, unknown>>> {
+  const rows: Array<Partial<AIProviderRow> & Record<string, unknown>> = []
+  const seen = new Set<string>()
+
+  for (const providerId of providerIds) {
+    for (const candidate of aiConfigProviderIdCandidates(providerId)) {
+      if (!candidate || seen.has(candidate)) continue
+      seen.add(candidate)
+      const row = await db.findById<Partial<AIProviderRow> & Record<string, unknown>>(aiProviderResource, candidate)
+        .catch((error) => {
+          if (isMissingAIConfigExactReadError(error)) {
+            return null
+          }
+          throw error
+        })
+      if (row) {
+        rows.push(row)
+        break
+      }
+    }
+  }
+
+  return rows
+}
+
+function collectAIConfigProviderIdsForBackend(
+  backend: string,
+  credentialRows: Array<Partial<CredentialRow> & Record<string, unknown>>,
+): string[] {
+  const ids = new Set(getAIConfigProviderIdsForBackend(backend))
+
+  for (const row of credentialRows) {
+    const providerId = aiConfigCredentialProviderId(row)
+    if (providerId) ids.add(providerId)
+  }
+
+  return Array.from(ids)
+}
+
+function aiConfigProviderIdCandidates(providerId: string): string[] {
+  const normalized = normalizeAIConfigResourceId(providerId) || providerId
+  return uniqueStrings([
+    normalized,
+    `${normalized}.ttl`,
+  ])
+}
+
+function isMissingAIConfigExactReadError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false
+  }
+  const message = 'message' in error && typeof error.message === 'string' ? error.message : ''
+  return /404|not found|missing/i.test(message)
+}
+
+export const aiConfigRepository = {
+  async loadCredentialForBackend(
+    db: AIConfigRepositoryDb,
+    backend: string,
+  ): Promise<AIConfigBackendCredentialSelection | undefined> {
+    const credentialRows = await listAIConfigCredentialRows(db)
+    const providerRows = await findAIConfigProviderRows(
+      db,
+      collectAIConfigProviderIdsForBackend(backend, credentialRows),
+    )
+    return selectAIConfigCredentialForBackend(backend, credentialRows, providerRows)
+  },
+
+  async markCredentialUsed(
+    db: AIConfigRepositoryDb,
+    selection: Pick<AIConfigCredentialSelection, 'credentialId'> | undefined,
+    usedAt = new Date(),
+  ): Promise<void> {
+    if (!selection?.credentialId || !db.updateById) return
+    await db.updateById(credentialResource, selection.credentialId, { lastUsedAt: usedAt })
+  },
 }
 
 // Compatibility aliases for older app/CLI call sites. New code should prefer
@@ -485,17 +666,35 @@ export function buildAIConfigMutationPlan(input: {
   const metadata = getAIConfigProviderMetadata(providerId)
   const existingProvider = input.currentProviderRows.find((row) => sameAIConfigProviderFamily(aiConfigProviderRowId(row), providerId))
   const existingCredential =
-    selectAIConfigCredential(providerId, input.currentCredentialRows, input.currentProviderRows)?.credential
+    (input.updates.credentialId
+      ? input.currentCredentialRows.find((row) =>
+          normalizeAIConfigResourceId(String(row.id ?? row['@id'] ?? '')) === normalizeAIConfigResourceId(input.updates.credentialId),
+        )
+      : undefined)
+    ?? selectAIConfigCredential(providerId, input.currentCredentialRows, input.currentProviderRows)?.credential
     ?? input.currentCredentialRows.find((row) => sameAIConfigProviderFamily(aiConfigCredentialProviderId(row), providerId))
   const existingModels = input.currentModelRows.filter((row) => sameAIConfigProviderFamily(aiConfigModelProviderId(row), providerId))
-  const hasConfigUpdate = input.updates.enabled !== undefined || input.updates.apiKey !== undefined || input.updates.baseUrl !== undefined
+  const hasProviderUpdate =
+    input.updates.enabled !== undefined ||
+    input.updates.apiKey !== undefined ||
+    input.updates.baseUrl !== undefined ||
+    input.updates.supportsBackend !== undefined ||
+    input.updates.rotationPolicy !== undefined ||
+    input.updates.models !== undefined
+  const hasCredentialUpdate =
+    input.updates.enabled !== undefined ||
+    input.updates.apiKey !== undefined ||
+    input.updates.credentialId !== undefined ||
+    input.updates.credentialLabel !== undefined ||
+    input.updates.credentialBaseUrl !== undefined ||
+    input.updates.baseUrl !== undefined
 
   let providerPayload: AIProviderInsert | undefined
   let credentialPayload: CredentialInsert | undefined
   const modelUpserts: AIModelInsert[] = []
   const modelDeleteIds: string[] = []
 
-  if (hasConfigUpdate || input.updates.models !== undefined) {
+  if (hasProviderUpdate) {
     const selectedModelId = input.updates.models
       ? preferredSelectedModelId(input.updates.models)
       : normalizeAIConfigModelStorageId(typeof existingProvider?.hasModel === 'string' ? existingProvider.hasModel : '', providerId)
@@ -508,12 +707,19 @@ export function buildAIConfigMutationPlan(input: {
         metadata.defaultBaseUrl,
       proxyUrl: typeof existingProvider?.proxyUrl === 'string' ? existingProvider.proxyUrl : undefined,
       hasModel: selectedModelId ? aiConfigModelRef(providerId, selectedModelId) : undefined,
+      supportsBackend:
+        input.updates.supportsBackend ??
+        (typeof existingProvider?.supportsBackend === 'string' ? existingProvider.supportsBackend : undefined),
+      rotationPolicy:
+        input.updates.rotationPolicy ??
+        (typeof existingProvider?.rotationPolicy === 'string' ? existingProvider.rotationPolicy : undefined),
     }
   }
 
-  if (hasConfigUpdate) {
+  if (hasCredentialUpdate) {
     credentialPayload = {
       id:
+        normalizeAIConfigResourceId(input.updates.credentialId) ||
         normalizeAIConfigResourceId(typeof existingCredential?.id === 'string' ? existingCredential.id : '') ||
         getDefaultAIConfigCredentialId(providerId),
       provider: aiConfigProviderRef(providerId),
@@ -530,12 +736,13 @@ export function buildAIConfigMutationPlan(input: {
         input.updates.apiKey ??
         (typeof existingCredential?.apiKey === 'string' ? existingCredential.apiKey : undefined),
       baseUrl:
-        input.updates.baseUrl ??
-        (typeof existingCredential?.baseUrl === 'string' ? existingCredential.baseUrl : undefined),
+        input.updates.credentialBaseUrl ??
+        (input.updates.baseUrl !== undefined ? undefined : typeof existingCredential?.baseUrl === 'string' ? existingCredential.baseUrl : undefined),
       label:
-        typeof existingCredential?.label === 'string' && existingCredential.label
+        input.updates.credentialLabel ??
+        (typeof existingCredential?.label === 'string' && existingCredential.label
           ? existingCredential.label
-          : `${metadata.displayName} Key`,
+          : `${metadata.displayName} Key`),
       isDefault: existingCredential?.isDefault === undefined ? true : Boolean(existingCredential.isDefault),
     }
   }

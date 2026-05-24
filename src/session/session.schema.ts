@@ -79,7 +79,7 @@ export const sessionResource = podTable(
   {
     id: id('id'),
 
-    ownerWebId: uri('ownerWebId').predicate(UDFS.actor).notNull(),
+    owner: uri('owner').predicate(UDFS.actor).notNull(),
     chat: uri('chat').predicate(UDFS.conversation).link(chatResource),
     thread: uri('thread').predicate(UDFS.inThread).link(threadResource),
 
@@ -87,11 +87,12 @@ export const sessionResource = podTable(
     status: string('status').predicate(UDFS.sessionStatus).notNull().default('active'),
     tool: string('tool').predicate(UDFS.sessionTool),
     tokenUsage: integer('tokenUsage').predicate(UDFS.tokenUsage).default(0),
-    messageResources: uri('messageResources').predicate(UDFS.messageResource).array(),
+    messages: uri('messages').predicate(UDFS.message).array(),
 
     policy: uri('policy').predicate(UDFS.policy),
     policyVersion: string('policyVersion').predicate(UDFS.policyVersion),
 
+    // Opaque protocol/local/UI metadata only. Shared relations must be explicit URI fields.
     metadata: object('metadata').predicate(UDFS.metadata),
 
     createdAt: timestamp('createdAt').predicate(DCTerms.created).notNull().defaultNow(),

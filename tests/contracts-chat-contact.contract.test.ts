@@ -9,12 +9,18 @@ import {
   ChatBaseVocab,
   MessageVocab,
   ContactVocab,
+  DeliveryVocab,
+  SessionVocab,
+  RunStepVocab,
+  RunVocab,
+  TaskVocab,
   ThreadVocab,
 } from '../src/index'
 
 import type { ChatRow } from '../src/chat.schema'
 import type { ThreadRow } from '../src/thread.schema'
 import type { MessageRow } from '../src/message.schema'
+import type { DeliveryRow } from '../src/delivery.schema'
 import type { ContactTypeValue } from '../src/contact.schema'
 
 import {
@@ -34,7 +40,7 @@ describe('Wave A CP0 contracts: namespaces', () => {
     expect(UDFS.workspace).toBe('https://undefineds.co/ns#workspace')
     expect(UDFS.policyRef).toBe('https://undefineds.co/ns#policyRef')
     expect(UDFS.policyVersion).toBe('https://undefineds.co/ns#policyVersion')
-    expect(UDFS.parentThreadId).toBe('https://undefineds.co/ns#parentThreadId')
+    expect(UDFS.parentThread).toBe('https://undefineds.co/ns#parentThread')
 
     expect(UDFS.coordinationId).toBe('https://undefineds.co/ns#coordinationId')
   })
@@ -48,6 +54,16 @@ describe('Wave A CP0 contracts: vocab ttl files', () => {
 
     const msgTtl = readFileSync(resolve(__dirname, '../src/vocab/linx-message.ttl'), 'utf-8')
     expect(msgTtl).toContain('udfs:coordinationId')
+
+    const workflowTtl = readFileSync(resolve(__dirname, '../src/vocab/linx-workflow.ttl'), 'utf-8')
+    expect(workflowTtl).toContain('udfs:Task a rdfs:Class')
+    expect(workflowTtl).toContain('udfs:Delivery a rdfs:Class')
+    expect(workflowTtl).toContain('udfs:Run a rdfs:Class')
+    expect(workflowTtl).toContain('udfs:RunStep a rdfs:Class')
+    expect(workflowTtl).toContain('udfs:message a rdf:Property')
+    expect(workflowTtl).not.toContain('udfs:messageResource')
+    expect(workflowTtl).toContain('udfs:externalRunId')
+    expect(workflowTtl).toContain('must not hide shared RDF relations')
   })
 })
 
@@ -62,13 +78,42 @@ describe('Wave A CP0 contracts: centralized vocabs', () => {
 
   it('MessageVocab exposes routing predicates', () => {
     expect(MessageVocab.routedBy).toBe(UDFS.routedBy)
-    expect(MessageVocab.routeTargetAgentId).toBe(UDFS.routeTargetAgentId)
+    expect(MessageVocab.routeTargetAgent).toBe(UDFS.routeTargetAgent)
     expect(MessageVocab.coordinationId).toBe(UDFS.coordinationId)
   })
 
   it('ContactVocab remains stable for core fields', () => {
     expect(ContactVocab.contactType).toBeDefined()
     expect(ContactVocab.name).toBeDefined()
+  })
+
+  it('Workflow vocab exposes semantic relation fields without storage partition or *Id/*Uri names', () => {
+    expect((DeliveryVocab as Record<string, unknown>).commandKind).toBeUndefined()
+    expect((DeliveryVocab as Record<string, unknown>).surface).toBeUndefined()
+    expect(TaskVocab.issue).toBe(UDFS.issue)
+    expect(TaskVocab.message).toBe(UDFS.message)
+    expect(TaskVocab.thread).toBe(UDFS.inThread)
+    expect(DeliveryVocab.task).toBe(UDFS.task)
+    expect(DeliveryVocab.projection).toBe(UDFS.projection)
+    expect((RunVocab as Record<string, unknown>).commandKind).toBeUndefined()
+    expect((RunVocab as Record<string, unknown>).surface).toBeUndefined()
+    expect(RunVocab.delivery).toBe(UDFS.delivery)
+    expect(RunVocab.trigger).toBe(UDFS.trigger)
+    expect(RunStepVocab.run).toBe(UDFS.run)
+    expect((RunStepVocab as Record<string, unknown>).commandKind).toBeUndefined()
+    expect((RunStepVocab as Record<string, unknown>).surface).toBeUndefined()
+    expect(RunStepVocab.stepType).toBe(UDFS.stepType)
+    expect((TaskVocab as Record<string, unknown>).surfaceId).toBeUndefined()
+    expect((DeliveryVocab as Record<string, unknown>).surfaceId).toBeUndefined()
+    expect((RunVocab as Record<string, unknown>).surfaceId).toBeUndefined()
+    expect((RunStepVocab as Record<string, unknown>).surfaceId).toBeUndefined()
+  })
+
+  it('Session vocab exposes semantic relation fields without ownerWebId/messageResources names', () => {
+    expect(SessionVocab.owner).toBe(UDFS.actor)
+    expect(SessionVocab.messages).toBe(UDFS.message)
+    expect(SessionVocab.thread).toBe(UDFS.inThread)
+    expect(SessionVocab.metadata).toBe(UDFS.metadata)
   })
 })
 
@@ -81,10 +126,23 @@ describe('Wave A CP0 contracts: schema types', () => {
 
   it('ThreadRow contains workspace context only', () => {
     expectTypeOf<ThreadRow>().toHaveProperty('workspace')
+    expectTypeOf<ThreadRow>().not.toHaveProperty('surface')
+    expectTypeOf<ThreadRow>().not.toHaveProperty('commandKind')
     expectTypeOf<ThreadRow>().not.toHaveProperty('policyRef')
     expectTypeOf<ThreadRow>().not.toHaveProperty('policyVersion')
-    expectTypeOf<ThreadRow>().not.toHaveProperty('parentThreadId')
+    expectTypeOf<ThreadRow>().not.toHaveProperty('parentThread')
+    expectTypeOf<ThreadRow>().not.toHaveProperty('surfaceId')
     expectTypeOf<ThreadRow>().not.toHaveProperty('sessionStatus')
+  })
+
+  it('DeliveryRow includes semantic relations without command-surface partition fields', () => {
+    expectTypeOf<DeliveryRow>().not.toHaveProperty('commandKind')
+    expectTypeOf<DeliveryRow>().not.toHaveProperty('surface')
+    expectTypeOf<DeliveryRow>().toHaveProperty('task')
+    expectTypeOf<DeliveryRow>().toHaveProperty('thread')
+    expectTypeOf<DeliveryRow>().toHaveProperty('targetThread')
+    expectTypeOf<DeliveryRow>().toHaveProperty('targetSession')
+    expectTypeOf<DeliveryRow>().not.toHaveProperty('surfaceId')
   })
 
   it('MessageRow contains group/routing extensions', () => {
