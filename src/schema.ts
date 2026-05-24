@@ -24,10 +24,12 @@ import { issueResource, issueTable } from './issue.schema'
 import { messageResource, messageTable } from './message.schema'
 import { solidProfileResource, solidProfileTable } from './profile.schema'
 import { runResource, runStepResource, runTable, runStepTable } from './run.schema'
+import { scheduleResource, scheduleTable } from './schedule.schema'
 import { sessionResource, sessionTable } from './session'
 import { settingsResource, settingsTable } from './settings/settings.schema'
 import { taskResource, taskTable } from './task.schema'
 import { threadResource, threadTable } from './thread.schema'
+import { automationRuleResource, automationRuleTable } from './automation-rule.schema'
 
 export const solidResources = {
   solidProfileResource,
@@ -38,6 +40,8 @@ export const solidResources = {
   threadResource,
   messageResource,
   taskResource,
+  scheduleResource,
+  automationRuleResource,
   deliveryResource,
   runResource,
   runStepResource,
@@ -70,6 +74,8 @@ export const solidSchema = {
   threadTable,
   messageTable,
   taskTable,
+  scheduleTable,
+  automationRuleTable,
   deliveryTable,
   runTable,
   runStepTable,

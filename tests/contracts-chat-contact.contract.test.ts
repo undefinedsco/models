@@ -10,6 +10,8 @@ import {
   MessageVocab,
   ContactVocab,
   DeliveryVocab,
+  AutomationRuleVocab,
+  ScheduleVocab,
   SessionVocab,
   RunStepVocab,
   RunVocab,
@@ -57,6 +59,8 @@ describe('Wave A CP0 contracts: vocab ttl files', () => {
 
     const workflowTtl = readFileSync(resolve(__dirname, '../src/vocab/linx-workflow.ttl'), 'utf-8')
     expect(workflowTtl).toContain('udfs:Task a rdfs:Class')
+    expect(workflowTtl).toContain('udfs:Schedule a rdfs:Class')
+    expect(workflowTtl).toContain('udfs:AutomationRule a rdfs:Class')
     expect(workflowTtl).toContain('udfs:Delivery a rdfs:Class')
     expect(workflowTtl).toContain('udfs:Run a rdfs:Class')
     expect(workflowTtl).toContain('udfs:RunStep a rdfs:Class')
@@ -93,6 +97,11 @@ describe('Wave A CP0 contracts: centralized vocabs', () => {
     expect(TaskVocab.issue).toBe(UDFS.issue)
     expect(TaskVocab.message).toBe(UDFS.message)
     expect(TaskVocab.thread).toBe(UDFS.inThread)
+    expect(ScheduleVocab.task).toBe(UDFS.task)
+    expect(ScheduleVocab.scheduleKind).toBe(UDFS.scheduleKind)
+    expect(AutomationRuleVocab.task).toBe(UDFS.task)
+    expect(AutomationRuleVocab.schedule).toBe(UDFS.schedule)
+    expect(AutomationRuleVocab.condition).toBe(UDFS.condition)
     expect(DeliveryVocab.task).toBe(UDFS.task)
     expect(DeliveryVocab.projection).toBe(UDFS.projection)
     expect((RunVocab as Record<string, unknown>).commandKind).toBeUndefined()

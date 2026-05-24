@@ -5,6 +5,8 @@ import { join } from 'node:path'
 import {
   agentResource,
   agentTable,
+  automationRuleResource,
+  automationRuleTable,
   approvalResource,
   approvalTable,
   auditResource,
@@ -33,6 +35,8 @@ import {
   runStepTable,
   settingsResource,
   settingsTable,
+  scheduleResource,
+  scheduleTable,
   solidProfileResource,
   solidProfileTable,
   solidResources,
@@ -61,6 +65,8 @@ describe('shared Solid resources', () => {
     expect(threadResource).toBe(threadTable)
     expect(messageResource).toBe(messageTable)
     expect(taskResource).toBe(taskTable)
+    expect(scheduleResource).toBe(scheduleTable)
+    expect(automationRuleResource).toBe(automationRuleTable)
     expect(deliveryResource).toBe(deliveryTable)
     expect(runResource).toBe(runTable)
     expect(runStepResource).toBe(runStepTable)
@@ -82,6 +88,8 @@ describe('shared Solid resources', () => {
       threadResource,
       messageResource,
       taskResource,
+      scheduleResource,
+      automationRuleResource,
       deliveryResource,
       runResource,
       runStepResource,
@@ -101,6 +109,8 @@ describe('shared Solid resources', () => {
     expect((solidResources as any).threadTable).toBeUndefined()
     expect((solidResources as any).messageTable).toBeUndefined()
     expect((solidResources as any).taskTable).toBeUndefined()
+    expect((solidResources as any).scheduleTable).toBeUndefined()
+    expect((solidResources as any).automationRuleTable).toBeUndefined()
     expect((solidResources as any).deliveryTable).toBeUndefined()
     expect((solidResources as any).runTable).toBeUndefined()
     expect((solidResources as any).runStepTable).toBeUndefined()
@@ -122,6 +132,8 @@ describe('shared Solid resources', () => {
       threadTable,
       messageTable,
       taskTable,
+      scheduleTable,
+      automationRuleTable,
       deliveryTable,
       runTable,
       runStepTable,
@@ -144,6 +156,8 @@ describe('shared Solid resources', () => {
     expect(threadResource.hasCustomTemplate()).toBe(false)
     expect(messageResource.hasCustomTemplate()).toBe(false)
     expect(taskResource.hasCustomTemplate()).toBe(false)
+    expect(scheduleResource.hasCustomTemplate()).toBe(false)
+    expect(automationRuleResource.hasCustomTemplate()).toBe(false)
     expect(deliveryResource.hasCustomTemplate()).toBe(false)
     expect(runResource.hasCustomTemplate()).toBe(false)
     expect(runStepResource.hasCustomTemplate()).toBe(false)
@@ -151,6 +165,8 @@ describe('shared Solid resources', () => {
     expect(threadResource.config.base).toBe('/.data/')
     expect(messageResource.config.base).toBe('/.data/')
     expect(taskResource.config.base).toBe('/.data/task/')
+    expect(scheduleResource.config.base).toBe('/.data/')
+    expect(automationRuleResource.config.base).toBe('/.data/')
     expect(deliveryResource.config.base).toBe('/.data/')
     expect(runResource.config.base).toBe('/.data/')
     expect(runStepResource.config.base).toBe('/.data/')
@@ -190,6 +206,8 @@ describe('shared Solid resources', () => {
     expect((sessionResource.columns as Record<string, unknown>).ownerWebId).toBeUndefined()
     expect((sessionResource.columns as Record<string, unknown>).messageResources).toBeUndefined()
     expect((taskResource.columns as Record<string, unknown>).surface).toBeUndefined()
+    expect((scheduleResource.columns as Record<string, unknown>).surface).toBeUndefined()
+    expect((automationRuleResource.columns as Record<string, unknown>).surface).toBeUndefined()
     expect((deliveryResource.columns as Record<string, unknown>).commandKind).toBeUndefined()
     expect((deliveryResource.columns as Record<string, unknown>).surface).toBeUndefined()
     expect((runResource.columns as Record<string, unknown>).commandKind).toBeUndefined()

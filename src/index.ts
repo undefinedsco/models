@@ -109,6 +109,30 @@ export {
 } from './task.schema'
 
 export {
+  ScheduleKind,
+  ScheduleStatus,
+  scheduleResource,
+  scheduleTable,
+  type ScheduleKindType,
+  type ScheduleStatusType,
+  type ScheduleRow,
+  type ScheduleInsert,
+  type ScheduleUpdate,
+} from './schedule.schema'
+
+export {
+  AutomationRuleKind,
+  AutomationRuleStatus,
+  automationRuleResource,
+  automationRuleTable,
+  type AutomationRuleKindType,
+  type AutomationRuleStatusType,
+  type AutomationRuleRow,
+  type AutomationRuleInsert,
+  type AutomationRuleUpdate,
+} from './automation-rule.schema'
+
+export {
   DeliveryKind,
   DeliveryStatus,
   deliveryResource,

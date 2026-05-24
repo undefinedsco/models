@@ -14,6 +14,14 @@ udfs:Task a rdfs:Class ;
   rdfs:label "Task" ;
   rdfs:comment "Durable executable work unit. It describes what should be done, independent of schedule, runner selection, runtime prompt projection, or a concrete execution attempt." .
 
+udfs:Schedule a rdfs:Class ;
+  rdfs:label "Schedule" ;
+  rdfs:comment "Time-based trigger configuration for a Task. Schedule owns cron, interval, and next-run state without selecting a runner or recording an execution attempt." .
+
+udfs:AutomationRule a rdfs:Class ;
+  rdfs:label "AutomationRule" ;
+  rdfs:comment "Policy, condition, and action wiring that can dispatch Tasks or schedule work. It is separate from Task instructions, Schedule timing, and Run execution facts." .
+
 udfs:Delivery a rdfs:Class ;
   rdfs:label "Delivery" ;
   rdfs:comment "Internal handoff envelope between threads, sessions, agents, and runtimes. It carries task dispatch, runtime intent, reports, or delegated responses without becoming an Inbox item by itself." .
@@ -31,6 +39,16 @@ udfs:task a rdf:Property ;
   rdfs:label "task" ;
   rdfs:range udfs:Task ;
   rdfs:comment "Semantic URI relation to the executable Task." .
+
+udfs:schedule a rdf:Property ;
+  rdfs:label "schedule" ;
+  rdfs:range udfs:Schedule ;
+  rdfs:comment "Semantic URI relation to the Schedule that owns time-based triggering." .
+
+udfs:automationRule a rdf:Property ;
+  rdfs:label "automation rule" ;
+  rdfs:range udfs:AutomationRule ;
+  rdfs:comment "Semantic URI relation to the AutomationRule that owns policy, condition, and action wiring." .
 
 udfs:delivery a rdf:Property ;
   rdfs:label "delivery" ;
@@ -90,6 +108,24 @@ udfs:instruction a rdf:Property ;
   rdfs:range rdfs:Literal ;
   rdfs:comment "Human or Secretary-authored executable instruction for a Task." .
 
+udfs:scheduleKind a rdf:Property ;
+  rdfs:label "schedule kind" ;
+  rdfs:range rdfs:Literal ;
+  rdfs:comment "Schedule category such as once, interval, or cron." .
+
+udfs:ruleKind a rdf:Property ;
+  rdfs:label "rule kind" ;
+  rdfs:range rdfs:Literal ;
+  rdfs:comment "Automation rule category such as event, schedule, or manual." .
+
+udfs:condition a rdf:Property ;
+  rdfs:label "condition" ;
+  rdfs:comment "Structured condition for an AutomationRule. It is implementation data, not a replacement for semantic URI relations." .
+
+udfs:actions a rdf:Property ;
+  rdfs:label "actions" ;
+  rdfs:comment "Structured action list for an AutomationRule. Semantic resource targets should still be explicit URI relations." .
+
 udfs:deliveryKind a rdf:Property ;
   rdfs:label "delivery kind" ;
   rdfs:range rdfs:Literal ;
@@ -146,6 +182,38 @@ udfs:cancelRequestedAt a rdf:Property ;
 
 udfs:startedAt a rdf:Property ;
   rdfs:label "started at" ;
+  rdfs:range rdfs:Literal .
+
+udfs:startsAt a rdf:Property ;
+  rdfs:label "starts at" ;
+  rdfs:range rdfs:Literal .
+
+udfs:nextRunAt a rdf:Property ;
+  rdfs:label "next run at" ;
+  rdfs:range rdfs:Literal .
+
+udfs:lastRunAt a rdf:Property ;
+  rdfs:label "last run at" ;
+  rdfs:range rdfs:Literal .
+
+udfs:lastTriggeredAt a rdf:Property ;
+  rdfs:label "last triggered at" ;
+  rdfs:range rdfs:Literal .
+
+udfs:lastRunStatus a rdf:Property ;
+  rdfs:label "last run status" ;
+  rdfs:range rdfs:Literal .
+
+udfs:cron a rdf:Property ;
+  rdfs:label "cron" ;
+  rdfs:range rdfs:Literal .
+
+udfs:intervalSeconds a rdf:Property ;
+  rdfs:label "interval seconds" ;
+  rdfs:range rdfs:Literal .
+
+udfs:timezone a rdf:Property ;
+  rdfs:label "timezone" ;
   rdfs:range rdfs:Literal .
 
 udfs:consumedAt a rdf:Property ;

@@ -17,6 +17,39 @@ export const TaskVocab = {
   updatedAt: DCTerms.modified,
 } as const
 
+export const ScheduleVocab = {
+  task: UDFS.task,
+  status: UDFS.status,
+  scheduleKind: UDFS.scheduleKind,
+  cron: UDFS.cron,
+  intervalSeconds: UDFS.intervalSeconds,
+  timezone: UDFS.timezone,
+  startsAt: UDFS.startsAt,
+  nextRunAt: UDFS.nextRunAt,
+  lastRunAt: UDFS.lastRunAt,
+  metadata: UDFS.metadata,
+  createdAt: DCTerms.created,
+  updatedAt: DCTerms.modified,
+} as const
+
+export const AutomationRuleVocab = {
+  title: DCTerms.title,
+  description: DCTerms.description,
+  status: UDFS.status,
+  ruleKind: UDFS.ruleKind,
+  task: UDFS.task,
+  schedule: UDFS.schedule,
+  source: UDFS.source,
+  target: UDFS.target,
+  condition: UDFS.condition,
+  actions: UDFS.actions,
+  metadata: UDFS.metadata,
+  lastTriggeredAt: UDFS.lastTriggeredAt,
+  lastRunStatus: UDFS.lastRunStatus,
+  createdAt: DCTerms.created,
+  updatedAt: DCTerms.modified,
+} as const
+
 export const DeliveryVocab = {
   kind: UDFS.deliveryKind,
   status: UDFS.status,
