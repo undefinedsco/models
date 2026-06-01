@@ -98,6 +98,49 @@ export const RunVocab = {
   updatedAt: DCTerms.modified,
 } as const
 
+export const EvidenceVocab = {
+  evidenceKind: UDFS.evidenceKind,
+  subject: UDFS.subject,
+  issue: UDFS.issue,
+  task: UDFS.task,
+  delivery: UDFS.delivery,
+  run: UDFS.run,
+  thread: UDFS.inThread,
+  title: DCTerms.title,
+  summary: UDFS.summary,
+  body: UDFS.body,
+  artifact: UDFS.artifact,
+  source: UDFS.source,
+  actor: UDFS.actor,
+  outcome: UDFS.outcome,
+  metadata: UDFS.metadata,
+  createdAt: DCTerms.created,
+} as const
+
+export const ReportVocab = {
+  reportKind: UDFS.reportKind,
+  status: UDFS.status,
+  outcome: UDFS.outcome,
+  subject: UDFS.subject,
+  issue: UDFS.issue,
+  task: UDFS.task,
+  delivery: UDFS.delivery,
+  run: UDFS.run,
+  thread: UDFS.inThread,
+  evidence: UDFS.evidence,
+  title: DCTerms.title,
+  summary: UDFS.summary,
+  body: UDFS.body,
+  reviewer: UDFS.reviewer,
+  actor: UDFS.actor,
+  source: UDFS.source,
+  metricFacts: UDFS.metricFacts,
+  metadata: UDFS.metadata,
+  createdAt: DCTerms.created,
+  publishedAt: UDFS.publishedAt,
+  updatedAt: DCTerms.modified,
+} as const
+
 export const RunStepVocab = {
   run: UDFS.run,
   stepType: UDFS.stepType,

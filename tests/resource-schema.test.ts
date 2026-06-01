@@ -17,14 +17,20 @@ import {
   contactTable,
   deliveryResource,
   deliveryTable,
+  evidenceResource,
+  evidenceTable,
   favoriteResource,
   favoriteTable,
   grantResource,
   grantTable,
+  ideaResource,
+  ideaTable,
   inboxNotificationResource,
   inboxNotificationTable,
   issueResource,
   issueTable,
+  reportResource,
+  reportTable,
   initSolidResources,
   initSolidTables,
   messageResource,
@@ -68,10 +74,13 @@ describe('shared Solid resources', () => {
     expect(scheduleResource).toBe(scheduleTable)
     expect(automationRuleResource).toBe(automationRuleTable)
     expect(deliveryResource).toBe(deliveryTable)
+    expect(evidenceResource).toBe(evidenceTable)
+    expect(reportResource).toBe(reportTable)
     expect(runResource).toBe(runTable)
     expect(runStepResource).toBe(runStepTable)
     expect(favoriteResource).toBe(favoriteTable)
     expect(settingsResource).toBe(settingsTable)
+    expect(ideaResource).toBe(ideaTable)
     expect(issueResource).toBe(issueTable)
     expect(approvalResource).toBe(approvalTable)
     expect(auditResource).toBe(auditTable)
@@ -91,10 +100,13 @@ describe('shared Solid resources', () => {
       scheduleResource,
       automationRuleResource,
       deliveryResource,
+      evidenceResource,
+      reportResource,
       runResource,
       runStepResource,
       favoriteResource,
       settingsResource,
+      ideaResource,
       issueResource,
       approvalResource,
       auditResource,
@@ -112,12 +124,15 @@ describe('shared Solid resources', () => {
     expect((solidResources as any).scheduleTable).toBeUndefined()
     expect((solidResources as any).automationRuleTable).toBeUndefined()
     expect((solidResources as any).deliveryTable).toBeUndefined()
+    expect((solidResources as any).evidenceTable).toBeUndefined()
+    expect((solidResources as any).reportTable).toBeUndefined()
     expect((solidResources as any).runTable).toBeUndefined()
     expect((solidResources as any).runStepTable).toBeUndefined()
     expect((solidResources as any).fileResource).toBeUndefined()
     expect((solidResources as any).fileTable).toBeUndefined()
     expect((solidResources as any).favoriteTable).toBeUndefined()
     expect((solidResources as any).settingsTable).toBeUndefined()
+    expect((solidResources as any).ideaTable).toBeUndefined()
     expect((solidResources as any).issueTable).toBeUndefined()
     expect((solidResources as any).approvalTable).toBeUndefined()
     expect((solidResources as any).auditTable).toBeUndefined()
@@ -135,10 +150,13 @@ describe('shared Solid resources', () => {
       scheduleTable,
       automationRuleTable,
       deliveryTable,
+      evidenceTable,
+      reportTable,
       runTable,
       runStepTable,
       favoriteTable,
       settingsTable,
+      ideaTable,
       issueTable,
       approvalTable,
       auditTable,
@@ -159,6 +177,8 @@ describe('shared Solid resources', () => {
     expect(scheduleResource.hasCustomTemplate()).toBe(false)
     expect(automationRuleResource.hasCustomTemplate()).toBe(false)
     expect(deliveryResource.hasCustomTemplate()).toBe(false)
+    expect(evidenceResource.hasCustomTemplate()).toBe(false)
+    expect(reportResource.hasCustomTemplate()).toBe(false)
     expect(runResource.hasCustomTemplate()).toBe(false)
     expect(runStepResource.hasCustomTemplate()).toBe(false)
     expect(chatResource.config.base).toBe('/.data/chat/')
@@ -168,6 +188,8 @@ describe('shared Solid resources', () => {
     expect(scheduleResource.config.base).toBe('/.data/')
     expect(automationRuleResource.config.base).toBe('/.data/')
     expect(deliveryResource.config.base).toBe('/.data/')
+    expect(evidenceResource.config.base).toBe('/.data/')
+    expect(reportResource.config.base).toBe('/.data/')
     expect(runResource.config.base).toBe('/.data/')
     expect(runStepResource.config.base).toBe('/.data/')
   })
@@ -206,10 +228,16 @@ describe('shared Solid resources', () => {
     expect((sessionResource.columns as Record<string, unknown>).ownerWebId).toBeUndefined()
     expect((sessionResource.columns as Record<string, unknown>).messageResources).toBeUndefined()
     expect((taskResource.columns as Record<string, unknown>).surface).toBeUndefined()
+    expect((ideaResource.columns as Record<string, unknown>).sourceId).toBeUndefined()
+    expect((ideaResource.columns as Record<string, unknown>).sourceUri).toBeUndefined()
     expect((scheduleResource.columns as Record<string, unknown>).surface).toBeUndefined()
     expect((automationRuleResource.columns as Record<string, unknown>).surface).toBeUndefined()
     expect((deliveryResource.columns as Record<string, unknown>).commandKind).toBeUndefined()
     expect((deliveryResource.columns as Record<string, unknown>).surface).toBeUndefined()
+    expect((evidenceResource.columns as Record<string, unknown>).commandKind).toBeUndefined()
+    expect((evidenceResource.columns as Record<string, unknown>).surface).toBeUndefined()
+    expect((reportResource.columns as Record<string, unknown>).commandKind).toBeUndefined()
+    expect((reportResource.columns as Record<string, unknown>).surface).toBeUndefined()
     expect((runResource.columns as Record<string, unknown>).commandKind).toBeUndefined()
     expect((runResource.columns as Record<string, unknown>).surface).toBeUndefined()
     expect((runStepResource.columns as Record<string, unknown>).commandKind).toBeUndefined()

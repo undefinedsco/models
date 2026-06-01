@@ -55,6 +55,36 @@ export function deliveryResourceId(
   return `${ownerDir}/${yyyy}/${MM}/${dd}/deliveries.ttl#${localKey}`
 }
 
+export function evidenceResourceId(
+  key: string | undefined,
+  row?: Record<string, unknown>,
+): string {
+  const localKey = resourceKey(key, 'evidence')
+  const ownerDir = taskDir(row)
+    ?? runDir(row)
+    ?? deliveryDir(row)
+    ?? threadDir(row)
+    ?? chatDir(row)
+    ?? 'evidence'
+  const { yyyy, MM, dd } = dateParts(row?.createdAt as DateInput)
+  return `${ownerDir}/${yyyy}/${MM}/${dd}/evidence.ttl#${localKey}`
+}
+
+export function reportResourceId(
+  key: string | undefined,
+  row?: Record<string, unknown>,
+): string {
+  const localKey = resourceKey(key, 'report')
+  const ownerDir = taskDir(row)
+    ?? runDir(row)
+    ?? deliveryDir(row)
+    ?? threadDir(row)
+    ?? chatDir(row)
+    ?? 'reports'
+  const { yyyy, MM, dd } = dateParts(row?.createdAt as DateInput)
+  return `${ownerDir}/${yyyy}/${MM}/${dd}/reports.ttl#${localKey}`
+}
+
 export function threadResourceId(
   key: string | undefined,
   row?: Record<string, unknown>,
@@ -122,6 +152,22 @@ function taskDir(row?: Record<string, unknown>): string | null {
   if (legacyIndexMatch?.[1]) return `task/${legacyIndexMatch[1]}`
   const match = resourceId.match(/^task\/(.+)\.ttl(?:#[^#/]+)?$/)
   return match?.[1] ? `task/${match[1]}` : null
+}
+
+function deliveryDir(row?: Record<string, unknown>): string | null {
+  const delivery = typeof row?.delivery === 'string' ? row.delivery : undefined
+  if (!delivery) return null
+  const resourceId = stripPodDataPrefix(delivery)
+  const match = resourceId.match(/^(.+)\/\d{4}\/\d{2}\/\d{2}\/deliveries\.ttl#[^#/]+$/)
+  return match?.[1] ?? null
+}
+
+function runDir(row?: Record<string, unknown>): string | null {
+  const run = typeof row?.run === 'string' ? row.run : undefined
+  if (!run) return null
+  const resourceId = stripPodDataPrefix(run)
+  const match = resourceId.match(/^(.+)\/\d{4}\/\d{2}\/\d{2}\/runs\.ttl#[^#/]+$/)
+  return match?.[1] ?? null
 }
 
 function stripPodDataPrefix(ref: string): string {

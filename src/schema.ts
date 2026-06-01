@@ -17,12 +17,15 @@ import { chatResource, chatTable } from './chat.schema'
 import { contactResource, contactTable } from './contact.schema'
 import { credentialResource, credentialTable } from './credential.schema'
 import { deliveryResource, deliveryTable } from './delivery.schema'
+import { evidenceResource, evidenceTable } from './evidence.schema'
 import { favoriteResource, favoriteTable } from './favorite/favorite.schema'
 import { grantResource, grantTable } from './grant.schema'
+import { ideaResource, ideaTable } from './idea.schema'
 import { inboxNotificationResource, inboxNotificationTable } from './inbox-notification.schema'
 import { issueResource, issueTable } from './issue.schema'
 import { messageResource, messageTable } from './message.schema'
 import { solidProfileResource, solidProfileTable } from './profile.schema'
+import { reportResource, reportTable } from './report.schema'
 import { runResource, runStepResource, runTable, runStepTable } from './run.schema'
 import { scheduleResource, scheduleTable } from './schedule.schema'
 import { sessionResource, sessionTable } from './session'
@@ -43,6 +46,8 @@ export const solidResources = {
   scheduleResource,
   automationRuleResource,
   deliveryResource,
+  evidenceResource,
+  reportResource,
   runResource,
   runStepResource,
   credentialResource,
@@ -54,6 +59,7 @@ export const solidResources = {
   agentStatusResource,
   favoriteResource,
   settingsResource,
+  ideaResource,
   issueResource,
 
   // Sidecar collaboration data
@@ -77,6 +83,8 @@ export const solidSchema = {
   scheduleTable,
   automationRuleTable,
   deliveryTable,
+  evidenceTable,
+  reportTable,
   runTable,
   runStepTable,
   credentialTable,
@@ -88,6 +96,7 @@ export const solidSchema = {
   agentStatusTable,
   favoriteTable,
   settingsTable,
+  ideaTable,
   issueTable,
 
   // Sidecar collaboration data

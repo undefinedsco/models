@@ -7,7 +7,7 @@
 
 <> a owl:Ontology ;
   rdfs:label "LinX Workflow Vocabulary" ;
-  rdfs:comment "Company-level terms (udfs:) used by Issue/Task/Delivery/Run/RunStep workflow contracts. URI relations use semantic field names; external or local opaque ids are not RDF links." .
+  rdfs:comment "Company-level terms (udfs:) used by Issue/Task/Delivery/Run/RunStep/Evidence/Report workflow contracts. URI relations use semantic field names; external or local opaque ids are not RDF links." .
 
 # Classes
 udfs:Task a rdfs:Class ;
@@ -33,6 +33,14 @@ udfs:Run a rdfs:Class ;
 udfs:RunStep a rdfs:Class ;
   rdfs:label "RunStep" ;
   rdfs:comment "Append-only execution fact emitted during a Run. Tool calls, text deltas, waiting-input states, errors, and completion events are RunStep facts." .
+
+udfs:Evidence a rdfs:Class ;
+  rdfs:label "Evidence" ;
+  rdfs:comment "Append-only proof or finding that supports a workflow control object. Evidence points to concrete tests, logs, diffs, artifacts, Pod projections, user validation, or review findings without owning status by itself." .
+
+udfs:Report a rdfs:Class ;
+  rdfs:label "Report" ;
+  rdfs:comment "Authoritative closure, review, handoff, status, or quality summary for a workflow control object. Reports summarize evidence and outcome facts without replacing the underlying Issue, Task, Delivery, Run, or Evidence." .
 
 # Shared workflow relations
 udfs:task a rdf:Property ;
@@ -60,6 +68,16 @@ udfs:run a rdf:Property ;
   rdfs:range udfs:Run ;
   rdfs:comment "Semantic URI relation from a RunStep to its Run." .
 
+udfs:evidence a rdf:Property ;
+  rdfs:label "evidence" ;
+  rdfs:range udfs:Evidence ;
+  rdfs:comment "Semantic URI relation to Evidence supporting a report, status transition, delivery, or work item." .
+
+udfs:report a rdf:Property ;
+  rdfs:label "report" ;
+  rdfs:range udfs:Report ;
+  rdfs:comment "Semantic URI relation to a Report that summarizes closure, review, handoff, status, or quality facts." .
+
 udfs:issue a rdf:Property ;
   rdfs:label "issue" ;
   rdfs:comment "Semantic URI relation to the user-facing Issue or product work item that originated the task." .
@@ -82,6 +100,11 @@ udfs:input a rdf:Property ;
   rdfs:label "input" ;
   rdfs:range rdfs:Resource ;
   rdfs:comment "Resource containing the concrete input or context projection used for a Run." .
+
+udfs:subject a rdf:Property ;
+  rdfs:label "subject" ;
+  rdfs:range rdfs:Resource ;
+  rdfs:comment "Primary workflow/control object that Evidence or Report is about." .
 
 udfs:targetThread a rdf:Property ;
   rdfs:label "target thread" ;
@@ -163,6 +186,39 @@ udfs:stepType a rdf:Property ;
   rdfs:label "step type" ;
   rdfs:range rdfs:Literal ;
   rdfs:comment "Append-only RunStep event type, such as runtime.tool_call, runtime.waiting_input, runtime.error, or run.completed." .
+
+udfs:evidenceKind a rdf:Property ;
+  rdfs:label "evidence kind" ;
+  rdfs:range rdfs:Literal ;
+  rdfs:comment "Evidence category such as test, runtime_log, diff, artifact, pod_projection, user_validation, review_finding, migration_note, or manual_observation." .
+
+udfs:reportKind a rdf:Property ;
+  rdfs:label "report kind" ;
+  rdfs:range rdfs:Literal ;
+  rdfs:comment "Report category such as closure, review, status, handoff, or quality." .
+
+udfs:outcome a rdf:Property ;
+  rdfs:label "outcome" ;
+  rdfs:range rdfs:Literal ;
+  rdfs:comment "Observed or reviewed outcome for Evidence or Report, for example accepted, rejected, reopened, partial_release, deferred, blocked, or change_requested." .
+
+udfs:artifact a rdf:Property ;
+  rdfs:label "artifact" ;
+  rdfs:range rdfs:Resource ;
+  rdfs:comment "Concrete artifact URI for evidence, such as a log, diff, patch, screenshot, report file, or Pod projection." .
+
+udfs:metricFacts a rdf:Property ;
+  rdfs:label "metric facts" ;
+  rdfs:comment "Structured metric-relevant facts summarized by a Report. Raw evidence remains in linked Evidence/Audit/RunStep records." .
+
+udfs:publishedAt a rdf:Property ;
+  rdfs:label "published at" ;
+  rdfs:range rdfs:Literal .
+
+udfs:reviewer a rdf:Property ;
+  rdfs:label "reviewer" ;
+  rdfs:range rdfs:Resource ;
+  rdfs:comment "Agent, user, or verifier resource that reviewed a Report." .
 
 udfs:leaseOwner a rdf:Property ;
   rdfs:label "lease owner" ;

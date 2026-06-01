@@ -14,6 +14,11 @@ cross-app semantics.
 Model the Pod as a Linked Data graph, not as a relational database with foreign
 keys.
 
+- Treat Solid resources and files as first-class. A document, report, spec,
+  plan, image, JSONL export, or source artifact can be the durable subject.
+- RDF/TTL is not "just auxiliary"; it is the structured graph representation of
+  resource metadata and relations. Use it where cross-client lookup, routing,
+  audit, synchronization, or recovery needs structured facts.
 - Use RDF/Pod relation fields for URI references.
 - Use local ids only for UI state, runtime protocol keys, function parameters,
   or the random key passed into an id default function.
@@ -24,12 +29,35 @@ keys.
   `replyTo`, `workspace`, `task`, `run`, `agent`.
 - UI-only state stays outside the Pod. Durable shared state belongs in the Pod.
 
+## File-Primary vs Control-Primary Resources
+
+Before adding a schema, decide what the resource fundamentally is.
+
+- File-primary resources have a meaningful body: markdown, JSONL, source file,
+  artifact, uploaded file, or generated report. Examples include `Spec`,
+  `Plan`, `Report`, and most `Evidence`.
+- For file-primary resources, model the queryable metadata: subject, kind,
+  status or outcome, actor/reviewer, evidence links, revision, body/artifact
+  URI, and relations to the controlling issue/task/run.
+- Do not create a parallel model just because a file needs metadata. Add schema
+  fields only for facts that must be searched, joined, synchronized, audited, or
+  used for routing/recovery across clients.
+- Control-primary resources are execution/control state and should be
+  structured model-first. Examples include `Issue`, `Task`, `Delivery`, `Run`,
+  `RunStep`, `ApprovalRequest`, and `AutonomyGrant`.
+- A control-primary resource may link to file-primary artifacts; it should not
+  inline long-form design, logs, or reports when those are better represented
+  as files with metadata.
+
 ## Package Ownership
 
 `@undefineds.co/models` owns durable shared model semantics. `drizzle-solid`
 owns the ORM/resource machinery. Product shells such as Xpod, LinX desktop,
 CLI, mobile, or workers should not duplicate shared schemas.
 
+- This skill is maintained and released by `@undefineds.co/models`. Product
+  repos should consume the released skill/plugin instead of keeping their own
+  divergent Solid modeling rules.
 - If a resource/schema/repository already exists in `models`, consume it.
 - If a product needs a missing shared query, mutation, or id helper, add it to
   `models` first with tests, then call it from the product shell.

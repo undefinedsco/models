@@ -145,6 +145,30 @@ export {
 } from './delivery.schema'
 
 export {
+  EvidenceKind,
+  evidenceResource,
+  evidenceTable,
+  type EvidenceKindType,
+  type EvidenceRow,
+  type EvidenceInsert,
+  type EvidenceUpdate,
+} from './evidence.schema'
+
+export {
+  ReportKind,
+  ReportOutcome,
+  ReportStatus,
+  reportResource,
+  reportTable,
+  type ReportKindType,
+  type ReportOutcomeType,
+  type ReportStatusType,
+  type ReportRow,
+  type ReportInsert,
+  type ReportUpdate,
+} from './report.schema'
+
+export {
   RunStatus,
   RunStepType,
   runResource,
@@ -165,9 +189,11 @@ export {
   chatResourceId,
   dateParts,
   deliveryResourceId,
+  evidenceResourceId,
   messageResourceId,
   parentDir,
   resourceKey,
+  reportResourceId,
   runResourceId,
   runStepResourceId,
   taskResourceId,
@@ -177,6 +203,16 @@ export {
 } from './resource-id-defaults'
 
 // Issue - user-facing work item that can be inspected through chat/thread
+export {
+  ideaResource,
+  ideaTable,
+  type IdeaStatus,
+  type IdeaCommitment,
+  type IdeaRow,
+  type IdeaInsert,
+  type IdeaUpdate,
+} from './idea.schema'
+
 export {
   issueResource,
   issueTable,

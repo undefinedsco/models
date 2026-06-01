@@ -5,6 +5,8 @@ import {
   chatResourceId,
   messageResourceId,
   deliveryResourceId,
+  evidenceResourceId,
+  reportResourceId,
   runResourceId,
   runStepResourceId,
   taskResourceId,
@@ -30,6 +32,14 @@ describe('command resource id defaults', () => {
       task: 'https://pod.example/.data/task/index.ttl#task_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('task/task_1/2026/05/18/deliveries.ttl#delivery_1')
+    expect(evidenceResourceId('evidence_1', {
+      run: 'https://pod.example/.data/task/task_1/2026/05/18/runs.ttl#run_1',
+      createdAt: new Date('2026-05-18T01:02:03.000Z'),
+    })).toBe('task/task_1/2026/05/18/evidence.ttl#evidence_1')
+    expect(reportResourceId('report_1', {
+      delivery: 'https://pod.example/.data/task/task_1/2026/05/18/deliveries.ttl#delivery_1',
+      createdAt: new Date('2026-05-18T01:02:03.000Z'),
+    })).toBe('task/task_1/2026/05/18/reports.ttl#report_1')
     expect(runStepResourceId('step_1', {
       run: 'task/task_1/2026/05/18/runs.ttl#run_1',
     })).toBe('task/task_1/2026/05/18/runs.ttl#step_1')
