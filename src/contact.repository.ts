@@ -8,7 +8,7 @@ export const contactRepository = definePodRepository<
   ContactUpdate
 >({
   namespace: 'contact',
-  table: contactResource,
+  resource: contactResource,
   searchableFields: ['name', 'alias', 'note'],
   defaultSort: { field: 'name', direction: 'asc' },
 })

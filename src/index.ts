@@ -66,13 +66,24 @@ export {
 } from './chat.schema'
 export { chatRepository } from './chat.repository'
 export {
+  buildChatTargetRef,
   extractChatIdFromChatRef,
+  extractChatTargetRef,
   extractChatThreadRef,
   extractThreadIdFromThreadRef,
   resolveThreadChatId,
   toTimestamp,
+  type ChatTargetRef,
   type ChatThreadRef,
 } from './chat.utils'
+export {
+  buildModelResourceId,
+  buildModelResourceIri,
+  buildModelResourceIriForDatabase,
+  resolveModelResourceIri,
+  resolveModelResourceIriForDatabase,
+  type ModelResourceTarget,
+} from './resource-refs'
 
 export {
   ThreadStatus,
@@ -147,7 +158,6 @@ export {
 export {
   EvidenceKind,
   evidenceResource,
-  evidenceTable,
   type EvidenceKindType,
   type EvidenceRow,
   type EvidenceInsert,
@@ -159,7 +169,6 @@ export {
   ReportOutcome,
   ReportStatus,
   reportResource,
-  reportTable,
   type ReportKindType,
   type ReportOutcomeType,
   type ReportStatusType,
@@ -205,7 +214,6 @@ export {
 // Issue - user-facing work item that can be inspected through chat/thread
 export {
   ideaResource,
-  ideaTable,
   type IdeaStatus,
   type IdeaCommitment,
   type IdeaRow,
@@ -318,6 +326,7 @@ export {
   sessionResource,
   sessionTable,
   buildSessionResourceId,
+  buildSessionPodResourcePath,
   buildSessionSubjectPath,
   buildRuntimeSessionIri,
   extractSessionIdFromSessionRef,
@@ -334,6 +343,8 @@ export { sessionRepository } from './session.repository'
 export {
   approvalResource,
   approvalTable,
+  buildApprovalResourceId,
+  buildApprovalPodResourcePath,
   buildApprovalSubjectPath,
   extractApprovalIdFromApprovalRef,
   type ApprovalRow,
@@ -344,6 +355,8 @@ export {
 export {
   auditResource,
   auditTable,
+  buildAuditResourceId,
+  buildAuditPodResourcePath,
   buildAuditSubjectPath,
   extractAuditIdFromAuditRef,
   type AuditRow,
@@ -362,6 +375,8 @@ export {
 export {
   grantResource,
   grantTable,
+  buildGrantResourceId,
+  buildGrantPodResourcePath,
   buildGrantSubjectPath,
   type GrantRow,
   type GrantInsert,
@@ -506,6 +521,7 @@ export {
 } from './pod-storage-descriptor'
 
 export {
+  createResourceRepositoryDescriptor,
   createRepositoryDescriptor,
   definePodRepository,
   initSolidResources,
@@ -513,6 +529,7 @@ export {
   type AnyPodResource,
   type AnyPodTable,
   type PodRepositoryDescriptor,
+  type PodResourceRepositoryOptions,
   type RepositoryCacheOptions,
   type RepositoryInvalidations,
   type RepositoryScope,

@@ -1,9 +1,9 @@
-import { id, object, podTable, string, text, timestamp, uri } from '@undefineds.co/drizzle-solid'
+import { id, object, podTable, renderDefaultIdTemplate, string, text, timestamp, uri } from '@undefineds.co/drizzle-solid'
 import { AS, DCTerms, UDFS } from './namespaces'
 import { chatResource } from './chat.schema'
 import { threadResource } from './thread.schema'
 import { taskResource } from './task.schema'
-import { deliveryResourceId } from './resource-id-defaults'
+import { resourceKey } from './resource-id-defaults'
 
 export type DeliveryStatusType = 'pending' | 'dispatched' | 'consumed' | 'completed' | 'failed' | 'cancelled'
 export type DeliveryKindType =
@@ -48,7 +48,26 @@ export const DeliveryKind = {
 export const deliveryResource = podTable(
   'delivery',
   {
-    id: id('id').default(deliveryResourceId),
+    id: id('id').default((key: string | undefined, row?: Record<string, unknown>) => (
+      renderDefaultIdTemplate(
+        row?.task
+          ? 'task/{task.id[-1]}/{yyyy}/{MM}/{dd}/deliveries.ttl#{key}'
+          : row?.chat
+            ? 'chat/{chat.id[0]}/{yyyy}/{MM}/{dd}/deliveries.ttl#{key}'
+            : row?.thread
+              ? '{thread.id[0:2]}/{yyyy}/{MM}/{dd}/deliveries.ttl#{key}'
+              : 'deliveries/{yyyy}/{MM}/{dd}/deliveries.ttl#{key}',
+        {
+          key: resourceKey(key, 'delivery'),
+          row,
+          links: {
+            task: taskResource,
+            chat: chatResource,
+            thread: threadResource,
+          },
+        },
+      )
+    )),
 
     kind: string('kind').predicate(UDFS.deliveryKind).notNull().default(DeliveryKind.TASK_DISPATCH),
     status: string('status').predicate(UDFS.status).notNull().default(DeliveryStatus.PENDING),

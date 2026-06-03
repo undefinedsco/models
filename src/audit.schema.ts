@@ -1,17 +1,22 @@
-import { extractPodResourceTemplateValue, podTable, uri, string, timestamp, id } from '@undefineds.co/drizzle-solid'
+import { extractPodResourceTemplateValue, podTable, renderDefaultIdTemplate, uri, string, timestamp, id } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms } from './namespaces'
 import { chatResource } from './chat.schema'
 import { threadResource } from './thread.schema'
 import { asPodResourceTemplateTarget } from './repository'
 
-export function buildAuditSubjectPath(auditId: string, createdAt: Date | string | number = new Date()): string {
-  const date = createdAt instanceof Date ? createdAt : new Date(createdAt)
-  const safeDate = Number.isFinite(date.getTime()) ? date : new Date()
-  const yyyy = String(safeDate.getUTCFullYear())
-  const mm = String(safeDate.getUTCMonth() + 1).padStart(2, '0')
-  const dd = String(safeDate.getUTCDate()).padStart(2, '0')
-  return `/.data/audits/${yyyy}/${mm}/${dd}.ttl#${encodeURIComponent(auditId)}`
+export function buildAuditResourceId(auditId: string, createdAt: Date | string | number = new Date()): string {
+  return renderDefaultIdTemplate('{yyyy}/{MM}/{dd}.ttl#{key}', {
+    key: encodeURIComponent(auditId),
+    row: { createdAt },
+  })
 }
+
+export function buildAuditPodResourcePath(auditId: string, createdAt: Date | string | number = new Date()): string {
+  return `/.data/audits/${buildAuditResourceId(auditId, createdAt)}`
+}
+
+/** @deprecated Use buildAuditPodResourcePath for Pod-root paths or buildAuditResourceId for resource-base ids. */
+export const buildAuditSubjectPath = buildAuditPodResourcePath
 
 // Append-only audit entry resource (separate from Solid inbox notifications).
 // Audit entries are independent events; session/chat/thread are optional relations,

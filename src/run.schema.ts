@@ -1,9 +1,9 @@
-import { id, object, podTable, string, timestamp, uri } from '@undefineds.co/drizzle-solid'
+import { id, object, podTable, renderDefaultIdTemplate, string, timestamp, uri } from '@undefineds.co/drizzle-solid'
 import { DCTerms, UDFS } from './namespaces'
 import { deliveryResource } from './delivery.schema'
 import { taskResource } from './task.schema'
 import { threadResource } from './thread.schema'
-import { runResourceId, runStepResourceId } from './resource-id-defaults'
+import { resourceKey } from './resource-id-defaults'
 
 export type RunStatusType =
   | 'queued'
@@ -52,7 +52,23 @@ export type RunStepTypeValue = (typeof RunStepType)[keyof typeof RunStepType]
 export const runResource = podTable(
   'run',
   {
-    id: id('id').default(runResourceId),
+    id: id('id').default((key: string | undefined, row?: Record<string, unknown>) => (
+      renderDefaultIdTemplate(
+        row?.task
+          ? 'task/{task.id[-1]}/{yyyy}/{MM}/{dd}/runs.ttl#{key}'
+          : row?.thread
+            ? '{thread.id[0:2]}/{yyyy}/{MM}/{dd}/runs.ttl#{key}'
+            : 'runs/{yyyy}/{MM}/{dd}/runs.ttl#{key}',
+        {
+          key: resourceKey(key, 'run'),
+          row,
+          links: {
+            task: taskResource,
+            thread: threadResource,
+          },
+        },
+      )
+    )),
 
     task: uri('task').predicate(UDFS.task).link(taskResource),
     delivery: uri('delivery').predicate(UDFS.delivery).link(deliveryResource),
@@ -96,7 +112,27 @@ export const runResource = podTable(
 export const runStepResource = podTable(
   'run_step',
   {
-    id: id('id').default(runStepResourceId),
+    id: id('id').default((key: string | undefined, row?: Record<string, unknown>) => {
+      const localKey = resourceKey(key, 'run-step')
+      return renderDefaultIdTemplate(
+        row?.run
+          ? '{run.id[0:5]}/runs.ttl#{key}'
+          : row?.task
+            ? 'task/{task.id[-1]}/{yyyy}/{MM}/{dd}/runs.ttl#{key}'
+            : row?.thread
+              ? '{thread.id[0:2]}/{yyyy}/{MM}/{dd}/runs.ttl#{key}'
+              : 'runs/{yyyy}/{MM}/{dd}/runs.ttl#{key}',
+        {
+          key: localKey,
+          row,
+          links: {
+            run: runResource,
+            task: taskResource,
+            thread: threadResource,
+          },
+        },
+      )
+    }),
     run: uri('run').predicate(UDFS.run).notNull().link(runResource),
     stepType: string('stepType').predicate(UDFS.stepType).notNull(),
     message: string('message').predicate(DCTerms.description),

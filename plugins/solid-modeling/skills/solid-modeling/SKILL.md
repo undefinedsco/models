@@ -82,6 +82,21 @@ Do not hand-parse shared business TTL when a resource schema exists.
   `updateByLocator`, and `deleteByLocator` are legacy compatibility surfaces.
 - Raw Solid client or `fetch` access is acceptable only for protocol-level
   adapters where no shared business resource exists yet.
+- Product shells should trust the typed `SolidDatabase` contract. Do not add
+  application-layer probes such as `typeof db.findById === 'function'`,
+  `db.updateById?.(...)`, or `typeof db.resolveResourceIri === 'function'`.
+  If a required ORM method is missing, fix `drizzle-solid`, the shared
+  repository in `models`, or the test mock.
+- `db.resolveResourceIri` is a generic drizzle-solid resolver for turning a
+  schema resource plus an exact target into a full Pod IRI. Treat it as a
+  low-level adapter escape hatch, not as the default product API.
+- If a shared `models` resource exists, product shells should call
+  resource-owned helpers such as `resource.buildId(...)`,
+  `resource.buildIri(webIdOrPodUrl, ...)`, or
+  `resource.buildIriForDatabase(db, ...)` instead of directly calling
+  `db.resolveResourceIri`, importing `buildModelResource*` compatibility
+  wrappers, or reimplementing Pod base discovery. Reusable business target
+  construction belongs in `models` repositories/helpers, not in product shells.
 
 ## Ids, Defaults, and Subject Templates
 
@@ -188,7 +203,7 @@ Use `Resource` names for shared models.
 
 - Export `chatResource`, `messageResource`, `taskResource`, `runResource`.
 - Keep `chatTable`-style aliases only for compatibility while downstream code
-  migrates.
+  migrates; do not use them in new examples or new shared-model code.
 - New shared-model code should prefer `solidResources` over table registries.
 
 ## Testing Expectations

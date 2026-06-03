@@ -8,6 +8,6 @@ export const agentRepository = definePodRepository<
   AgentUpdate
 >({
   namespace: 'agent',
-  table: agentResource,
+  resource: agentResource,
   searchableFields: ['name', 'description', 'instructions'],
 })

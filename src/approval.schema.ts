@@ -1,17 +1,22 @@
-import { extractPodResourceTemplateValue, podTable, uri, string, text, timestamp, id } from '@undefineds.co/drizzle-solid'
+import { extractPodResourceTemplateValue, podTable, renderDefaultIdTemplate, uri, string, text, timestamp, id } from '@undefineds.co/drizzle-solid'
 import { ODRL, UDFS, DCTerms } from './namespaces'
 import { chatResource } from './chat.schema'
 import { threadResource } from './thread.schema'
 import { asPodResourceTemplateTarget } from './repository'
 
-export function buildApprovalSubjectPath(approvalId: string, createdAt: Date | string | number = new Date()): string {
-  const date = createdAt instanceof Date ? createdAt : new Date(createdAt)
-  const safeDate = Number.isFinite(date.getTime()) ? date : new Date()
-  const yyyy = String(safeDate.getUTCFullYear())
-  const mm = String(safeDate.getUTCMonth() + 1).padStart(2, '0')
-  const dd = String(safeDate.getUTCDate()).padStart(2, '0')
-  return `/.data/approvals/${yyyy}/${mm}/${dd}.ttl#${encodeURIComponent(approvalId)}`
+export function buildApprovalResourceId(approvalId: string, createdAt: Date | string | number = new Date()): string {
+  return renderDefaultIdTemplate('{yyyy}/{MM}/{dd}.ttl#{key}', {
+    key: encodeURIComponent(approvalId),
+    row: { createdAt },
+  })
 }
+
+export function buildApprovalPodResourcePath(approvalId: string, createdAt: Date | string | number = new Date()): string {
+  return `/.data/approvals/${buildApprovalResourceId(approvalId, createdAt)}`
+}
+
+/** @deprecated Use buildApprovalPodResourcePath for Pod-root paths or buildApprovalResourceId for resource-base ids. */
+export const buildApprovalSubjectPath = buildApprovalPodResourcePath
 
 export function extractApprovalIdFromApprovalRef(approvalRef: string | null | undefined): string | null {
   if (approvalRef && !/[/:#]/.test(approvalRef)) {

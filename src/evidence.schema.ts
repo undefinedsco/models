@@ -1,11 +1,11 @@
-import { id, object, podTable, string, text, timestamp, uri } from '@undefineds.co/drizzle-solid'
-import { DCTerms, UDFS } from './namespaces'
+import { id, object, podTable, renderDefaultIdTemplate, string, text, timestamp, uri } from '@undefineds.co/drizzle-solid'
+import { DCTerms, SCHEMA, UDFS } from './namespaces'
 import { deliveryResource } from './delivery.schema'
 import { issueResource } from './issue.schema'
 import { runResource } from './run.schema'
 import { taskResource } from './task.schema'
 import { threadResource } from './thread.schema'
-import { evidenceResourceId } from './resource-id-defaults'
+import { resourceKey, workflowOwnerDir } from './resource-id-defaults'
 
 export type EvidenceKindType =
   | 'test'
@@ -33,17 +33,24 @@ export const EvidenceKind = {
 /**
  * Evidence resource.
  *
- * Evidence is append-only proof or finding. It points to the work/control object
- * it supports and to concrete artifacts such as tests, logs, diffs, reports, or
- * Pod projections. It is not a status owner by itself.
+ * Evidence is append-only proof or finding. The resource subject is the
+ * evidence file/record itself; `about` points to the work/control object it
+ * supports. It is not a status owner by itself.
  */
 export const evidenceResource = podTable(
   'evidence',
   {
-    id: id('id').default(evidenceResourceId),
+    id: id('id').default((key: string | undefined, row?: Record<string, unknown>) => {
+      const localKey = resourceKey(key, 'evidence')
+      const ownerDir = workflowOwnerDir(row) ?? 'evidence'
+      return renderDefaultIdTemplate(`${ownerDir}/{yyyy}/{MM}/{dd}/evidence.ttl#{key}`, {
+        key: localKey,
+        row,
+      })
+    }),
 
     evidenceKind: string('evidenceKind').predicate(UDFS.evidenceKind).notNull(),
-    subject: uri('subject').predicate(UDFS.subject).notNull(),
+    about: uri('about').predicate(SCHEMA.about).notNull(),
 
     issue: uri('issue').predicate(UDFS.issue).link(issueResource),
     task: uri('task').predicate(UDFS.task).link(taskResource),
@@ -51,12 +58,9 @@ export const evidenceResource = podTable(
     run: uri('run').predicate(UDFS.run).link(runResource),
     thread: uri('thread').predicate(UDFS.inThread).link(threadResource),
 
-    title: string('title').predicate(DCTerms.title),
-    summary: text('summary').predicate(UDFS.summary),
-    body: text('body').predicate(UDFS.body),
-    artifact: uri('artifact').predicate(UDFS.artifact),
-    source: uri('source').predicate(UDFS.source),
-    actor: uri('actor').predicate(UDFS.actor),
+    summary: text('summary').predicate(DCTerms.abstract),
+    source: uri('source').predicate(DCTerms.source),
+    actor: uri('actor').predicate(DCTerms.creator),
     outcome: string('outcome').predicate(UDFS.outcome),
     metadata: object('metadata').predicate(UDFS.metadata),
 
@@ -69,9 +73,6 @@ export const evidenceResource = podTable(
     namespace: UDFS,
   },
 )
-
-// Compatibility alias. New model code should prefer `evidenceResource`.
-export const evidenceTable = evidenceResource
 
 export type EvidenceRow = typeof evidenceResource.$inferSelect
 export type EvidenceInsert = typeof evidenceResource.$inferInsert

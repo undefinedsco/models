@@ -1,4 +1,4 @@
-import { AS, DCTerms, UDFS } from '../namespaces'
+import { AS, DCTerms, SCHEMA, UDFS } from '../namespaces'
 
 export const TaskVocab = {
   title: DCTerms.title,
@@ -100,18 +100,15 @@ export const RunVocab = {
 
 export const EvidenceVocab = {
   evidenceKind: UDFS.evidenceKind,
-  subject: UDFS.subject,
+  about: SCHEMA.about,
   issue: UDFS.issue,
   task: UDFS.task,
   delivery: UDFS.delivery,
   run: UDFS.run,
   thread: UDFS.inThread,
-  title: DCTerms.title,
-  summary: UDFS.summary,
-  body: UDFS.body,
-  artifact: UDFS.artifact,
-  source: UDFS.source,
-  actor: UDFS.actor,
+  summary: DCTerms.abstract,
+  source: DCTerms.source,
+  actor: DCTerms.creator,
   outcome: UDFS.outcome,
   metadata: UDFS.metadata,
   createdAt: DCTerms.created,
@@ -121,23 +118,21 @@ export const ReportVocab = {
   reportKind: UDFS.reportKind,
   status: UDFS.status,
   outcome: UDFS.outcome,
-  subject: UDFS.subject,
+  about: SCHEMA.about,
   issue: UDFS.issue,
   task: UDFS.task,
   delivery: UDFS.delivery,
   run: UDFS.run,
   thread: UDFS.inThread,
   evidence: UDFS.evidence,
-  title: DCTerms.title,
-  summary: UDFS.summary,
-  body: UDFS.body,
-  reviewer: UDFS.reviewer,
-  actor: UDFS.actor,
-  source: UDFS.source,
+  summary: DCTerms.abstract,
+  reviewer: SCHEMA.reviewedBy,
+  actor: DCTerms.creator,
+  source: DCTerms.source,
   metricFacts: UDFS.metricFacts,
   metadata: UDFS.metadata,
   createdAt: DCTerms.created,
-  publishedAt: UDFS.publishedAt,
+  publishedAt: DCTerms.issued,
   updatedAt: DCTerms.modified,
 } as const
 

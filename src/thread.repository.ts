@@ -8,7 +8,7 @@ export const threadRepository = definePodRepository<
   ThreadUpdate
 >({
   namespace: 'thread',
-  table: threadResource,
+  resource: threadResource,
   searchableFields: ['title'],
   defaultSort: { field: 'updatedAt', direction: 'desc' },
 })

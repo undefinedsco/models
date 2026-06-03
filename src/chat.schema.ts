@@ -1,6 +1,5 @@
 import { boolean, object, podTable, string, text, timestamp, uri, id, integer } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms, SCHEMA, MEETING, WF } from './namespaces'
-import { chatResourceId } from './resource-id-defaults'
 
 export type ChatMemberRole = 'owner' | 'admin' | 'member'
 export type ChatStatusType = 'active' | 'archived' | 'deleted'
@@ -35,7 +34,7 @@ export interface ChatMetadata {
 export const chatResource = podTable(
   'chats',
   {
-    id: id('id').default(chatResourceId),
+    id: id('id').default('{key}/index.ttl#this'),
 
     // Display
     title: string('title').predicate(DCTerms.title).notNull(),

@@ -8,7 +8,7 @@ export const chatRepository = definePodRepository<
   ChatUpdate
 >({
   namespace: 'chat',
-  table: chatResource,
+  resource: chatResource,
   searchableFields: ['title', 'description'],
   defaultSort: { field: 'lastActiveAt', direction: 'desc' },
 })

@@ -43,6 +43,9 @@ describe('command resource id defaults', () => {
     expect(runStepResourceId('step_1', {
       run: 'task/task_1/2026/05/18/runs.ttl#run_1',
     })).toBe('task/task_1/2026/05/18/runs.ttl#step_1')
+    expect(runStepResourceId('step_2', {
+      run: 'https://pod.example/.data/task/task_1/2026/05/18/runs.ttl#run_1',
+    })).toBe('task/task_1/2026/05/18/runs.ttl#step_2')
   })
 
   it('accepts seconds and milliseconds numeric timestamps', () => {
@@ -68,6 +71,12 @@ describe('command resource id defaults', () => {
     expect((Models as Record<string, unknown>).commandKindFromResourceId).toBeUndefined()
     expect((Models as Record<string, unknown>).surfaceFromCommandResourceId).toBeUndefined()
     expect((Models as Record<string, unknown>).surfaceIdFromCommandResourceId).toBeUndefined()
+    expect((Models as Record<string, unknown>).buildPodResourceIri).toBeUndefined()
+    expect((Models as Record<string, unknown>).buildPodResourceIriForResource).toBeUndefined()
+    expect((Models as Record<string, unknown>).normalizePodDataResourceId).toBeUndefined()
+    expect((Models as Record<string, unknown>).resolvePodBaseUrl).toBeUndefined()
+    expect((Models as Record<string, unknown>).resolvePodResourceId).toBeUndefined()
+    expect((Models as Record<string, unknown>).resolvePodResourceTemplateValue).toBeUndefined()
   })
 
   it('keeps explicit ids exact and leaves schema subjectTemplate empty', () => {

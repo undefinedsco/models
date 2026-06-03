@@ -8,7 +8,7 @@ export const issueRepository = definePodRepository<
   IssueUpdate
 >({
   namespace: 'issue',
-  table: issueResource,
+  resource: issueResource,
   searchableFields: ['title', 'description'],
   defaultSort: { field: 'updatedAt', direction: 'desc' },
 })

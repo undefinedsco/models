@@ -1,8 +1,8 @@
-import { object, podTable, uri, string, text, timestamp, id } from '@undefineds.co/drizzle-solid'
+import { object, podTable, renderDefaultIdTemplate, uri, string, text, timestamp, id } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms, FOAF, MEETING, SCHEMA, SIOC, WF } from './namespaces'
 import { chatResource } from './chat.schema'
 import { threadResource } from './thread.schema'
-import { messageResourceId } from './resource-id-defaults'
+import { resourceKey } from './resource-id-defaults'
 
 export type MessageRoleType = 'user' | 'assistant' | 'system'
 export type MessageStatusType = 'in_progress' | 'completed' | 'incomplete' | 'sent'
@@ -37,7 +37,23 @@ export const MessageStatus = {
 export const messageResource = podTable(
   'chat_message',
   {
-    id: id('id').default(messageResourceId),
+    id: id('id').default((key: string | undefined, row?: Record<string, unknown>) => (
+      renderDefaultIdTemplate(
+        row?.chat
+          ? 'chat/{chat.id[0]}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'
+          : row?.thread
+            ? '{thread.id[0:2]}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'
+            : 'chat/default/{yyyy}/{MM}/{dd}/messages.ttl#{key}',
+        {
+          key: resourceKey(key, 'msg'),
+          row,
+          links: {
+            chat: chatResource,
+            thread: threadResource,
+          },
+        },
+      )
+    )),
 
     // Chat relation. In RDF this is an inverse Solid Chat link: <chat> wf:message <message>.
     chat: uri('chat').predicate(WF.message).inverse().link(chatResource),

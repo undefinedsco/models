@@ -15,23 +15,23 @@ export type IdeaCommitment = 'thought' | 'direction' | 'tentative_decision' | 'c
 export const ideaResource = podTable(
   'idea',
   {
-    id: id('id'),
+    id: id('id').default('{yyyy}/{MM}/{dd}.ttl#{key}'),
 
-    summary: string('summary').predicate(DCTerms.title).notNull(),
+    summary: string('summary').predicate(DCTerms.abstract).notNull(),
     input: text('input').predicate(DCTerms.description),
     status: string('status').predicate(UDFS.status).notNull().default('captured'),
     commitment: string('commitment').predicate(UDFS.commitment).notNull().default('thought'),
     affectedArea: string('affectedArea').predicate(UDFS.affectedArea),
     currentUnderstanding: text('currentUnderstanding').predicate(UDFS.currentUnderstanding),
     openQuestions: text('openQuestions').array().predicate(UDFS.openQuestions),
-    related: uri('related').array().predicate(UDFS.related),
+    related: uri('related').array().predicate(DCTerms.relation),
     conflicts: text('conflicts').array().predicate(UDFS.conflicts),
     nextStep: text('nextStep').predicate(UDFS.nextStep),
     promotedTo: uri('promotedTo').predicate(UDFS.promotedTo),
 
     chat: uri('chat').predicate(UDFS.conversation).link(chatResource),
     thread: uri('thread').predicate(UDFS.inThread).link(threadResource),
-    sourceMessages: uri('sourceMessages').array().predicate(UDFS.sourceMessage),
+    sourceMessages: uri('sourceMessages').array().predicate(DCTerms.source),
     createdBy: uri('createdBy').predicate(DCTerms.creator),
     metadata: object('metadata').predicate(UDFS.metadata),
 
@@ -43,12 +43,8 @@ export const ideaResource = podTable(
     sparqlEndpoint: '/.data/ideas/-/sparql',
     type: UDFS.Idea,
     namespace: UDFS,
-    subjectTemplate: '{id}.ttl',
   },
 )
-
-// Compatibility alias. New model code should prefer `ideaResource`.
-export const ideaTable = ideaResource
 
 export type IdeaRow = typeof ideaResource.$inferSelect
 export type IdeaInsert = typeof ideaResource.$inferInsert

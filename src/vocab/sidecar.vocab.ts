@@ -40,17 +40,17 @@ export const GrantVocab = {
   target: ODRL.target,
   action: ODRL.action,
   title: DCTerms.title,
-  summary: UDFS.summary,
-  body: UDFS.body,
+  summary: DCTerms.abstract,
+  description: DCTerms.description,
   schema: DCTerms.conformsTo,
   pageKind: UDFS.pageKind,
   wikiStatus: UDFS.status,
   tags: UDFS.tags,
-  source: UDFS.source,
+  source: UDFS.sourceKind,
   sourceHash: UDFS.sourceHash,
   compiledAt: UDFS.compiledAt,
   compiledFrom: UDFS.compiledFrom,
-  related: UDFS.related,
+  related: DCTerms.relation,
   effect: UDFS.effect,
   riskCeiling: UDFS.riskCeiling,
   policy: UDFS.policy,
@@ -60,6 +60,26 @@ export const GrantVocab = {
   onBehalfOf: UDFS.onBehalfOf,
   createdAt: DCTerms.created,
   revokedAt: UDFS.revokedAt,
+} as const
+
+/**
+ * Legacy predicates written by @undefineds.co/models <= 0.2.33.
+ *
+ * Keep this small compatibility surface so readers can accept old Pod grants
+ * while new writers use `GrantVocab`.
+ */
+export const LegacyGrantVocab = {
+  summary: UDFS.summary,
+  body: UDFS.body,
+  source: UDFS.source,
+  related: UDFS.related,
+} as const
+
+export const GrantReadVocab = {
+  summary: [GrantVocab.summary, LegacyGrantVocab.summary],
+  description: [GrantVocab.description, LegacyGrantVocab.body],
+  source: [GrantVocab.source, LegacyGrantVocab.source],
+  related: [GrantVocab.related, LegacyGrantVocab.related],
 } as const
 
 export const InboxNotificationVocab = {

@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { extractChatThreadRef } from '../src'
+import {
+  buildChatTargetRef,
+  buildModelResourceIriForDatabase,
+  chatResource,
+  extractChatTargetRef,
+  extractChatThreadRef,
+  resolveModelResourceIriForDatabase,
+  threadResource,
+} from '../src'
 import { extractApprovalIdFromApprovalRef } from '../src/approval.schema'
 
 describe('resource reference helpers', () => {
@@ -17,4 +25,45 @@ describe('resource reference helpers', () => {
       threadId: 'thread-2',
     })
   })
+
+  it('builds chat target refs from chat ids and refs', () => {
+    expect(buildChatTargetRef('chat-1')).toBe('/.data/chat/chat-1/index.ttl#this')
+    expect(buildChatTargetRef('https://alice.example/.data/chat/chat-1/index.ttl#this')).toBe('/.data/chat/chat-1/index.ttl#this')
+  })
+
+  it('resolves model resource IRIs from database runtime context', () => {
+    const database = {
+      getSession: () => ({
+        info: { webId: 'https://alice.example/profile/card#me' },
+      }),
+    }
+
+    expect(buildModelResourceIriForDatabase(database, chatResource, { id: 'chat-1' }))
+      .toBe('https://alice.example/.data/chat/chat-1/index.ttl#this')
+    expect(resolveModelResourceIriForDatabase(database, threadResource, {
+      id: 'thread-1',
+      chat: buildChatTargetRef('chat-1'),
+    })).toBe('https://alice.example/.data/chat/chat-1/index.ttl#thread-1')
+    expect(resolveModelResourceIriForDatabase({}, chatResource, { id: 'chat-2' }))
+      .toBeNull()
+  })
+
+  it('extracts chat target refs for chat, thread, and message targets', () => {
+    expect(extractChatTargetRef('https://alice.example/.data/chat/chat-1/index.ttl#this')).toEqual({
+      chatId: 'chat-1',
+      threadId: null,
+      messageId: null,
+    })
+    expect(extractChatTargetRef('https://alice.example/.data/chat/chat-1/index.ttl#thread-1')).toEqual({
+      chatId: 'chat-1',
+      threadId: 'thread-1',
+      messageId: null,
+    })
+    expect(extractChatTargetRef('https://alice.example/.data/chat/chat-1/2026/06/03/messages.ttl#msg-1')).toEqual({
+      chatId: 'chat-1',
+      threadId: null,
+      messageId: 'msg-1',
+    })
+  })
+
 })

@@ -58,6 +58,7 @@ export const SCHEMA = createNamespace('schema', 'http://schema.org/', {
   CreativeWork: 'CreativeWork',
   MediaObject: 'MediaObject',
   PropertyValue: 'PropertyValue',
+  about: 'about',
   author: 'author',
   dateCreated: 'dateCreated',
   dateDeleted: 'dateDeleted',
@@ -67,6 +68,7 @@ export const SCHEMA = createNamespace('schema', 'http://schema.org/', {
   image: 'image',
   name: 'name',
   participant: 'participant',
+  reviewedBy: 'reviewedBy',
   text: 'text',
   url: 'url',
 })
@@ -262,6 +264,7 @@ export const UDFS = createNamespace('udfs', 'https://undefineds.co/ns#', {
   body: 'body',
   tags: 'tags',
   source: 'source',
+  sourceKind: 'sourceKind',
   sourceHash: 'sourceHash',
   compiledAt: 'compiledAt',
   compiledFrom: 'compiledFrom',

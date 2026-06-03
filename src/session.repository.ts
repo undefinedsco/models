@@ -13,7 +13,7 @@ export const sessionRepository = definePodRepository<
   SessionUpdate
 >({
   namespace: 'session',
-  table: sessionResource,
+  resource: sessionResource,
   searchableFields: ['chat', 'thread', 'status', 'tool'],
   defaultSort: { field: 'updatedAt', direction: 'desc' },
 })

@@ -170,7 +170,7 @@ interface AIConfigRepositoryDb {
     }
   }
   findById<T = unknown>(resource: unknown, id: string): Promise<T | null>
-  updateById?(resource: unknown, id: string, data: Record<string, unknown>): Promise<unknown>
+  updateById(resource: unknown, id: string, data: Record<string, unknown>): Promise<unknown>
 }
 
 function normalizeText(value: string): string {
@@ -553,7 +553,7 @@ export const aiConfigRepository = {
     selection: Pick<AIConfigCredentialSelection, 'credentialId'> | undefined,
     usedAt = new Date(),
   ): Promise<void> {
-    if (!selection?.credentialId || !db.updateById) return
+    if (!selection?.credentialId) return
     await db.updateById(credentialResource, selection.credentialId, { lastUsedAt: usedAt })
   },
 }

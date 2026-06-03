@@ -8,7 +8,7 @@ export const messageRepository = definePodRepository<
   MessageUpdate
 >({
   namespace: 'message',
-  table: messageResource,
+  resource: messageResource,
   searchableFields: ['content'],
   defaultSort: { field: 'createdAt', direction: 'asc' },
 })

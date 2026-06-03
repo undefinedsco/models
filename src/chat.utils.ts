@@ -1,4 +1,5 @@
-import { parsePodResourceRef } from '@undefineds.co/drizzle-solid'
+import { normalizePodDataResourceId, parsePodResourceRef } from '@undefineds.co/drizzle-solid'
+import { chatResourceId } from './resource-id-defaults'
 
 export const toTimestamp = (value: unknown, fallback = 0): number => {
   if (value instanceof Date) return value.getTime()
@@ -15,6 +16,12 @@ export interface ChatThreadRef {
   threadId: string | null
 }
 
+export interface ChatTargetRef {
+  chatId: string | null
+  threadId: string | null
+  messageId: string | null
+}
+
 export function extractChatIdFromChatRef(chatRef: string | null | undefined): string | null {
   if (!chatRef) return null
   const parsed = parsePodResourceRef({ config: { base: '/.data/chat/' } } as any, chatRef)
@@ -23,6 +30,10 @@ export function extractChatIdFromChatRef(chatRef: string | null | undefined): st
   if (direct) return decodeURIComponent(direct[1])
   const chatPath = normalizePodDataResourceId(resourceId).match(/^chat\/(.+)\/index\.ttl#this$/)
   return chatPath?.[1] ? decodeURIComponent(chatPath[1]) : null
+}
+
+export function buildChatTargetRef(chatIdOrRef: string): string {
+  return `/.data/chat/${chatResourceId(extractChatIdFromChatRef(chatIdOrRef) ?? chatIdOrRef)}`
 }
 
 export function extractThreadIdFromThreadRef(threadRef: string | null | undefined): string | null {
@@ -47,15 +58,35 @@ export function extractChatThreadRef(uri: string | null | undefined): ChatThread
   }
 }
 
+export function extractChatTargetRef(uri: string | null | undefined): ChatTargetRef {
+  if (!uri) return { chatId: null, threadId: null, messageId: null }
+  const parsed = parsePodResourceRef({ config: { base: '/.data/' } } as any, uri)
+  const resourceId = parsed?.resourceId ?? uri
+  const normalized = normalizePodDataResourceId(resourceId)
+  const chatThread = normalized.match(/^chat\/(.+)\/index\.ttl#([^#/]+)$/)
+  if (chatThread?.[1]) {
+    const fragment = chatThread[2]
+    return {
+      chatId: decodeURIComponent(chatThread[1]),
+      threadId: fragment === 'this' ? null : decodeURIComponent(fragment),
+      messageId: null,
+    }
+  }
+
+  const message = normalized.match(/^chat\/(.+)\/\d{4}\/\d{2}\/\d{2}\/messages\.ttl#([^#/]+)$/)
+  if (message?.[1]) {
+    return {
+      chatId: decodeURIComponent(message[1]),
+      threadId: null,
+      messageId: message[2] ? decodeURIComponent(message[2]) : null,
+    }
+  }
+
+  return { chatId: null, threadId: null, messageId: null }
+}
+
 export function resolveThreadChatId(
   thread: Pick<Record<string, unknown>, 'chat'> | null | undefined,
 ): string | null {
   return extractChatIdFromChatRef(typeof thread?.chat === 'string' ? thread.chat : null)
-}
-
-function normalizePodDataResourceId(ref: string): string {
-  const dataIndex = ref.indexOf('/.data/')
-  return dataIndex >= 0
-    ? ref.slice(dataIndex + '/.data/'.length)
-    : ref.replace(/^\/?\.data\//, '').replace(/^\/+/, '')
 }

@@ -1,7 +1,6 @@
 import { id, object, podTable, string, text, timestamp, uri } from '@undefineds.co/drizzle-solid'
 import { DCTerms, UDFS } from './namespaces'
 import { threadResource } from './thread.schema'
-import { taskResourceId } from './resource-id-defaults'
 
 export type TaskStatusType = 'open' | 'ready' | 'active' | 'blocked' | 'completed' | 'failed' | 'cancelled'
 
@@ -25,7 +24,7 @@ export const TaskStatus = {
 export const taskResource = podTable(
   'task',
   {
-    id: id('id').default(taskResourceId),
+    id: id('id').default('index.ttl#{key}'),
 
     title: string('title').predicate(DCTerms.title),
     instruction: text('instruction').predicate(UDFS.instruction).notNull(),

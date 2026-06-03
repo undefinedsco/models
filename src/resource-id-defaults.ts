@@ -1,3 +1,5 @@
+import { normalizePodDataResourceId } from '@undefineds.co/drizzle-solid'
+
 export type DateInput = Date | string | number | null | undefined
 
 export interface DateParts {
@@ -24,6 +26,16 @@ export function resourceKey(key: string | undefined, prefix: string): string {
   return key && key.length > 0
     ? key
     : `${prefix}_${Math.random().toString(36).slice(2, 12)}`
+}
+
+export function workflowOwnerDir(row?: Record<string, unknown>): string | null {
+  return taskDir(row)
+    ?? runDir(row)
+    ?? deliveryDir(row)
+    ?? issueDir(row)
+    ?? threadDir(row)
+    ?? chatDir(row)
+    ?? aboutDir(row)
 }
 
 export function parentDir(id: string | null | undefined): string | null {
@@ -119,8 +131,9 @@ export function runStepResourceId(
 ): string {
   const localKey = resourceKey(key, 'run-step')
   const run = typeof row?.run === 'string' ? row.run : undefined
-  if (run && /(?:^|\/)\d{4}\/\d{2}\/\d{2}\/runs\.ttl#[^#/]+$/.test(stripPodDataPrefix(run))) {
-    return `${run.slice(0, run.lastIndexOf('#') + 1)}${localKey}`
+  const runResourceId = run ? normalizePodDataResourceId(run) : undefined
+  if (runResourceId && /(?:^|\/)\d{4}\/\d{2}\/\d{2}\/runs\.ttl#[^#/]+$/.test(runResourceId)) {
+    return `${runResourceId.slice(0, runResourceId.lastIndexOf('#') + 1)}${localKey}`
   }
   const ownerDir = taskDir(row) ?? threadDir(row) ?? chatDir(row) ?? 'runs'
   const { yyyy, MM, dd } = dateParts(row?.createdAt as DateInput)
@@ -130,7 +143,7 @@ export function runStepResourceId(
 function chatDir(row?: Record<string, unknown>): string | null {
   const chat = typeof row?.chat === 'string' ? row.chat : undefined
   if (!chat) return null
-  const resourceId = stripPodDataPrefix(chat)
+  const resourceId = normalizePodDataResourceId(chat)
   const match = resourceId.match(/^chat\/(.+)\/index\.ttl#this$/)
   return match?.[1] ? `chat/${match[1]}` : null
 }
@@ -138,7 +151,7 @@ function chatDir(row?: Record<string, unknown>): string | null {
 function threadDir(row?: Record<string, unknown>): string | null {
   const thread = typeof row?.thread === 'string' ? row.thread : undefined
   if (!thread) return null
-  const resourceId = stripPodDataPrefix(thread)
+  const resourceId = normalizePodDataResourceId(thread)
   const match = resourceId.match(/^(chat\/.+)\/index\.ttl#[^#/]+$/)
   return match?.[1] ?? null
 }
@@ -146,7 +159,7 @@ function threadDir(row?: Record<string, unknown>): string | null {
 function taskDir(row?: Record<string, unknown>): string | null {
   const task = typeof row?.task === 'string' ? row.task : undefined
   if (!task) return null
-  const resourceId = stripPodDataPrefix(task)
+  const resourceId = normalizePodDataResourceId(task)
   if (resourceId === 'task/index.ttl#this') return 'task'
   const legacyIndexMatch = resourceId.match(/^task\/index\.ttl#([^#/]+)$/)
   if (legacyIndexMatch?.[1]) return `task/${legacyIndexMatch[1]}`
@@ -154,10 +167,18 @@ function taskDir(row?: Record<string, unknown>): string | null {
   return match?.[1] ? `task/${match[1]}` : null
 }
 
+function issueDir(row?: Record<string, unknown>): string | null {
+  const issue = typeof row?.issue === 'string' ? row.issue : undefined
+  if (!issue) return null
+  const resourceId = normalizePodDataResourceId(issue)
+  const match = resourceId.match(/^issues\/(.+)\.ttl(?:#[^#/]+)?$/)
+  return match?.[1] ? `issues/${match[1]}` : null
+}
+
 function deliveryDir(row?: Record<string, unknown>): string | null {
   const delivery = typeof row?.delivery === 'string' ? row.delivery : undefined
   if (!delivery) return null
-  const resourceId = stripPodDataPrefix(delivery)
+  const resourceId = normalizePodDataResourceId(delivery)
   const match = resourceId.match(/^(.+)\/\d{4}\/\d{2}\/\d{2}\/deliveries\.ttl#[^#/]+$/)
   return match?.[1] ?? null
 }
@@ -165,19 +186,18 @@ function deliveryDir(row?: Record<string, unknown>): string | null {
 function runDir(row?: Record<string, unknown>): string | null {
   const run = typeof row?.run === 'string' ? row.run : undefined
   if (!run) return null
-  const resourceId = stripPodDataPrefix(run)
+  const resourceId = normalizePodDataResourceId(run)
   const match = resourceId.match(/^(.+)\/\d{4}\/\d{2}\/\d{2}\/runs\.ttl#[^#/]+$/)
   return match?.[1] ?? null
 }
 
-function stripPodDataPrefix(ref: string): string {
-  const hashIndex = ref.indexOf('#')
-  const [documentRef, fragment = ''] = hashIndex >= 0
-    ? [ref.slice(0, hashIndex), ref.slice(hashIndex)]
-    : [ref, '']
-  const dataIndex = documentRef.indexOf('/.data/')
-  const relative = dataIndex >= 0
-    ? documentRef.slice(dataIndex + '/.data/'.length)
-    : documentRef.replace(/^\/?\.data\//, '').replace(/^\/+/, '')
-  return `${relative}${fragment}`
+function aboutDir(row?: Record<string, unknown>): string | null {
+  const about = typeof row?.about === 'string' ? row.about : undefined
+  if (!about) return null
+  return runDir({ run: about })
+    ?? deliveryDir({ delivery: about })
+    ?? taskDir({ task: about })
+    ?? issueDir({ issue: about })
+    ?? threadDir({ thread: about })
+    ?? chatDir({ chat: about })
 }

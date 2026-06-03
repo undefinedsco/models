@@ -47,7 +47,7 @@ export type GrantProjectionInsert = Pick<
   | 'action'
   | 'title'
   | 'summary'
-  | 'body'
+  | 'description'
   | 'schema'
   | 'pageKind'
   | 'wikiStatus'

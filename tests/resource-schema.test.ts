@@ -18,19 +18,16 @@ import {
   deliveryResource,
   deliveryTable,
   evidenceResource,
-  evidenceTable,
   favoriteResource,
   favoriteTable,
   grantResource,
   grantTable,
   ideaResource,
-  ideaTable,
   inboxNotificationResource,
   inboxNotificationTable,
   issueResource,
   issueTable,
   reportResource,
-  reportTable,
   initSolidResources,
   initSolidTables,
   messageResource,
@@ -63,7 +60,7 @@ function listSourceFiles(dir: string): string[] {
 }
 
 describe('shared Solid resources', () => {
-  it('exports Resource names with Table aliases for compatibility', () => {
+  it('keeps legacy Table aliases only for compatibility', () => {
     expect(solidProfileResource).toBe(solidProfileTable)
     expect(contactResource).toBe(contactTable)
     expect(agentResource).toBe(agentTable)
@@ -74,13 +71,10 @@ describe('shared Solid resources', () => {
     expect(scheduleResource).toBe(scheduleTable)
     expect(automationRuleResource).toBe(automationRuleTable)
     expect(deliveryResource).toBe(deliveryTable)
-    expect(evidenceResource).toBe(evidenceTable)
-    expect(reportResource).toBe(reportTable)
     expect(runResource).toBe(runTable)
     expect(runStepResource).toBe(runStepTable)
     expect(favoriteResource).toBe(favoriteTable)
     expect(settingsResource).toBe(settingsTable)
-    expect(ideaResource).toBe(ideaTable)
     expect(issueResource).toBe(issueTable)
     expect(approvalResource).toBe(approvalTable)
     expect(auditResource).toBe(auditTable)
@@ -88,7 +82,7 @@ describe('shared Solid resources', () => {
     expect(inboxNotificationResource).toBe(inboxNotificationTable)
   })
 
-  it('keeps solidResources Resource-only and solidSchema Table-compatible', () => {
+  it('keeps solidResources Resource-only and solidSchema legacy-compatible only', () => {
     expect(solidResources).toMatchObject({
       solidProfileResource,
       contactResource,
@@ -150,19 +144,19 @@ describe('shared Solid resources', () => {
       scheduleTable,
       automationRuleTable,
       deliveryTable,
-      evidenceTable,
-      reportTable,
       runTable,
       runStepTable,
       favoriteTable,
       settingsTable,
-      ideaTable,
       issueTable,
       approvalTable,
       auditTable,
       grantTable,
       inboxNotificationTable,
     })
+    expect((solidSchema as any).evidenceTable).toBeUndefined()
+    expect((solidSchema as any).reportTable).toBeUndefined()
+    expect((solidSchema as any).ideaTable).toBeUndefined()
   })
 
   it('exports resource-first repository helper aliases', () => {

@@ -1,7 +1,6 @@
 import { uri, boolean, object, podTable, string, timestamp, id } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms, SIOC } from './namespaces'
 import { chatResource } from './chat.schema'
-import { threadResourceId } from './resource-id-defaults'
 
 export type ThreadStatusType = 'active' | 'locked' | 'closed'
 
@@ -36,7 +35,7 @@ export const ThreadStatus = {
 export const threadResource = podTable(
   'thread',
   {
-    id: id('id').default(threadResourceId),
+    id: id('id').default('chat/{chat.id[0]}/index.ttl#{key}'),
 
     // Belongs to chat/counterpart. Stored as an RDF URI; short ids are resolved via chatResource's URI template by the ORM.
     chat: uri('chat').predicate(SIOC.has_parent).link(chatResource),

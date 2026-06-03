@@ -2,6 +2,7 @@ export {
   sessionResource,
   sessionTable,
   buildSessionResourceId,
+  buildSessionPodResourcePath,
   buildSessionSubjectPath,
   buildRuntimeSessionIri,
   extractSessionIdFromSessionRef,

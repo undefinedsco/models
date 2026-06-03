@@ -1,4 +1,4 @@
-import { extractPodResourceTemplateValue, object, podTable, string, timestamp, uri, id, integer } from '@undefineds.co/drizzle-solid'
+import { extractPodResourceTemplateValue, object, podTable, renderDefaultIdTemplate, string, timestamp, uri, id, integer } from '@undefineds.co/drizzle-solid'
 import { DCTerms, UDFS } from '../namespaces'
 import { chatResource } from '../chat.schema'
 import { threadResource } from '../thread.schema'
@@ -8,17 +8,18 @@ export type SessionType = 'direct' | 'group' | 'imported-readonly'
 export type SessionStatus = 'active' | 'paused' | 'completed' | 'error' | 'archived'
 
 export function buildSessionResourceId(sessionId: string, createdAt: Date | string | number = new Date()): string {
-  const date = createdAt instanceof Date ? createdAt : new Date(createdAt)
-  const safeDate = Number.isFinite(date.getTime()) ? date : new Date()
-  const yyyy = String(safeDate.getUTCFullYear())
-  const mm = String(safeDate.getUTCMonth() + 1).padStart(2, '0')
-  const dd = String(safeDate.getUTCDate()).padStart(2, '0')
-  return `${yyyy}/${mm}/${dd}/${encodeURIComponent(sessionId)}.ttl`
+  return renderDefaultIdTemplate('{yyyy}/{MM}/{dd}/{key}.ttl', {
+    key: encodeURIComponent(sessionId),
+    row: { createdAt },
+  })
 }
 
-export function buildSessionSubjectPath(sessionId: string, createdAt: Date | string | number = new Date()): string {
+export function buildSessionPodResourcePath(sessionId: string, createdAt: Date | string | number = new Date()): string {
   return `/.data/sessions/${buildSessionResourceId(sessionId, createdAt)}`
 }
+
+/** @deprecated Use buildSessionPodResourcePath for Pod-root paths or buildSessionResourceId for resource-base ids. */
+export const buildSessionSubjectPath = buildSessionPodResourcePath
 
 export function buildRuntimeSessionIri(sessionId: string): string {
   return `urn:linx:runtime-session:${sessionId}`
