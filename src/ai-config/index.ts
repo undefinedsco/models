@@ -271,7 +271,7 @@ export function normalizeAIConfigProviderId(raw?: string | null): string {
 }
 
 function aiConfigProviderRowId(row: Partial<AIProviderRow> & Record<string, unknown>): string {
-  return aiConfigResourceRefToProviderId(String(row.id ?? row['@id'] ?? ''))
+  return aiConfigResourceRefToProviderId(String(row.id ?? ''))
 }
 
 function aiConfigCredentialProviderId(row: Partial<CredentialRow> & Record<string, unknown>): string {
@@ -350,8 +350,8 @@ export function selectAIConfigCredential(
     const rightFailCount = normalizeOptionalInteger(right.failCount)
     if (leftFailCount !== rightFailCount) return leftFailCount - rightFailCount
 
-    return normalizeAIConfigResourceId(String(left.id ?? left['@id'] ?? ''))
-      .localeCompare(normalizeAIConfigResourceId(String(right.id ?? right['@id'] ?? '')))
+    return normalizeAIConfigResourceId(String(left.id ?? ''))
+      .localeCompare(normalizeAIConfigResourceId(String(right.id ?? '')))
   }
 
   const defaults = candidates.filter((row) => normalizeOptionalBoolean(row.isDefault))
@@ -364,7 +364,7 @@ export function selectAIConfigCredential(
     providerId: provider,
     credential,
     credentialId: normalizeAIConfigResourceId(
-      normalizeOptionalText(credential.id) ?? normalizeOptionalText(credential['@id']),
+      normalizeOptionalText(credential.id),
     ),
     credentialLabel: normalizeOptionalText(credential.label),
     apiKey,
@@ -415,7 +415,7 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
     const providerId = aiConfigModelProviderId(row)
     if (!providerId) continue
 
-    const modelId = normalizeAIConfigModelStorageId(String(row.id ?? row['@id'] ?? ''), providerId)
+    const modelId = normalizeAIConfigModelStorageId(String(row.id ?? ''), providerId)
     if (!modelId) continue
 
     const list = modelMap.get(providerId) ?? []
@@ -543,7 +543,7 @@ export function buildAIConfigMutationPlan(input: {
   if (input.updates.models !== undefined) {
     const existingById = new Map(
       existingModels.map((row) => [
-        normalizeAIConfigModelStorageId(String(row.id ?? row['@id'] ?? ''), providerId),
+        normalizeAIConfigModelStorageId(String(row.id ?? ''), providerId),
         row,
       ] as const),
     )
@@ -597,7 +597,7 @@ export function buildAIConfigDisconnectPlan(input: {
     }
 
     const id = normalizeAIConfigResourceId(
-      normalizeOptionalText(row.id) ?? normalizeOptionalText(row['@id']),
+      normalizeOptionalText(row.id),
     )
     if (!id || seen.has(id)) {
       continue

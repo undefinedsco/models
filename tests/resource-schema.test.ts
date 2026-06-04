@@ -145,12 +145,14 @@ describe('shared Solid resources', () => {
 
   it('uses exact-id mode for command resources', () => {
     expect(chatResource.hasCustomTemplate()).toBe(false)
+    expect(agentResource.hasCustomTemplate()).toBe(false)
     expect(threadResource.hasCustomTemplate()).toBe(false)
     expect(messageResource.hasCustomTemplate()).toBe(false)
     expect(taskResource.hasCustomTemplate()).toBe(false)
     expect(runResource.hasCustomTemplate()).toBe(false)
     expect(runStepResource.hasCustomTemplate()).toBe(false)
     expect(chatResource.config.base).toBe('/.data/chat/')
+    expect(agentResource.config.base).toBe('/.data/agents/')
     expect(threadResource.config.base).toBe('/.data/')
     expect(messageResource.config.base).toBe('/.data/')
     expect(taskResource.config.base).toBe('/.data/task/')

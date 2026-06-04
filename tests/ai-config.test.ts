@@ -159,6 +159,35 @@ describe('ai-config shared core', () => {
     })
   })
 
+  it('does not use @id as an AI config row id fallback', () => {
+    const selected = selectAIConfigCredential('openai', [
+      {
+        '@id': 'https://pod.example/settings/credentials.ttl#openai-default',
+        provider: '/settings/providers/openai.ttl',
+        service: 'ai',
+        status: 'active',
+        apiKey: 'sk-default',
+      },
+    ])
+
+    expect(selected?.credentialId).toBe('')
+
+    const disconnect = buildAIConfigDisconnectPlan({
+      providerId: 'openai',
+      currentCredentialRows: [
+        {
+          '@id': 'https://pod.example/settings/credentials.ttl#openai-default',
+          provider: '/settings/providers/openai.ttl',
+          service: 'ai',
+          status: 'active',
+          apiKey: 'sk-default',
+        },
+      ],
+    })
+
+    expect(disconnect.credentialDeleteIds).toEqual([])
+  })
+
   it('creates a shared mutation plan for provider, credential, and model writes', () => {
     const plan = buildAIConfigMutationPlan({
       providerId: 'claude',

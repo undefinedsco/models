@@ -2,6 +2,7 @@ import { uri, boolean, object, podTable, string, timestamp, id } from '@undefine
 import { UDFS, DCTerms, SIOC } from './namespaces'
 import { chatResource } from './chat.schema'
 import { threadResourceId } from './resource-id-defaults'
+import type { ResourceInsert, ResourceRow, ResourceUpdate } from './resource-identity'
 
 export type ThreadStatusType = 'active' | 'locked' | 'closed'
 
@@ -70,6 +71,6 @@ export const threadResource = podTable(
 // Compatibility alias. New model code should prefer `threadResource`.
 export const threadTable = threadResource
 
-export type ThreadRow = typeof threadResource.$inferSelect
-export type ThreadInsert = typeof threadResource.$inferInsert
-export type ThreadUpdate = typeof threadResource.$inferUpdate
+export type ThreadRow = ResourceRow<typeof threadResource.$inferSelect>
+export type ThreadInsert = ResourceInsert<typeof threadResource.$inferInsert>
+export type ThreadUpdate = ResourceUpdate<typeof threadResource.$inferUpdate>

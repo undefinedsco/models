@@ -3,6 +3,7 @@ import { UDFS, DCTerms, FOAF, MEETING, SCHEMA, SIOC, WF } from './namespaces'
 import { chatResource } from './chat.schema'
 import { threadResource } from './thread.schema'
 import { messageResourceId } from './resource-id-defaults'
+import type { ResourceInsert, ResourceRow, ResourceUpdate } from './resource-identity'
 
 export type MessageRoleType = 'user' | 'assistant' | 'system'
 export type MessageStatusType = 'in_progress' | 'completed' | 'incomplete' | 'sent'
@@ -50,7 +51,7 @@ export const messageResource = podTable(
 
     // maker is the entity URI of the message author:
     // - User: their WebID (https://user.pod/profile/card#me)
-    // - AI: Agent URI (/.data/agents/{id}.ttl#this)
+    // - AI: Agent URI (/.data/agents/{agentKey}/index.ttl#this)
     // - External: Contact URI (/.data/contacts/{id}.ttl#this)
     // No reference() constraint - accepts any valid URI.
     maker: uri('maker').predicate(FOAF.maker),
@@ -92,6 +93,6 @@ export const messageResource = podTable(
 // Compatibility alias. New model code should prefer `messageResource`.
 export const messageTable = messageResource
 
-export type MessageRow = typeof messageResource.$inferSelect
-export type MessageInsert = typeof messageResource.$inferInsert
-export type MessageUpdate = typeof messageResource.$inferUpdate
+export type MessageRow = ResourceRow<typeof messageResource.$inferSelect>
+export type MessageInsert = ResourceInsert<typeof messageResource.$inferInsert>
+export type MessageUpdate = ResourceUpdate<typeof messageResource.$inferUpdate>

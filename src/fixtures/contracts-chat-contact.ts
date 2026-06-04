@@ -2,6 +2,7 @@ import type { ChatInsert } from '../chat.schema'
 import type { ContactInsert } from '../contact.schema'
 import type { MessageInsert } from '../message.schema'
 import type { ThreadInsert } from '../thread.schema'
+import { asBaseRelativeResourceId } from '../resource-identity'
 import type {
   ToolApprovalBlock,
   ToolCallBlock,
@@ -10,7 +11,7 @@ import type {
 import { ContactClass } from '../contact.schema'
 
 export const fixtureContactSolid: ContactInsert = {
-  id: 'contact-solid-1',
+  id: asBaseRelativeResourceId('contact-solid-1'),
   name: 'Alice',
   rdfType: ContactClass.PERSON,
   contactType: 'solid',
@@ -19,16 +20,16 @@ export const fixtureContactSolid: ContactInsert = {
 } satisfies ContactInsert
 
 export const fixtureContactAgentWorkspace: ContactInsert = {
-  id: 'contact-agent-ws-1',
+  id: asBaseRelativeResourceId('contact-agent-ws-1'),
   name: 'Secretary@linx',
   rdfType: ContactClass.AGENT,
   contactType: 'agent',
-  entityUri: 'https://pod.example/.data/agents/secretary.ttl#this',
+  entityUri: 'https://pod.example/.data/agents/secretary/index.ttl#this',
   isPublic: false,
 } satisfies ContactInsert
 
 export const fixtureChatDirectAI: ChatInsert = {
-  id: 'chat-direct-ai-1',
+  id: asBaseRelativeResourceId('chat-direct-ai-1'),
   title: 'Chat Channel',
   participants: [
     'https://pod.example/profile/card#me',
@@ -41,7 +42,7 @@ export const fixtureChatDirectAI: ChatInsert = {
 } satisfies ChatInsert
 
 export const fixtureThreadDirectAI: ThreadInsert = {
-  id: 'thread-001',
+  id: asBaseRelativeResourceId('thread-001'),
   chat: 'https://pod.example/.data/chat/chat-direct-ai-1/index.ttl#this',
   title: 'Main thread',
   starred: false,
@@ -82,7 +83,7 @@ export const fixtureTaskProgressBlock: TaskProgressBlock = {
 }
 
 export const fixtureMessageTooling: MessageInsert = {
-  id: 'message-1',
+  id: asBaseRelativeResourceId('message-1'),
   thread: 'https://pod.example/.data/chat/chat-direct-ai-1/index.ttl#thread-001',
   chat: 'https://pod.example/.data/chat/chat-direct-ai-1/index.ttl#this',
   maker: 'https://pod.example/profile/card#me',

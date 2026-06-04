@@ -158,6 +158,9 @@ export {
 } from './run.schema'
 
 export {
+  agentHomeDirFromResourceId,
+  agentHomePathFromResourceId,
+  agentResourceId,
   chatResourceId,
   commandKindFromResourceId,
   dateParts,
@@ -176,6 +179,19 @@ export {
   type DateInput,
   type DateParts,
 } from './resource-id-defaults'
+export {
+  asBaseRelativeResourceId,
+  asResourceIri,
+  isBaseRelativeResourceId,
+  isResourceIri,
+  requireRowResourceId,
+  type BaseRelativeResourceId,
+  type ResourceIri,
+  type ResourceInsert,
+  type ResourceRow,
+  type ResourceUpdate,
+  type RowWithResourceId,
+} from './resource-identity'
 
 // Issue - user-facing work item that can be inspected through chat/thread
 export {

@@ -1,6 +1,7 @@
 import { boolean, object, podTable, string, text, timestamp, uri, id, integer } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms, SCHEMA, MEETING, WF } from './namespaces'
 import { chatResourceId } from './resource-id-defaults'
+import type { ResourceInsert, ResourceRow, ResourceUpdate } from './resource-identity'
 
 export type ChatMemberRole = 'owner' | 'admin' | 'member'
 export type ChatStatusType = 'active' | 'archived' | 'deleted'
@@ -83,6 +84,6 @@ export const chatResource = podTable(
 // Compatibility alias. New model code should prefer `chatResource`.
 export const chatTable = chatResource
 
-export type ChatRow = typeof chatResource.$inferSelect
-export type ChatInsert = typeof chatResource.$inferInsert
-export type ChatUpdate = typeof chatResource.$inferUpdate
+export type ChatRow = ResourceRow<typeof chatResource.$inferSelect>
+export type ChatInsert = ResourceInsert<typeof chatResource.$inferInsert>
+export type ChatUpdate = ResourceUpdate<typeof chatResource.$inferUpdate>

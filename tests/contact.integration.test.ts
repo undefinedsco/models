@@ -4,6 +4,7 @@ import { Session } from '@inrupt/solid-client-authn-node'
 import { drizzle, type SolidDatabase } from '@undefineds.co/drizzle-solid'
 import { contactTable } from '../src/contact.schema'
 import { agentTable } from '../src/agent.schema'
+import { agentResourceId } from '../src/resource-id-defaults'
 import { solidSchema } from '../src/schema'
 import { startLocalXpod, type LocalXpodTestPod } from './utils/local-xpod'
 import { eq } from '@undefineds.co/drizzle-solid'
@@ -217,7 +218,7 @@ describe('Solid Pod Contact CRUD', () => {
     expect(agentRecord.instructions).toContain('helpful assistant')
 
     // 2. CREATE CONTACT pointing to agent
-    const agentEntityUri = agentSubject || `${env.webId!.replace('/profile/card#me', '')}/.data/agents/${agentId}.ttl`
+    const agentEntityUri = agentSubject || `${env.webId!.replace('/profile/card#me', '')}/.data/agents/${agentResourceId(agentId)}`
 
     const [contactCreated] = await database
       .insert(contactTable)

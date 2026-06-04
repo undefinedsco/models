@@ -52,16 +52,16 @@ export interface StarredSyncConfig<T = Record<string, unknown>> {
  * 创建 Favorite 记录
  */
 async function createFavorite(
-  _ctx: HookContext,
+  ctx: HookContext,
   config: StarredSyncConfig,
   record: Record<string, unknown>
 ): Promise<void> {
   const { rdfType, sourceModule, extractor } = config
-  const targetUri = (record['@id'] as string) || (record.id as string)
-  const sourceId = (record.id as string) || targetUri
+  const targetUri = resolveHookRecordIri(ctx, record)
+  const sourceId = typeof record.id === 'string' ? record.id : ''
 
-  if (!targetUri) {
-    console.warn('[StarredSync] Cannot create favorite: missing target URI')
+  if (!targetUri || !sourceId) {
+    console.warn('[StarredSync] Cannot create favorite: missing row.id or target URI')
     return
   }
 
@@ -144,17 +144,28 @@ export function createStarredSyncHook<T = Record<string, unknown>>(
       if (!('starred' in changes)) return
 
       const starred = record.starred as boolean
-      const targetUri = (record['@id'] as string) || (record.id as string)
+      const targetUri = resolveHookRecordIri(ctx, record)
 
       if (starred) {
         // 标星 → 创建 Favorite
         await createFavorite(ctx, config as StarredSyncConfig, record)
       } else {
         // 取消标星 → 删除 Favorite
-        await deleteFavorite(ctx, targetUri)
+        await deleteFavorite(ctx, targetUri ?? '')
       }
     },
   }
+}
+
+function resolveHookRecordIri(ctx: HookContext, record: Record<string, unknown>): string | null {
+  if (!record.id || typeof record.id !== 'string') {
+    return null
+  }
+  if (typeof ctx.db?.resolveRowIri !== 'function' || !ctx.table) {
+    return null
+  }
+  const iri = ctx.db.resolveRowIri(ctx.table, record)
+  return typeof iri === 'string' && iri.length > 0 ? iri : null
 }
 
 // ============================================================================

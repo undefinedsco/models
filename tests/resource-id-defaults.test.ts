@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  agentHomeDirFromResourceId,
+  agentHomePathFromResourceId,
+  agentResourceId,
   chatResourceId,
   matrixAccountResourceId,
   matrixEventResourceId,
@@ -14,6 +17,9 @@ import {
 describe('command resource id defaults', () => {
   it('generates complete base-relative ids from local keys', () => {
     expect(chatResourceId('default')).toBe('default/index.ttl#this')
+    expect(agentResourceId('__secretary__')).toBe('__secretary__/index.ttl#this')
+    expect(agentHomeDirFromResourceId(agentResourceId('__secretary__'))).toBe('__secretary__/')
+    expect(agentHomePathFromResourceId(agentResourceId('__secretary__'))).toBe('/.data/agents/__secretary__/')
     expect(taskResourceId('task_1')).toBe('index.ttl#task_1')
     expect(threadResourceId('thread_1', {
       commandKind: 'task',
@@ -61,5 +67,8 @@ describe('command resource id defaults', () => {
 
   it('keeps explicit resource id helpers exact', () => {
     expect(chatResourceId('default')).toBe('default/index.ttl#this')
+    expect(agentResourceId('__secretary__/index.ttl#this')).toBe('__secretary__/index.ttl#this')
+    expect(() => agentResourceId('__secretary__.ttl#this')).toThrow('Agent resource key must be a directory key')
+    expect(() => agentHomeDirFromResourceId('__secretary__.ttl#this')).toThrow('Agent resource id must point to an Agent index resource')
   })
 })

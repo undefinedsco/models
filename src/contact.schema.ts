@@ -1,5 +1,6 @@
 import { podTable, string, text, timestamp, uri, boolean, id } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms, VCARD, AS, FOAF, RDF } from './namespaces'
+import type { ResourceInsert, ResourceRow, ResourceUpdate } from './resource-identity'
 
 export const ContactType = {
   SOLID: 'solid',
@@ -111,6 +112,6 @@ export const contactResource = podTable(
 // Compatibility alias. New model code should prefer `contactResource`.
 export const contactTable = contactResource
 
-export type ContactRow = typeof contactResource.$inferSelect
-export type ContactInsert = typeof contactResource.$inferInsert
-export type ContactUpdate = typeof contactResource.$inferUpdate
+export type ContactRow = ResourceRow<typeof contactResource.$inferSelect>
+export type ContactInsert = ResourceInsert<typeof contactResource.$inferInsert>
+export type ContactUpdate = ResourceUpdate<typeof contactResource.$inferUpdate>
