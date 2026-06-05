@@ -58,9 +58,9 @@ Agent home owns:
 - durable memory/index state
 - effective runtime snapshots
 
-The Agent resource identity is the container itself, for example
-`/agents/secretary/`. A Solid `.meta` document may describe that container, but
-`.meta` is not the Agent identity.
+The Agent resource identity is the context-root container itself, for example
+`/agents/__secretary__/`. A Solid `.meta` document may describe that container,
+but `.meta` is not the Agent identity.
 
 ### Contact / Person / Agent
 
@@ -84,10 +84,11 @@ AI Secretary has both a Contact projection and an Agent identity:
 Contact
   type: AgentContact
   display name: AI Secretary
-  links to Agent profile URI
+  links to Agent context-root URI
 
 Agent
-  home: /agents/secretary/
+  root: /agents/__secretary__/
+  meta: /agents/__secretary__/.meta
   owns runtime capability/config
 ```
 
@@ -192,19 +193,19 @@ Session is one Agent runtime execution. It should be light.
 
 Session should reference:
 
-- Agent profile URI
+- Agent context-root URI
 - Thread URI
 - Workspace URI
 
 Session should snapshot, not explode, Agent internals. Do not hang every rules,
 skills, MCP, backend, or compaction file from Session as individual relations.
-Agent home is derived from the Agent profile URI. Do not duplicate a generated
-home container URI on the Agent resource.
+The Agent context root is the Agent resource URI. Do not derive identity from
+the `.meta` storage document.
 
 Recommended Session fields:
 
 ```text
-agent                      Agent profile URI
+agent                      Agent context-root URI
 thread                     Thread URI
 workspace                  Workspace URI
 workspaceSnapshot          optional Workspace metadata snapshot URI/hash
@@ -292,7 +293,7 @@ udfs:effectiveConfigSnapshot
 Actual Pod resource subjects should be user-owned Pod URLs, for example:
 
 ```text
-</agents/secretary/>
+</agents/__secretary__/>
 </.data/repositories/linx.ttl>
 </.data/workspaces/linx-feature-login/>
 </.data/sessions/2026/05/14/sess-123.ttl>
@@ -306,12 +307,12 @@ resource instance. Do not confuse the two.
 ```ttl
 <#sess-123>
   a udfs:Session ;
-  udfs:agent </agents/secretary/> ;
+  udfs:agent </agents/__secretary__/> ;
   udfs:inThread </.data/chat/chat-1/index.ttl#thread-1> ;
   udfs:workspace </.data/workspaces/linx-feature-login/> ;
   udfs:workspaceSnapshot </.data/workspaces/linx-feature-login/snapshots/2026-05-13T120000Z.ttl> ;
   udfs:effectiveConfigHash "sha256:..." ;
-  udfs:effectiveConfigSnapshot </agents/secretary/snapshots/2026-05-13T120000Z.ttl> .
+  udfs:effectiveConfigSnapshot </agents/__secretary__/snapshots/2026-05-13T120000Z.ttl> .
 ```
 
 This keeps Session light and replayable: it references the Agent and the

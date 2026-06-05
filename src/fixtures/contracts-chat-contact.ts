@@ -23,7 +23,7 @@ export const fixtureContactAgentWorkspace: ContactInsert = {
   name: 'Secretary@linx',
   rdfType: ContactClass.AGENT,
   contactType: 'agent',
-  entity: 'https://pod.example/agents/secretary/',
+  entity: 'https://pod.example/agents/__secretary__/',
   isPublic: false,
 } satisfies ContactInsert
 

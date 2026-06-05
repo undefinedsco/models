@@ -1,5 +1,5 @@
 import { id, object, podTable, string, text, timestamp, uri } from '@undefineds.co/drizzle-solid'
-import { DCTerms, UDFS } from './namespaces'
+import { AS, DCTerms, UDFS } from './namespaces'
 import { scheduleResource } from './schedule.schema'
 import { taskResource } from './task.schema'
 
@@ -42,8 +42,8 @@ export const automationRuleResource = podTable(
 
     task: uri('task').predicate(UDFS.task).link(taskResource),
     schedule: uri('schedule').predicate(UDFS.schedule).link(scheduleResource),
-    source: uri('source').predicate(UDFS.source),
-    target: uri('target').predicate(UDFS.target),
+    source: uri('source').predicate(DCTerms.source),
+    target: uri('target').predicate(AS.target),
 
     condition: object('condition').predicate(UDFS.condition),
     actions: object('actions').predicate(UDFS.actions),

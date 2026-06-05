@@ -400,7 +400,7 @@ export {
 } from './inbox-notification.schema'
 
 // Sidecar vocab + runtime contracts
-export { ApprovalVocab, AuditVocab, GrantVocab, InboxNotificationVocab } from './vocab/sidecar.vocab'
+export { ApprovalVocab, AuditVocab, GrantVocab, GrantReadVocab, LegacyGrantVocab, InboxNotificationVocab } from './vocab/sidecar.vocab'
 export * from './sidecar/sidecar-events'
 export * from './sidecar/persistence-mapping'
 

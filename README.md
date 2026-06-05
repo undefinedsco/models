@@ -160,16 +160,16 @@ AI Secretary has both:
 ```text
 Contact
   contactType: agent
-  entity: Agent profile URI
+  entity: Agent context-root URI
 
 Agent
-  home: /agents/secretary/
-  optional WebID: /agents/secretary/profile/card#me
+  root: /agents/__secretary__/
+  meta: /agents/__secretary__/.meta
 ```
 
 External people, services, or bots may appear as Contacts without being LinX
-Agents. If something is modeled as an executable LinX Agent, it must have an
-Agent home container.
+Agents. If something is modeled as an executable LinX Agent, the Agent resource
+identity is the context-root container itself.
 
 ## Resource Ownership
 

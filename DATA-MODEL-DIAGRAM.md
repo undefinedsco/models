@@ -20,9 +20,10 @@ This diagram summarizes the current shared model contract in
 └──────┬───────┘
        │ owns defaults/capability
        ▼
-/.data/agents/{agentId}/
-  profile.ttl
-  config/
+/agents/{agentKey}/
+  .meta
+  system/
+  user/
   rules/
   skills/
   mcp/
@@ -33,7 +34,10 @@ This diagram summarizes the current shared model contract in
 ```
 
 Contact is the visible address-book/chat projection. Agent is the executable
-runtime root. A Contact can point to an Agent, but it is not the Agent itself.
+runtime context root. A Contact can point to an Agent, but it is not the Agent
+itself. The Agent resource identity is the container root, for example
+`/agents/__secretary__/`; `.meta` is only the storage document describing that
+container.
 
 ## Chat Graph
 
@@ -80,7 +84,7 @@ Representative storage:
 │   Session    │ one runtime execution
 └──────┬───────┘
        │ references
-       ├────────► Agent profile URI
+       ├────────► Agent context-root URI
        ├────────► Thread URI
        └────────► Workspace URI
 

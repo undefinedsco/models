@@ -73,7 +73,7 @@ export const deliveryResource = podTable(
     status: string('status').predicate(UDFS.status).notNull().default(DeliveryStatus.PENDING),
 
     task: uri('task').predicate(UDFS.task).link(taskResource),
-    source: uri('source').predicate(UDFS.source),
+    source: uri('source').predicate(DCTerms.source),
     target: uri('target').predicate(AS.target),
     chat: uri('chat').predicate(UDFS.conversation).link(chatResource),
     thread: uri('thread').predicate(UDFS.inThread).link(threadResource),
