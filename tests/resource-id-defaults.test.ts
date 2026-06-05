@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import * as Models from '../src'
 import {
+  agentResource,
   chatResource,
+  aiModelResource,
+  aiModelResourceId,
   chatResourceId,
   messageResourceId,
   deliveryResourceId,
@@ -9,6 +12,7 @@ import {
   reportResourceId,
   runResourceId,
   runStepResourceId,
+  skillResource,
   taskResourceId,
   threadResourceId,
 } from '../src'
@@ -46,6 +50,27 @@ describe('command resource id defaults', () => {
     expect(runStepResourceId('step_2', {
       run: 'https://pod.example/.data/task/task_1/2026/05/18/runs.ttl#run_1',
     })).toBe('task/task_1/2026/05/18/runs.ttl#step_2')
+    expect(aiModelResourceId('gpt-5.5', {
+      isProvidedBy: '/settings/providers/openai.ttl',
+    })).toBe('openai.ttl#gpt-5.5')
+    expect(aiModelResourceId('openai/gpt-4o-mini', {
+      isProvidedBy: 'https://pod.example/settings/providers/openrouter.ttl',
+    })).toBe('openrouter.ttl#openai/gpt-4o-mini')
+    expect(aiModelResource.buildId({
+      id: 'gpt-5.5',
+      isProvidedBy: '/settings/providers/openai.ttl',
+    })).toBe('openai.ttl#gpt-5.5')
+    expect(agentResource.buildId({
+      id: '__secretary__',
+    })).toBe('__secretary__/')
+    expect(skillResource.buildId({
+      id: 'symphony',
+      agent: 'https://pod.example/agents/__secretary__/',
+    })).toBe('__secretary__/skills/symphony/')
+    expect(skillResource.buildId({
+      id: 'symphony',
+      agent: '__secretary__',
+    })).toBe('__secretary__/skills/symphony/')
   })
 
   it('accepts seconds and milliseconds numeric timestamps', () => {
@@ -83,5 +108,14 @@ describe('command resource id defaults', () => {
     expect(chatResource.resolveUri('default/index.ttl#this'))
       .toBe('/.data/chat/default/index.ttl#this')
     expect(chatResource.getSubjectTemplate()).toBeUndefined()
+    expect(aiModelResource.resolveUri('openai.ttl#gpt-5.5'))
+      .toBe('/settings/providers/openai.ttl#gpt-5.5')
+    expect(aiModelResource.getSubjectTemplate()).toBeUndefined()
+    expect(agentResource.resolveUri('__secretary__/'))
+      .toBe('/agents/__secretary__/')
+    expect(agentResource.getSubjectTemplate()).toBeUndefined()
+    expect(skillResource.resolveUri('__secretary__/skills/symphony/'))
+      .toBe('/agents/__secretary__/skills/symphony/')
+    expect(skillResource.getSubjectTemplate()).toBeUndefined()
   })
 })

@@ -45,6 +45,8 @@ import {
   solidResources,
   solidSchema,
   sessionResource,
+  skillResource,
+  skillTable,
   threadResource,
   threadTable,
   taskResource,
@@ -64,6 +66,7 @@ describe('shared Solid resources', () => {
     expect(solidProfileResource).toBe(solidProfileTable)
     expect(contactResource).toBe(contactTable)
     expect(agentResource).toBe(agentTable)
+    expect(skillResource).toBe(skillTable)
     expect(chatResource).toBe(chatTable)
     expect(threadResource).toBe(threadTable)
     expect(messageResource).toBe(messageTable)
@@ -87,6 +90,7 @@ describe('shared Solid resources', () => {
       solidProfileResource,
       contactResource,
       agentResource,
+      skillResource,
       chatResource,
       threadResource,
       messageResource,
@@ -111,6 +115,7 @@ describe('shared Solid resources', () => {
     expect((solidResources as any).solidProfileTable).toBeUndefined()
     expect((solidResources as any).contactTable).toBeUndefined()
     expect((solidResources as any).agentTable).toBeUndefined()
+    expect((solidResources as any).skillTable).toBeUndefined()
     expect((solidResources as any).chatTable).toBeUndefined()
     expect((solidResources as any).threadTable).toBeUndefined()
     expect((solidResources as any).messageTable).toBeUndefined()
@@ -137,6 +142,7 @@ describe('shared Solid resources', () => {
       solidProfileTable,
       contactTable,
       agentTable,
+      skillTable,
       chatTable,
       threadTable,
       messageTable,
@@ -164,6 +170,8 @@ describe('shared Solid resources', () => {
   })
 
   it('uses exact-id mode for command resources', () => {
+    expect(agentResource.hasCustomTemplate()).toBe(false)
+    expect(skillResource.hasCustomTemplate()).toBe(false)
     expect(chatResource.hasCustomTemplate()).toBe(false)
     expect(threadResource.hasCustomTemplate()).toBe(false)
     expect(messageResource.hasCustomTemplate()).toBe(false)
@@ -175,6 +183,8 @@ describe('shared Solid resources', () => {
     expect(reportResource.hasCustomTemplate()).toBe(false)
     expect(runResource.hasCustomTemplate()).toBe(false)
     expect(runStepResource.hasCustomTemplate()).toBe(false)
+    expect(agentResource.config.base).toBe('/agents/')
+    expect(skillResource.config.base).toBe('/agents/')
     expect(chatResource.config.base).toBe('/.data/chat/')
     expect(threadResource.config.base).toBe('/.data/')
     expect(messageResource.config.base).toBe('/.data/')

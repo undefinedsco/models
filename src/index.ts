@@ -312,6 +312,14 @@ export {
 export { agentRepository } from './agent.repository'
 
 export {
+  skillResource,
+  skillTable,
+  type SkillRow,
+  type SkillInsert,
+  type SkillUpdate,
+} from './skill.schema'
+
+export {
   DEFAULT_AGENT_PROVIDERS,
   type AgentProviderMetadata,
   type AgentModelOption,
@@ -433,6 +441,7 @@ export {
 } from "./ai-provider.schema";
 
 export {
+  aiModelResourceId,
   aiModelResource,
   aiModelTable,
   type AIModelRow,

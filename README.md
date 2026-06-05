@@ -163,8 +163,8 @@ Contact
   entity: Agent profile URI
 
 Agent
-  home: /.data/agents/secretary/
-  profile: /.data/agents/secretary/profile.ttl
+  home: /agents/secretary/
+  optional WebID: /agents/secretary/profile/card#me
 ```
 
 External people, services, or bots may appear as Contacts without being LinX
@@ -203,7 +203,7 @@ Representative paths:
 /.data/chat/{chatId}/index.ttl#this
 /.data/chat/{chatId}/index.ttl#{threadId}
 /.data/chat/{chatId}/{yyyy}/{MM}/{dd}/messages.ttl#{messageId}
-/.data/agents/{agentId}/profile.ttl
+/agents/{agentId}/
 /.data/sessions/{yyyy}/{MM}/{dd}/{sessionId}.ttl
 /settings/providers/{providerId}.ttl
 /settings/providers/{providerId}.ttl#{modelId}

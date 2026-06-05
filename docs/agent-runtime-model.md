@@ -35,8 +35,9 @@ Agent home container. LinX no longer supports executable Agents without an
 Agent filesystem/home.
 
 ```text
-/.data/agents/{agentId}/
-  profile.ttl
+/agents/{agentId}/
+  .meta
+  profile/card
   config/
   rules/
   skills/
@@ -57,9 +58,9 @@ Agent home owns:
 - durable memory/index state
 - effective runtime snapshots
 
-Existing `agentResource` may remain compatible with
-`/.data/agents/{id}.ttl` during migration, but the target shape is one Agent
-home container per Agent.
+The Agent resource identity is the container itself, for example
+`/agents/secretary/`. A Solid `.meta` document may describe that container, but
+`.meta` is not the Agent identity.
 
 ### Contact / Person / Agent
 
@@ -86,7 +87,7 @@ Contact
   links to Agent profile URI
 
 Agent
-  home: /.data/agents/secretary/
+  home: /agents/secretary/
   owns runtime capability/config
 ```
 
@@ -291,7 +292,7 @@ udfs:effectiveConfigSnapshot
 Actual Pod resource subjects should be user-owned Pod URLs, for example:
 
 ```text
-</.data/agents/secretary/>
+</agents/secretary/>
 </.data/repositories/linx.ttl>
 </.data/workspaces/linx-feature-login/>
 </.data/sessions/2026/05/14/sess-123.ttl>
@@ -305,12 +306,12 @@ resource instance. Do not confuse the two.
 ```ttl
 <#sess-123>
   a udfs:Session ;
-  udfs:agent </.data/agents/secretary/profile.ttl> ;
+  udfs:agent </agents/secretary/> ;
   udfs:inThread </.data/chat/chat-1/index.ttl#thread-1> ;
   udfs:workspace </.data/workspaces/linx-feature-login/> ;
   udfs:workspaceSnapshot </.data/workspaces/linx-feature-login/snapshots/2026-05-13T120000Z.ttl> ;
   udfs:effectiveConfigHash "sha256:..." ;
-  udfs:effectiveConfigSnapshot </.data/agents/secretary/snapshots/2026-05-13T120000Z.ttl> .
+  udfs:effectiveConfigSnapshot </agents/secretary/snapshots/2026-05-13T120000Z.ttl> .
 ```
 
 This keeps Session light and replayable: it references the Agent and the

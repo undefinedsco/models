@@ -121,9 +121,10 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
 
     const modelId = `model-${crypto.randomUUID()}`
     const modelLocator = { id: modelId, isProvidedBy: providerIri }
+    const modelResourceId = aiModelTable.buildId(modelLocator)
     const modelIri = database.resolveLocatorIri(aiModelTable, modelLocator)
     await database.insert(aiModelTable).values({
-      id: modelId,
+      id: modelResourceId,
       displayName: 'Smoke Model',
       modelType: 'chat',
       isProvidedBy: providerIri,

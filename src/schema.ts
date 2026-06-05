@@ -30,6 +30,7 @@ import { runResource, runStepResource, runTable, runStepTable } from './run.sche
 import { scheduleResource, scheduleTable } from './schedule.schema'
 import { sessionResource, sessionTable } from './session'
 import { settingsResource, settingsTable } from './settings/settings.schema'
+import { skillResource, skillTable } from './skill.schema'
 import { taskResource, taskTable } from './task.schema'
 import { threadResource, threadTable } from './thread.schema'
 import { automationRuleResource, automationRuleTable } from './automation-rule.schema'
@@ -38,6 +39,7 @@ export const solidResources = {
   solidProfileResource,
   contactResource,
   agentResource,
+  skillResource,
   chatResource,
   sessionResource,
   threadResource,
@@ -75,6 +77,7 @@ export const solidSchema = {
   solidProfileTable,
   contactTable,
   agentTable,
+  skillTable,
   chatTable,
   sessionTable,
   threadTable,

@@ -333,6 +333,51 @@ describe('ai-config shared core', () => {
     expect(plan.credentialPayload?.baseUrl).toBeUndefined()
   })
 
+  it('creates a shared mutation plan for custom LinX-routed StepFun model credentials', () => {
+    const plan = buildAIConfigMutationPlan({
+      providerId: 'stepfun',
+      currentProviderRows: [],
+      currentCredentialRows: [],
+      currentModelRows: [],
+      updates: {
+        enabled: true,
+        apiKey: 'sk-stepfun-test',
+        baseUrl: 'https://api.stepfun.com/v1',
+        models: [
+          {
+            id: 'step-3.7-flash',
+            name: 'step-3.7-flash',
+            enabled: true,
+            capabilities: [],
+          },
+        ],
+      },
+    })
+
+    expect(plan.providerId).toBe('stepfun')
+    expect(plan.providerPayload).toMatchObject({
+      id: 'stepfun',
+      baseUrl: 'https://api.stepfun.com/v1',
+      hasModel: aiConfigModelRef('stepfun', 'step-3.7-flash'),
+    })
+    expect(plan.credentialPayload).toMatchObject({
+      id: 'stepfun-default',
+      provider: aiConfigProviderRef('stepfun'),
+      service: 'ai',
+      status: 'active',
+      apiKey: 'sk-stepfun-test',
+      label: 'Stepfun Key',
+      isDefault: true,
+    })
+    expect(plan.modelUpserts).toHaveLength(1)
+    expect(plan.modelUpserts[0]).toMatchObject({
+      id: 'step-3.7-flash',
+      displayName: 'step-3.7-flash',
+      isProvidedBy: aiConfigProviderRef('stepfun'),
+      status: 'active',
+    })
+  })
+
   it('builds a shared disconnect plan for provider alias credentials', () => {
     const plan = buildAIConfigDisconnectPlan({
       providerId: 'claude',
