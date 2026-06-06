@@ -1,8 +1,7 @@
-import { object, podTable, renderDefaultIdTemplate, uri, string, text, timestamp, id } from '@undefineds.co/drizzle-solid'
+import { object, podTable, uri, string, text, timestamp, id } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms, FOAF, MEETING, SCHEMA, SIOC, WF } from './namespaces'
 import { chatResource } from './chat.schema'
 import { threadResource } from './thread.schema'
-import { resourceKey } from './resource-id-defaults'
 
 export type MessageRoleType = 'user' | 'assistant' | 'system'
 export type MessageStatusType = 'in_progress' | 'completed' | 'incomplete' | 'sent'
@@ -30,36 +29,20 @@ export const MessageStatus = {
  * - Thread answers "which run/timeline/place does this message belong to".
  *
  * Storage structure:
- * - Location: /.data/chat/{chat|id}/{yyyy}/{MM}/{dd}/messages.ttl#{id}
+ * - Location: /.data/{thread.id[0:2]}/{yyyy}/{MM}/{dd}/messages.ttl#{id}
  * - Date-based path for efficient time-range queries
  * - chat/thread are RDF URI relations. Short ids remain accepted at API/query call sites via ORM URI template resolution.
  */
 export const messageResource = podTable(
   'chat_message',
   {
-    id: id('id').default((key: string | undefined, row?: Record<string, unknown>) => (
-      renderDefaultIdTemplate(
-        row?.chat
-          ? 'chat/{chat.id[0]}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'
-          : row?.thread
-            ? '{thread.id[0:2]}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'
-            : 'chat/default/{yyyy}/{MM}/{dd}/messages.ttl#{key}',
-        {
-          key: resourceKey(key, 'msg'),
-          row,
-          links: {
-            chat: chatResource,
-            thread: threadResource,
-          },
-        },
-      )
-    )),
+    id: id('id').default('{thread.id[0:2]}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'),
 
     // Chat relation. In RDF this is an inverse Solid Chat link: <chat> wf:message <message>.
-    chat: uri('chat').predicate(WF.message).inverse().link(chatResource),
+    chat: uri('chat').predicate(WF.message).inverse().notNull().link(chatResource),
 
     // Thread relation. In RDF this is an inverse Solid Chat/SIOC link: <thread> sioc:has_member <message>.
-    thread: uri('thread').predicate(SIOC.has_member).inverse().link(threadResource),
+    thread: uri('thread').predicate(SIOC.has_member).inverse().notNull().link(threadResource),
 
     // maker is the entity URI of the message author:
     // - User: their WebID (https://user.pod/profile/card#me)

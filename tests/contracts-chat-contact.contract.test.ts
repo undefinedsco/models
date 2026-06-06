@@ -78,6 +78,7 @@ describe('Wave A CP0 contracts: centralized vocabs', () => {
 
   it('ThreadVocab exposes workspace context', () => {
     expect(ThreadVocab.workspace).toBe(UDFS.workspace)
+    expect(ThreadVocab.task).toBe(UDFS.task)
   })
 
   it('MessageVocab exposes routing predicates', () => {
@@ -96,7 +97,7 @@ describe('Wave A CP0 contracts: centralized vocabs', () => {
     expect((DeliveryVocab as Record<string, unknown>).surface).toBeUndefined()
     expect(TaskVocab.issue).toBe(UDFS.issue)
     expect(TaskVocab.message).toBe(UDFS.message)
-    expect(TaskVocab.thread).toBe(UDFS.inThread)
+    expect((TaskVocab as Record<string, unknown>).thread).toBeUndefined()
     expect(ScheduleVocab.task).toBe(UDFS.task)
     expect(ScheduleVocab.scheduleKind).toBe(UDFS.scheduleKind)
     expect(AutomationRuleVocab.task).toBe(UDFS.task)

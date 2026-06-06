@@ -1,6 +1,5 @@
 import { id, object, podTable, string, text, timestamp, uri } from '@undefineds.co/drizzle-solid'
 import { DCTerms, UDFS } from './namespaces'
-import { threadResource } from './thread.schema'
 
 export type TaskStatusType = 'open' | 'ready' | 'active' | 'blocked' | 'completed' | 'failed' | 'cancelled'
 
@@ -32,7 +31,6 @@ export const taskResource = podTable(
 
     issue: uri('issue').predicate(UDFS.issue).link('issue'),
     message: uri('message').predicate(UDFS.message),
-    thread: uri('thread').predicate(UDFS.inThread).link(threadResource),
     workspace: uri('workspace').predicate(UDFS.workspace).notNull(),
 
     status: string('status').predicate(UDFS.status).notNull().default(TaskStatus.OPEN),

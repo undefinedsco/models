@@ -36,6 +36,7 @@ describe('command resource id defaults', () => {
     expect(messageResource.buildId({
       id: 'msg_1',
       chat: 'https://pod.example/.data/chat/default/index.ttl#this',
+      thread: 'https://pod.example/.data/chat/default/index.ttl#thread_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('chat/default/2026/05/18/messages.ttl#msg_1')
     expect(runResource.buildId({
@@ -44,34 +45,35 @@ describe('command resource id defaults', () => {
       thread: 'https://pod.example/.data/chat/default/index.ttl#thread_1',
       workspace: 'https://pod.example/workspaces/default/',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
-    })).toBe('task/task_1/2026/05/18/runs.ttl#run_1')
+    })).toBe('chat/default/2026/05/18/runs.ttl#run_1')
     expect(deliveryResource.buildId({
       id: 'delivery_1',
       task: 'https://pod.example/.data/task/index.ttl#task_1',
+      thread: 'https://pod.example/.data/chat/default/index.ttl#thread_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
-    })).toBe('task/task_1/2026/05/18/deliveries.ttl#delivery_1')
+    })).toBe('chat/default/2026/05/18/deliveries.ttl#delivery_1')
     expect(evidenceResource.buildId({
       id: 'evidence_1',
-      run: 'https://pod.example/.data/task/task_1/2026/05/18/runs.ttl#run_1',
+      run: 'https://pod.example/.data/chat/default/2026/05/18/runs.ttl#run_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
-    })).toBe('task/task_1/2026/05/18/evidence.ttl#evidence_1')
+    })).toBe('chat/default/2026/05/18/evidence.ttl#evidence_1')
     expect(reportResource.buildId({
       id: 'report_1',
-      delivery: 'https://pod.example/.data/task/task_1/2026/05/18/deliveries.ttl#delivery_1',
+      delivery: 'https://pod.example/.data/chat/default/2026/05/18/deliveries.ttl#delivery_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
-    })).toBe('task/task_1/2026/05/18/reports.ttl#report_1')
+    })).toBe('chat/default/2026/05/18/reports.ttl#report_1')
     expect(runStepResource.buildId({
       id: 'step_1',
-      run: 'task/task_1/2026/05/18/runs.ttl#run_1',
+      run: 'chat/default/2026/05/18/runs.ttl#run_1',
       stepType: 'run.started',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
-    })).toBe('task/task_1/2026/05/18/runs.ttl#step_1')
+    })).toBe('chat/default/2026/05/18/runs.ttl#step_1')
     expect(runStepResource.buildId({
       id: 'step_2',
-      run: 'https://pod.example/.data/task/task_1/2026/05/18/runs.ttl#run_1',
+      run: 'https://pod.example/.data/chat/default/2026/05/18/runs.ttl#run_1',
       stepType: 'run.started',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
-    })).toBe('task/task_1/2026/05/18/runs.ttl#step_2')
+    })).toBe('chat/default/2026/05/18/runs.ttl#step_2')
     expect(aiModelResource.buildId({
       id: 'gpt-5.5',
       isProvidedBy: '/settings/providers/openai.ttl',
@@ -122,7 +124,7 @@ describe('command resource id defaults', () => {
       thread: 'https://pod.example/.data/chat/default/index.ttl#thread_1',
       workspace: 'https://pod.example/workspaces/default/',
       createdAt: Date.UTC(2026, 4, 18, 1, 2, 3) / 1000,
-    })).toBe('task/task_1/2026/05/18/runs.ttl#run_seconds')
+    })).toBe('chat/default/2026/05/18/runs.ttl#run_seconds')
 
     expect(runResource.buildId({
       id: 'run_millis',
@@ -130,12 +132,13 @@ describe('command resource id defaults', () => {
       thread: 'https://pod.example/.data/chat/default/index.ttl#thread_1',
       workspace: 'https://pod.example/workspaces/default/',
       createdAt: Date.UTC(2026, 4, 18, 1, 2, 3),
-    })).toBe('task/task_1/2026/05/18/runs.ttl#run_millis')
+    })).toBe('chat/default/2026/05/18/runs.ttl#run_millis')
   })
 
-  it('derives message storage from thread when chat is not provided', () => {
+  it('derives message storage from thread while retaining chat as a semantic relation', () => {
     expect(messageResource.buildId({
       id: 'msg_thread',
+      chat: 'https://pod.example/.data/chat/default/index.ttl#this',
       thread: 'https://pod.example/.data/chat/secretary/index.ttl#thread_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('chat/secretary/2026/05/18/messages.ttl#msg_thread')

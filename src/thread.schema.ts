@@ -1,6 +1,7 @@
 import { uri, boolean, object, podTable, string, timestamp, id } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms, SIOC } from './namespaces'
 import { chatResource } from './chat.schema'
+import { taskResource } from './task.schema'
 
 export type ThreadStatusType = 'active' | 'locked' | 'closed'
 
@@ -14,7 +15,8 @@ export const ThreadStatus = {
  * Thread resource.
  *
  * Product semantics:
- * - Thread is the concrete conversation timeline/place under a Chat.
+ * - Thread is the concrete conversation or execution timeline/place under a
+ *   Chat or Task.
  * - AI product runtime sessions map to Thread when they represent a concrete
  *   conversation timeline/place/run.
  * - Thread carries workspace/place relations and runtime metadata. Chat only
@@ -39,6 +41,9 @@ export const threadResource = podTable(
 
     // Belongs to chat/counterpart. Stored as an RDF URI; short ids are resolved via chatResource's URI template by the ORM.
     chat: uri('chat').predicate(SIOC.has_parent).link(chatResource),
+
+    // Optional work item this timeline is executing or discussing.
+    task: uri('task').predicate(UDFS.task).link(taskResource),
 
     // Display / state
     title: string('title').predicate(DCTerms.title),

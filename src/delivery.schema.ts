@@ -1,9 +1,8 @@
-import { id, object, podTable, renderDefaultIdTemplate, string, text, timestamp, uri } from '@undefineds.co/drizzle-solid'
+import { id, object, podTable, string, text, timestamp, uri } from '@undefineds.co/drizzle-solid'
 import { AS, DCTerms, UDFS } from './namespaces'
 import { chatResource } from './chat.schema'
 import { threadResource } from './thread.schema'
 import { taskResource } from './task.schema'
-import { resourceKey } from './resource-id-defaults'
 
 export type DeliveryStatusType = 'pending' | 'dispatched' | 'consumed' | 'completed' | 'failed' | 'cancelled'
 export type DeliveryKindType =
@@ -48,26 +47,7 @@ export const DeliveryKind = {
 export const deliveryResource = podTable(
   'delivery',
   {
-    id: id('id').default((key: string | undefined, row?: Record<string, unknown>) => (
-      renderDefaultIdTemplate(
-        row?.task
-          ? 'task/{task.id[-1]}/{yyyy}/{MM}/{dd}/deliveries.ttl#{key}'
-          : row?.chat
-            ? 'chat/{chat.id[0]}/{yyyy}/{MM}/{dd}/deliveries.ttl#{key}'
-            : row?.thread
-              ? '{thread.id[0:2]}/{yyyy}/{MM}/{dd}/deliveries.ttl#{key}'
-              : 'deliveries/{yyyy}/{MM}/{dd}/deliveries.ttl#{key}',
-        {
-          key: resourceKey(key, 'delivery'),
-          row,
-          links: {
-            task: taskResource,
-            chat: chatResource,
-            thread: threadResource,
-          },
-        },
-      )
-    )),
+    id: id('id').default('{thread.id[0:2]}/{yyyy}/{MM}/{dd}/deliveries.ttl#{key}'),
 
     kind: string('kind').predicate(UDFS.deliveryKind).notNull().default(DeliveryKind.TASK_DISPATCH),
     status: string('status').predicate(UDFS.status).notNull().default(DeliveryStatus.PENDING),
@@ -76,7 +56,7 @@ export const deliveryResource = podTable(
     source: uri('source').predicate(DCTerms.source),
     target: uri('target').predicate(AS.target),
     chat: uri('chat').predicate(UDFS.conversation).link(chatResource),
-    thread: uri('thread').predicate(UDFS.inThread).link(threadResource),
+    thread: uri('thread').predicate(UDFS.inThread).notNull().link(threadResource),
     targetThread: uri('targetThread').predicate(UDFS.targetThread).link(threadResource),
     targetSession: uri('targetSession').predicate(UDFS.targetSession),
 

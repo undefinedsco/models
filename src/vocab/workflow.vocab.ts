@@ -6,7 +6,6 @@ export const TaskVocab = {
   prompt: UDFS.prompt,
   issue: UDFS.issue,
   message: UDFS.message,
-  thread: UDFS.inThread,
   workspace: UDFS.workspace,
   status: UDFS.status,
   priority: UDFS.priority,
