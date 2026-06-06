@@ -2,7 +2,7 @@ import { id, podTable, string, uri } from "@undefineds.co/drizzle-solid"
 import { UDFS } from "./namespaces"
 
 export const aiProviderResource = podTable("aiProvider", {
-  id: id("id"),
+  id: id("id").default("{key}.ttl"),
   displayName: string("displayName").predicate(UDFS.displayName),
   baseUrl: string("baseUrl").predicate(UDFS.baseUrl),
   proxyUrl: string("proxyUrl").predicate(UDFS.proxyUrl),
@@ -14,7 +14,6 @@ export const aiProviderResource = podTable("aiProvider", {
   base: "/settings/providers/",
   type: UDFS.Provider,
   namespace: UDFS,
-  subjectTemplate: "{id}.ttl",
 })
 
 // Compatibility alias. New model code should prefer `aiProviderResource`.

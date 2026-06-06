@@ -27,15 +27,6 @@ function normalizeAIModelProviderPart(value: unknown): string {
   return tail.endsWith(".ttl") ? tail.slice(0, -4) : tail
 }
 
-export function aiModelResourceId(
-  key: string | undefined,
-  row?: Record<string, unknown>,
-): string {
-  const modelId = normalizeAIModelResourcePart(key ?? row?.id)
-  const providerId = normalizeAIModelProviderPart(row?.isProvidedBy ?? row?.provider)
-  return providerId && modelId ? `${providerId}.ttl#${modelId}` : modelId
-}
-
 export const aiModelResource = podTable("aiModel", {
   id: id("id").default((key: string | undefined, row?: Record<string, unknown>) => {
     const modelId = normalizeAIModelResourcePart(key ?? row?.id)

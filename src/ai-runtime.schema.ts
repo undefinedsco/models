@@ -5,21 +5,20 @@ import { UDFS } from './namespaces'
 import { taskResource } from './task.schema'
 
 export const aiConfigResource = podTable('aiConfig', {
-  id: id('id'),
+  id: id('id').default('config.ttl#{key}'),
   embeddingModel: uri('embeddingModel').predicate(UDFS.embeddingModel).link(aiModelResource),
   previousModel: uri('previousModel').predicate(UDFS.previousModel).link(aiModelResource),
   migrationStatus: string('migrationStatus').predicate(UDFS.migrationStatus),
   migrationProgress: integer('migrationProgress').predicate(UDFS.migrationProgress),
   updatedAt: timestamp('updatedAt').predicate(UDFS.updatedAt),
 }, {
-  base: '/settings/ai/config.ttl',
+  base: '/settings/ai/',
   type: UDFS.AIConfig,
   namespace: UDFS,
-  subjectTemplate: '#{id}',
 })
 
 export const vectorStoreResource = podTable('vectorStore', {
-  id: id('id'),
+  id: id('id').default('vector-stores.ttl#{key}'),
   name: string('name').predicate(UDFS.name),
   container: uri('container').predicate(UDFS.container),
   chunkingStrategy: string('chunkingStrategy').predicate(UDFS.chunkingStrategy),
@@ -27,14 +26,13 @@ export const vectorStoreResource = podTable('vectorStore', {
   createdAt: timestamp('createdAt').predicate(UDFS.createdAt),
   lastActiveAt: timestamp('lastActiveAt').predicate(UDFS.lastActiveAt),
 }, {
-  base: '/settings/ai/vector-stores.ttl',
+  base: '/settings/ai/',
   type: UDFS.VectorStore,
   namespace: UDFS,
-  subjectTemplate: '#{id}',
 })
 
 export const indexedFileResource = podTable('indexedFile', {
-  id: id('id'),
+  id: id('id').default('indexed-files.ttl#{key}'),
   fileUrl: uri('fileUrl').predicate(UDFS.fileUrl),
   vectorId: integer('vectorId').predicate(UDFS.vectorId),
   chunkingStrategy: string('chunkingStrategy').predicate(UDFS.chunkingStrategy),
@@ -43,14 +41,13 @@ export const indexedFileResource = podTable('indexedFile', {
   lastError: string('lastError').predicate(UDFS.lastError),
   indexedAt: timestamp('indexedAt').predicate(UDFS.indexedAt),
 }, {
-  base: '/settings/ai/indexed-files.ttl',
+  base: '/settings/ai/',
   type: UDFS.IndexedFile,
   namespace: UDFS,
-  subjectTemplate: '#{id}',
 })
 
 export const agentStatusResource = podTable('agentStatus', {
-  id: id('id'),
+  id: id('id').default('agent-status.ttl#{key}'),
   agent: uri('agent').predicate(UDFS.agent).link(agentResource),
   status: string('status').predicate(UDFS.status),
   startedAt: timestamp('startedAt').predicate(UDFS.startedAt),
@@ -58,10 +55,9 @@ export const agentStatusResource = podTable('agentStatus', {
   currentTask: uri('currentTask').predicate(UDFS.task).link(taskResource),
   errorMessage: string('errorMessage').predicate(UDFS.errorMessage),
 }, {
-  base: '/settings/ai/agent-status.ttl',
+  base: '/settings/ai/',
   type: UDFS.AgentStatus,
   namespace: UDFS,
-  subjectTemplate: '#{id}',
 })
 
 // Compatibility aliases. New model code should prefer `*Resource`.

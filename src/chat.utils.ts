@@ -1,5 +1,5 @@
 import { normalizePodDataResourceId, parsePodResourceRef } from '@undefineds.co/drizzle-solid'
-import { chatResourceId } from './resource-id-defaults'
+import { chatResource } from './chat.schema'
 
 export const toTimestamp = (value: unknown, fallback = 0): number => {
   if (value instanceof Date) return value.getTime()
@@ -33,7 +33,7 @@ export function extractChatIdFromChatRef(chatRef: string | null | undefined): st
 }
 
 export function buildChatTargetRef(chatIdOrRef: string): string {
-  return `/.data/chat/${chatResourceId(extractChatIdFromChatRef(chatIdOrRef) ?? chatIdOrRef)}`
+  return `/.data/chat/${chatResource.buildId({ id: extractChatIdFromChatRef(chatIdOrRef) ?? chatIdOrRef })}`
 }
 
 export function extractThreadIdFromThreadRef(threadRef: string | null | undefined): string | null {

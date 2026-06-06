@@ -54,7 +54,6 @@ interface ConsensusResult {
     storage: {
       base: string
       resourceIdPattern: string
-      subjectTemplate?: string
     }
   }
 }

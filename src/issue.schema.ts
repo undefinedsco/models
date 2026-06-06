@@ -16,7 +16,7 @@ export type IssuePriority = 'low' | 'medium' | 'high' | 'urgent'
 export const issueResource = podTable(
   'issue',
   {
-    id: id('id'),
+    id: id('id').default('{key}.ttl'),
 
     title: string('title').predicate(DCTerms.title).notNull(),
     description: text('description').predicate(DCTerms.description),
@@ -42,7 +42,6 @@ export const issueResource = podTable(
     sparqlEndpoint: '/.data/issues/-/sparql',
     type: UDFS.Issue,
     namespace: UDFS,
-    subjectTemplate: '{id}.ttl',
   },
 )
 

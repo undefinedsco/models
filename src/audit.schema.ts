@@ -1,22 +1,8 @@
-import { extractPodResourceTemplateValue, podTable, renderDefaultIdTemplate, uri, string, timestamp, id } from '@undefineds.co/drizzle-solid'
+import { extractPodResourceTemplateValue, podTable, uri, string, timestamp, id } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms } from './namespaces'
 import { chatResource } from './chat.schema'
 import { threadResource } from './thread.schema'
 import { asPodResourceTemplateTarget } from './repository'
-
-export function buildAuditResourceId(auditId: string, createdAt: Date | string | number = new Date()): string {
-  return renderDefaultIdTemplate('{yyyy}/{MM}/{dd}.ttl#{key}', {
-    key: encodeURIComponent(auditId),
-    row: { createdAt },
-  })
-}
-
-export function buildAuditPodResourcePath(auditId: string, createdAt: Date | string | number = new Date()): string {
-  return `/.data/audits/${buildAuditResourceId(auditId, createdAt)}`
-}
-
-/** @deprecated Use buildAuditPodResourcePath for Pod-root paths or buildAuditResourceId for resource-base ids. */
-export const buildAuditSubjectPath = buildAuditPodResourcePath
 
 // Append-only audit entry resource (separate from Solid inbox notifications).
 // Audit entries are independent events; session/chat/thread are optional relations,
@@ -24,7 +10,7 @@ export const buildAuditSubjectPath = buildAuditPodResourcePath
 export const auditResource = podTable(
   'audit',
   {
-    id: id('id'),
+    id: id('id').default('{yyyy}/{MM}/{dd}.ttl#{key}'),
 
     // Audit action
     action: string('action').predicate(UDFS.action).notNull(),
@@ -55,7 +41,6 @@ export const auditResource = podTable(
     sparqlEndpoint: '/.data/audits/-/sparql',
     type: UDFS.AuditEntry,
     namespace: UDFS,
-    subjectTemplate: '{yyyy}/{MM}/{dd}.ttl#{id}',
   },
 )
 
@@ -63,7 +48,7 @@ export function extractAuditIdFromAuditRef(auditRef: string | null | undefined):
   if (auditRef && !/[/:#]/.test(auditRef)) {
     return auditRef
   }
-  return extractPodResourceTemplateValue(asPodResourceTemplateTarget(auditResource), auditRef)
+  return extractPodResourceTemplateValue(asPodResourceTemplateTarget(auditResource), auditRef, 'key')
 }
 
 // Compatibility alias. New model code should prefer `auditResource`.

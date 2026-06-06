@@ -2,7 +2,7 @@ import { boolean, id, integer, podTable, string, timestamp, uri } from "@undefin
 import { UDFS } from "./namespaces"
 
 export const credentialResource = podTable("credential", {
-  id: id("id"),
+  id: id("id").default("credentials.ttl#{key}"),
   provider: uri("provider").predicate(UDFS.provider).link("aiProvider"),
   service: string("service").predicate(UDFS.service).notNull().default("ai"),
   status: string("status").predicate(UDFS.status).notNull().default("active"),
@@ -20,10 +20,9 @@ export const credentialResource = podTable("credential", {
   projectId: string("projectId").predicate(UDFS.projectId),
   organizationId: string("organizationId").predicate(UDFS.organizationId),
 }, {
-  base: "/settings/credentials.ttl",
+  base: "/settings/",
   type: UDFS.Credential,
   namespace: UDFS,
-  subjectTemplate: "#{id}",
 })
 
 // Compatibility aliases. New model code should prefer `credentialResource`.

@@ -98,7 +98,7 @@ Do not hand-parse shared business TTL when a resource schema exists.
   wrappers, or reimplementing Pod base discovery. Reusable business target
   construction belongs in `models` repositories/helpers, not in product shells.
 
-## Ids, Defaults, and Subject Templates
+## Ids and Defaults
 
 The durable `id` is base-relative. It is not a fragment id.
 
@@ -109,18 +109,14 @@ function should return the full base-relative resource id.
 Examples:
 
 ```ts
-chatResourceId('default') === 'default/index.ttl#this'
-messageResourceId('msg_1', row) === 'chat/default/2026/05/18/messages.ttl#msg_1'
-runResourceId('run_1', row) === 'task/secretary/2026/05/18/runs.ttl#run_1'
+chatResource.buildId({ id: 'default' }) === 'default/index.ttl#this'
+messageResource.buildId({ id: 'msg_1', ...row }) === 'chat/default/2026/05/18/messages.ttl#msg_1'
+runResource.buildId({ id: 'run_1', ...row }) === 'task/secretary/2026/05/18/runs.ttl#run_1'
 ```
 
-Do not combine a full id default with a `subjectTemplate` that reparses or
-wraps the same id. Exact ids should resolve directly against `base`.
-
-Keep `subjectTemplate` only for simple resources where the id field is the
-stable storage key and the template has no hidden dependency on another
-resource. Prefer a default id function once the template needs parent paths,
-date buckets, fragments, or associated resource ids.
+Do not configure legacy subject templates in `models`. Storage paths belong in
+the `id.default(...)` definition or in a caller-provided exact id. Exact ids
+should resolve directly against `base`.
 
 If a user passes an explicit id, treat it as exact. Do not reinterpret it as a
 random key or fragment id.
@@ -211,7 +207,7 @@ Use `Resource` names for shared models.
 For shared schema changes, verify both ergonomics and graph semantics:
 
 1. Unit tests for id/default helpers and URI builders.
-2. Resource tests that assert exact-id mode or the intended `subjectTemplate`.
+2. Resource tests that assert exact-id mode and the intended `id.default(...)`.
 3. Repository or Pod integration tests for relation read/write behavior.
 4. Assertions that produced IRIs contain no unresolved template placeholders.
 

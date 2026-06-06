@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  buildSessionResourceId,
-  buildSessionSubjectPath,
   extractSessionIdFromSessionRef,
   sessionResource,
   solidResources,
@@ -48,18 +46,16 @@ describe('session schema', () => {
 
     expect(source).toContain("base: '/.data/sessions/'")
     expect(source).toContain("sparqlEndpoint: '/.data/sessions/-/sparql'")
-    expect(source).toContain("subjectTemplate: '{yyyy}/{MM}/{dd}/{id}.ttl'")
+    expect(source).toContain("id: id('id').default('{yyyy}/{MM}/{dd}/{key}.ttl')")
   })
 
   it('builds base-relative session resource ids from session id and timestamp', () => {
-    expect(buildSessionResourceId(
-      '019df111-0000-7000-8000-000000000001',
-      new Date('2026-04-01T00:00:00.000Z'),
-    )).toBe('2026/04/01/019df111-0000-7000-8000-000000000001.ttl')
-    expect(buildSessionSubjectPath(
-      '019df111-0000-7000-8000-000000000001',
-      new Date('2026-04-01T00:00:00.000Z'),
-    )).toBe('/.data/sessions/2026/04/01/019df111-0000-7000-8000-000000000001.ttl')
+    const resourceId = sessionResource.buildId({
+      id: '019df111-0000-7000-8000-000000000001',
+      createdAt: new Date('2026-04-01T00:00:00.000Z'),
+    })
+    expect(resourceId).toBe('2026/04/01/019df111-0000-7000-8000-000000000001.ttl')
+    expect(sessionResource.resolveUri(resourceId)).toBe('/.data/sessions/2026/04/01/019df111-0000-7000-8000-000000000001.ttl')
   })
 
   it('extracts session ids from current document resources and legacy fragments', () => {

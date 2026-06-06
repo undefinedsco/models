@@ -56,7 +56,7 @@ export function normalizeContactGender(
 export const contactResource = podTable(
   'contact',
   {
-    id: id('id'),
+    id: id('id').default('{key}.ttl'),
 
     // Display information (cached for search/display)
     name: string('name').predicate(VCARD.fn).notNull(),
@@ -104,7 +104,6 @@ export const contactResource = podTable(
     sparqlEndpoint: '/.data/contacts/-/sparql',
     type: VCARD.Individual,
     namespace: UDFS,
-    subjectTemplate: '{id}.ttl',
   },
 )
 

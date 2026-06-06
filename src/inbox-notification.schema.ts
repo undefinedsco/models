@@ -5,7 +5,7 @@ import { AS, DCTerms, RDF } from './namespaces'
 export const inboxNotificationResource = podTable(
   'inbox_notification',
   {
-    id: id('id'),
+    id: id('id').default('{key}.ttl'),
 
     // Protocol inbox messages are not always Announce. Keep rdf:type writable so
     // app notifications can use as:Announce while other Solid inbox payloads keep their own type.
@@ -22,7 +22,6 @@ export const inboxNotificationResource = podTable(
     sparqlEndpoint: '/inbox/-/sparql',
     type: AS.Activity,
     namespace: AS,
-    subjectTemplate: '{id}.ttl',
   },
 )
 

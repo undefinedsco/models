@@ -12,7 +12,6 @@ describe('pod storage descriptors', () => {
     expect(credentialDescriptor.uri).toBe(UDFS.Credential)
     expect(credentialDescriptor.storage.base).toBe('/settings/credentials.ttl')
     expect(credentialDescriptor.storage.resourceIdPattern).toBe('#{id}')
-    expect(credentialDescriptor.storage.subjectTemplate).toBe('#{id}')
     expect(credentialDescriptor.uniqueBy).toEqual(['service', 'providerId', 'secretType'])
     expect(credentialDescriptor.fields.apiKey.secret).toBe(true)
   })

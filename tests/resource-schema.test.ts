@@ -262,4 +262,18 @@ describe('shared Solid resources', () => {
 
     expect(hiddenIdDefaults).toEqual([])
   })
+
+  it('keeps shared resources on id defaults instead of legacy template config', () => {
+    const sourceRoot = join(__dirname, '../src')
+    const sourceFiles = listSourceFiles(sourceRoot)
+    const legacyKey = ['subject', 'Template'].join('')
+    const violations = sourceFiles.flatMap((file) => {
+      const source = readFileSync(file, 'utf-8')
+      return source.includes(`${legacyKey}:`)
+        ? [file.replace(`${sourceRoot}/`, '')]
+        : []
+    })
+
+    expect(violations).toEqual([])
+  })
 })

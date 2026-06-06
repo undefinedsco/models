@@ -1,4 +1,4 @@
-import { podTable, string, timestamp, text, boolean } from "@undefineds.co/drizzle-solid";
+import { id, podTable, string, timestamp, text, boolean } from "@undefineds.co/drizzle-solid";
 import { UDFS, DCTerms, SCHEMA } from "../namespaces";
 
 /**
@@ -12,8 +12,14 @@ import { UDFS, DCTerms, SCHEMA } from "../namespaces";
  * 存储用户的应用配置、偏好设置等
  */
 export const settingsResource = podTable("settings", {
+  id: id("id").default((key: string | undefined, row?: Record<string, unknown>) => {
+    const settingKey = key ?? (typeof row?.key === "string" ? row.key : undefined);
+    if (!settingKey) return "";
+    return `${encodeURIComponent(settingKey)}.ttl`;
+  }),
+
   // 设置键值对
-  key: string("key").primaryKey().predicate(UDFS.settingKey).notNull(), // 设置键（唯一）
+  key: string("key").predicate(UDFS.settingKey).notNull(), // 设置键（唯一）
   value: text("value").predicate(UDFS.settingValue).notNull(), // 设置值（JSON 字符串）
   valueType: string("valueType").predicate(UDFS.settingType).notNull().default("string"), // string, number, boolean, json
 
@@ -36,7 +42,6 @@ export const settingsResource = podTable("settings", {
   sparqlEndpoint: "/settings/-/sparql",
   type: SCHEMA.PropertyValue,
   namespace: UDFS,
-  subjectTemplate: "{key}.ttl",
 });
 
 /**

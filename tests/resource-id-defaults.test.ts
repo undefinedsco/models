@@ -2,64 +2,84 @@ import { describe, expect, it } from 'vitest'
 import * as Models from '../src'
 import {
   agentResource,
-  chatResource,
   aiModelResource,
-  aiModelResourceId,
-  chatResourceId,
-  messageResourceId,
-  deliveryResourceId,
-  evidenceResourceId,
-  reportResourceId,
-  runResourceId,
-  runStepResourceId,
+  aiProviderResource,
+  approvalResource,
+  auditResource,
+  chatResource,
+  contactResource,
+  credentialResource,
+  deliveryResource,
+  evidenceResource,
+  grantResource,
+  inboxNotificationResource,
+  issueResource,
+  messageResource,
+  reportResource,
+  runResource,
+  runStepResource,
+  sessionResource,
+  settingsResource,
   skillResource,
-  taskResourceId,
-  threadResourceId,
+  taskResource,
+  threadResource,
 } from '../src'
 
 describe('command resource id defaults', () => {
   it('generates complete base-relative ids from local keys', () => {
-    expect(chatResourceId('default')).toBe('default/index.ttl#this')
-    expect(taskResourceId('task_1')).toBe('index.ttl#task_1')
-    expect(threadResourceId('thread_1', {
+    expect(chatResource.buildId({ id: 'default' })).toBe('default/index.ttl#this')
+    expect(taskResource.buildId({ id: 'task_1' })).toBe('index.ttl#task_1')
+    expect(threadResource.buildId({
+      id: 'thread_1',
       chat: 'https://pod.example/.data/chat/secretary/index.ttl#this',
     })).toBe('chat/secretary/index.ttl#thread_1')
-    expect(messageResourceId('msg_1', {
+    expect(messageResource.buildId({
+      id: 'msg_1',
       chat: 'https://pod.example/.data/chat/default/index.ttl#this',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('chat/default/2026/05/18/messages.ttl#msg_1')
-    expect(runResourceId('run_1', {
+    expect(runResource.buildId({
+      id: 'run_1',
       task: 'https://pod.example/.data/task/index.ttl#task_1',
+      thread: 'https://pod.example/.data/chat/default/index.ttl#thread_1',
+      workspace: 'https://pod.example/workspaces/default/',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('task/task_1/2026/05/18/runs.ttl#run_1')
-    expect(deliveryResourceId('delivery_1', {
+    expect(deliveryResource.buildId({
+      id: 'delivery_1',
       task: 'https://pod.example/.data/task/index.ttl#task_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('task/task_1/2026/05/18/deliveries.ttl#delivery_1')
-    expect(evidenceResourceId('evidence_1', {
+    expect(evidenceResource.buildId({
+      id: 'evidence_1',
       run: 'https://pod.example/.data/task/task_1/2026/05/18/runs.ttl#run_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('task/task_1/2026/05/18/evidence.ttl#evidence_1')
-    expect(reportResourceId('report_1', {
+    expect(reportResource.buildId({
+      id: 'report_1',
       delivery: 'https://pod.example/.data/task/task_1/2026/05/18/deliveries.ttl#delivery_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('task/task_1/2026/05/18/reports.ttl#report_1')
-    expect(runStepResourceId('step_1', {
+    expect(runStepResource.buildId({
+      id: 'step_1',
       run: 'task/task_1/2026/05/18/runs.ttl#run_1',
+      stepType: 'run.started',
+      createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('task/task_1/2026/05/18/runs.ttl#step_1')
-    expect(runStepResourceId('step_2', {
+    expect(runStepResource.buildId({
+      id: 'step_2',
       run: 'https://pod.example/.data/task/task_1/2026/05/18/runs.ttl#run_1',
+      stepType: 'run.started',
+      createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('task/task_1/2026/05/18/runs.ttl#step_2')
-    expect(aiModelResourceId('gpt-5.5', {
-      isProvidedBy: '/settings/providers/openai.ttl',
-    })).toBe('openai.ttl#gpt-5.5')
-    expect(aiModelResourceId('openai/gpt-4o-mini', {
-      isProvidedBy: 'https://pod.example/settings/providers/openrouter.ttl',
-    })).toBe('openrouter.ttl#openai/gpt-4o-mini')
     expect(aiModelResource.buildId({
       id: 'gpt-5.5',
       isProvidedBy: '/settings/providers/openai.ttl',
     })).toBe('openai.ttl#gpt-5.5')
+    expect(aiModelResource.buildId({
+      id: 'openai/gpt-4o-mini',
+      isProvidedBy: 'https://pod.example/settings/providers/openrouter.ttl',
+    })).toBe('openrouter.ttl#openai/gpt-4o-mini')
     expect(agentResource.buildId({
       id: '__secretary__',
     })).toBe('__secretary__/')
@@ -71,22 +91,51 @@ describe('command resource id defaults', () => {
       id: 'symphony',
       agent: '__secretary__',
     })).toBe('__secretary__/skills/symphony/')
+    expect(aiProviderResource.buildId({ id: 'openai' })).toBe('openai.ttl')
+    expect(credentialResource.buildId({ id: 'openai-default' })).toBe('credentials.ttl#openai-default')
+    expect(approvalResource.buildId({
+      id: 'approval_1',
+      createdAt: new Date('2026-05-18T01:02:03.000Z'),
+    })).toBe('2026/05/18.ttl#approval_1')
+    expect(auditResource.buildId({
+      id: 'audit_1',
+      action: 'approval.created',
+      actor: 'https://pod.example/profile/card#me',
+      actorRole: 'user',
+      createdAt: new Date('2026-05-18T01:02:03.000Z'),
+    })).toBe('2026/05/18.ttl#audit_1')
+    expect(contactResource.buildId({ id: 'person_1' })).toBe('person_1.ttl')
+    expect(grantResource.buildId({ id: 'grant_1' })).toBe('grant_1.ttl')
+    expect(inboxNotificationResource.buildId({ id: 'notification_1' })).toBe('notification_1.ttl')
+    expect(issueResource.buildId({ id: 'issue_1' })).toBe('issue_1.ttl')
+    expect(sessionResource.buildId({
+      id: 'session_1',
+      createdAt: new Date('2026-05-18T01:02:03.000Z'),
+    })).toBe('2026/05/18/session_1.ttl')
+    expect(settingsResource.buildId({ id: 'ui.theme' })).toBe('ui.theme.ttl')
   })
 
   it('accepts seconds and milliseconds numeric timestamps', () => {
-    expect(runResourceId('run_seconds', {
+    expect(runResource.buildId({
+      id: 'run_seconds',
       task: 'https://pod.example/.data/task/index.ttl#task_1',
+      thread: 'https://pod.example/.data/chat/default/index.ttl#thread_1',
+      workspace: 'https://pod.example/workspaces/default/',
       createdAt: Date.UTC(2026, 4, 18, 1, 2, 3) / 1000,
     })).toBe('task/task_1/2026/05/18/runs.ttl#run_seconds')
 
-    expect(runResourceId('run_millis', {
+    expect(runResource.buildId({
+      id: 'run_millis',
       task: 'https://pod.example/.data/task/index.ttl#task_1',
+      thread: 'https://pod.example/.data/chat/default/index.ttl#thread_1',
+      workspace: 'https://pod.example/workspaces/default/',
       createdAt: Date.UTC(2026, 4, 18, 1, 2, 3),
     })).toBe('task/task_1/2026/05/18/runs.ttl#run_millis')
   })
 
   it('derives message storage from thread when chat is not provided', () => {
-    expect(messageResourceId('msg_thread', {
+    expect(messageResource.buildId({
+      id: 'msg_thread',
       thread: 'https://pod.example/.data/chat/secretary/index.ttl#thread_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('chat/secretary/2026/05/18/messages.ttl#msg_thread')
@@ -102,9 +151,15 @@ describe('command resource id defaults', () => {
     expect((Models as Record<string, unknown>).resolvePodBaseUrl).toBeUndefined()
     expect((Models as Record<string, unknown>).resolvePodResourceId).toBeUndefined()
     expect((Models as Record<string, unknown>).resolvePodResourceTemplateValue).toBeUndefined()
+    expect((Models as Record<string, unknown>).aiModelResourceId).toBeUndefined()
+    expect((Models as Record<string, unknown>).chatResourceId).toBeUndefined()
+    expect((Models as Record<string, unknown>).messageResourceId).toBeUndefined()
+    expect((Models as Record<string, unknown>).runResourceId).toBeUndefined()
+    expect((Models as Record<string, unknown>).buildApprovalResourceId).toBeUndefined()
+    expect((Models as Record<string, unknown>).buildSessionResourceId).toBeUndefined()
   })
 
-  it('keeps explicit ids exact and leaves schema subjectTemplate empty', () => {
+  it('keeps explicit ids exact and leaves legacy templates empty', () => {
     expect(chatResource.resolveUri('default/index.ttl#this'))
       .toBe('/.data/chat/default/index.ttl#this')
     expect(chatResource.getSubjectTemplate()).toBeUndefined()

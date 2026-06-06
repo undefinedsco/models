@@ -26,12 +26,6 @@ export interface PodModelDescriptor {
   storage: {
     base: string
     resourceIdPattern: string
-    /**
-     * @deprecated subjectTemplate exists only for legacy fragment layouts.
-     * New descriptors should express exact base-relative ids through
-     * resourceIdPattern and store those ids directly.
-     */
-    subjectTemplate?: string
   }
   fields: Record<string, PodModelFieldDescriptor>
   uniqueBy: string[]
@@ -107,7 +101,6 @@ export const credentialDescriptor: PodModelDescriptor = {
   storage: {
     base: '/settings/credentials.ttl',
     resourceIdPattern: '#{id}',
-    subjectTemplate: '#{id}',
   },
   fields: {
     id: {

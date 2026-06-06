@@ -1,35 +1,21 @@
-import { extractPodResourceTemplateValue, podTable, renderDefaultIdTemplate, uri, string, text, timestamp, id } from '@undefineds.co/drizzle-solid'
+import { extractPodResourceTemplateValue, podTable, uri, string, text, timestamp, id } from '@undefineds.co/drizzle-solid'
 import { ODRL, UDFS, DCTerms } from './namespaces'
 import { chatResource } from './chat.schema'
 import { threadResource } from './thread.schema'
 import { asPodResourceTemplateTarget } from './repository'
 
-export function buildApprovalResourceId(approvalId: string, createdAt: Date | string | number = new Date()): string {
-  return renderDefaultIdTemplate('{yyyy}/{MM}/{dd}.ttl#{key}', {
-    key: encodeURIComponent(approvalId),
-    row: { createdAt },
-  })
-}
-
-export function buildApprovalPodResourcePath(approvalId: string, createdAt: Date | string | number = new Date()): string {
-  return `/.data/approvals/${buildApprovalResourceId(approvalId, createdAt)}`
-}
-
-/** @deprecated Use buildApprovalPodResourcePath for Pod-root paths or buildApprovalResourceId for resource-base ids. */
-export const buildApprovalSubjectPath = buildApprovalPodResourcePath
-
 export function extractApprovalIdFromApprovalRef(approvalRef: string | null | undefined): string | null {
   if (approvalRef && !/[/:#]/.test(approvalRef)) {
     return approvalRef
   }
-  return extractPodResourceTemplateValue(asPodResourceTemplateTarget(approvalResource), approvalRef)
+  return extractPodResourceTemplateValue(asPodResourceTemplateTarget(approvalResource), approvalRef, 'key')
 }
 
 // Approval request resource (separate from Solid inbox notifications).
 export const approvalResource = podTable(
   'approval',
   {
-    id: id('id'),
+    id: id('id').default('{yyyy}/{MM}/{dd}.ttl#{key}'),
 
     // Relations
     session: uri('session').predicate(UDFS.session).notNull(),
@@ -67,7 +53,6 @@ export const approvalResource = podTable(
     sparqlEndpoint: '/.data/approvals/-/sparql',
     type: UDFS.ApprovalRequest,
     namespace: UDFS,
-    subjectTemplate: '{yyyy}/{MM}/{dd}.ttl#{id}',
   },
 )
 

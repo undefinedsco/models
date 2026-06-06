@@ -1,4 +1,4 @@
-import { extractPodResourceTemplateValue, object, podTable, renderDefaultIdTemplate, string, timestamp, uri, id, integer } from '@undefineds.co/drizzle-solid'
+import { extractPodResourceTemplateValue, object, podTable, string, timestamp, uri, id, integer } from '@undefineds.co/drizzle-solid'
 import { DCTerms, UDFS } from '../namespaces'
 import { chatResource } from '../chat.schema'
 import { threadResource } from '../thread.schema'
@@ -6,20 +6,6 @@ import { asPodResourceTemplateTarget } from '../repository'
 
 export type SessionType = 'direct' | 'group' | 'imported-readonly'
 export type SessionStatus = 'active' | 'paused' | 'completed' | 'error' | 'archived'
-
-export function buildSessionResourceId(sessionId: string, createdAt: Date | string | number = new Date()): string {
-  return renderDefaultIdTemplate('{yyyy}/{MM}/{dd}/{key}.ttl', {
-    key: encodeURIComponent(sessionId),
-    row: { createdAt },
-  })
-}
-
-export function buildSessionPodResourcePath(sessionId: string, createdAt: Date | string | number = new Date()): string {
-  return `/.data/sessions/${buildSessionResourceId(sessionId, createdAt)}`
-}
-
-/** @deprecated Use buildSessionPodResourcePath for Pod-root paths or buildSessionResourceId for resource-base ids. */
-export const buildSessionSubjectPath = buildSessionPodResourcePath
 
 export function buildRuntimeSessionIri(sessionId: string): string {
   return `urn:linx:runtime-session:${sessionId}`
@@ -35,7 +21,7 @@ export function extractRuntimeSessionId(sessionRef: string | null | undefined): 
 export function extractSessionIdFromSessionRef(sessionRef: string | null | undefined): string | null {
   if (!sessionRef) return null
 
-  const templateId = extractPodResourceTemplateValue(asPodResourceTemplateTarget(sessionResource), sessionRef)
+  const templateId = extractPodResourceTemplateValue(asPodResourceTemplateTarget(sessionResource), sessionRef, 'key')
   if (templateId) return templateId
 
   const legacyFragmentMatch = sessionRef.match(/\.ttl#([^/?#]+)$/)
@@ -78,7 +64,7 @@ export function extractSessionIdFromSessionRef(sessionRef: string | null | undef
 export const sessionResource = podTable(
   'session',
   {
-    id: id('id'),
+    id: id('id').default('{yyyy}/{MM}/{dd}/{key}.ttl'),
 
     owner: uri('owner').predicate(UDFS.actor).notNull(),
     chat: uri('chat').predicate(UDFS.conversation).link(chatResource),
@@ -105,7 +91,6 @@ export const sessionResource = podTable(
     sparqlEndpoint: '/.data/sessions/-/sparql',
     type: UDFS.term('Session'),
     namespace: UDFS,
-    subjectTemplate: '{yyyy}/{MM}/{dd}/{id}.ttl',
   },
 )
 

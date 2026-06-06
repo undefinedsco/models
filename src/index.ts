@@ -195,18 +195,9 @@ export {
 } from './run.schema'
 
 export {
-  chatResourceId,
   dateParts,
-  deliveryResourceId,
-  evidenceResourceId,
-  messageResourceId,
   parentDir,
   resourceKey,
-  reportResourceId,
-  runResourceId,
-  runStepResourceId,
-  taskResourceId,
-  threadResourceId,
   type DateInput,
   type DateParts,
 } from './resource-id-defaults'
@@ -333,9 +324,6 @@ export {
 export {
   sessionResource,
   sessionTable,
-  buildSessionResourceId,
-  buildSessionPodResourcePath,
-  buildSessionSubjectPath,
   buildRuntimeSessionIri,
   extractSessionIdFromSessionRef,
   extractRuntimeSessionId,
@@ -351,9 +339,6 @@ export { sessionRepository } from './session.repository'
 export {
   approvalResource,
   approvalTable,
-  buildApprovalResourceId,
-  buildApprovalPodResourcePath,
-  buildApprovalSubjectPath,
   extractApprovalIdFromApprovalRef,
   type ApprovalRow,
   type ApprovalInsert,
@@ -363,9 +348,6 @@ export {
 export {
   auditResource,
   auditTable,
-  buildAuditResourceId,
-  buildAuditPodResourcePath,
-  buildAuditSubjectPath,
   extractAuditIdFromAuditRef,
   type AuditRow,
   type AuditInsert,
@@ -383,9 +365,6 @@ export {
 export {
   grantResource,
   grantTable,
-  buildGrantResourceId,
-  buildGrantPodResourcePath,
-  buildGrantSubjectPath,
   type GrantRow,
   type GrantInsert,
   type GrantUpdate,
@@ -441,7 +420,6 @@ export {
 } from "./ai-provider.schema";
 
 export {
-  aiModelResourceId,
   aiModelResource,
   aiModelTable,
   type AIModelRow,
