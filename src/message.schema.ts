@@ -24,25 +24,25 @@ export const MessageStatus = {
  * Message resource (aligned with xpod).
  *
  * Product semantics:
- * - Message belongs to both a Chat counterpart and a concrete Thread timeline.
- * - Chat answers "who/what is this conversation with".
- * - Thread answers "which run/timeline/place does this message belong to".
+ * - Message belongs to a Chat counterpart.
+ * - Thread is optional and appears only when a message participates in an
+ *   explicit AI/task/branch timeline.
  *
  * Storage structure:
- * - Location: /.data/{thread.id[0:2]}/{yyyy}/{MM}/{dd}/messages.ttl#{id}
+ * - Location: /.data/chat/{chat|id}/{yyyy}/{MM}/{dd}/messages.ttl#{id}
  * - Date-based path for efficient time-range queries
  * - chat/thread are RDF URI relations. Short ids remain accepted at API/query call sites via ORM URI template resolution.
  */
 export const messageResource = podTable(
   'chat_message',
   {
-    id: id('id').default('{thread.id[0:2]}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'),
+    id: id('id').default('chat/{chat.id[0]}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'),
 
     // Chat relation. In RDF this is an inverse Solid Chat link: <chat> wf:message <message>.
     chat: uri('chat').predicate(WF.message).inverse().notNull().link(chatResource),
 
-    // Thread relation. In RDF this is an inverse Solid Chat/SIOC link: <thread> sioc:has_member <message>.
-    thread: uri('thread').predicate(SIOC.has_member).inverse().notNull().link(threadResource),
+    // Optional Thread relation. In RDF this is an inverse Solid Chat/SIOC link: <thread> sioc:has_member <message>.
+    thread: uri('thread').predicate(SIOC.has_member).inverse().link(threadResource),
 
     // maker is the entity URI of the message author:
     // - User: their WebID (https://user.pod/profile/card#me)

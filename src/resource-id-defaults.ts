@@ -58,7 +58,7 @@ function threadDir(row?: Record<string, unknown>): string | null {
   const thread = typeof row?.thread === 'string' ? row.thread : undefined
   if (!thread) return null
   const resourceId = normalizePodDataResourceId(thread)
-  const match = resourceId.match(/^(chat\/.+)\/index\.ttl#[^#/]+$/)
+  const match = resourceId.match(/^((?:chat|task)\/.+)\/index\.ttl#[^#/]+$/)
   return match?.[1] ?? null
 }
 

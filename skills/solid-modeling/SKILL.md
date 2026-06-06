@@ -168,9 +168,10 @@ Use these concepts consistently across products:
   user is talking with.
 - `Task`: task-style command surface, parallel to Chat. It describes recurring,
   triggered, or one-off task intent.
-- `Thread`: concrete timeline/place under a Chat or Task.
-- `Message`: human/runtime communication item in a Thread, linked to the Chat
-  or Task surface when useful.
+- `Thread`: implicit concrete timeline/place under exactly one command surface:
+  Chat for conversation timelines, or Task for task execution timelines.
+- `Message`: human/runtime communication item in a Chat, optionally linked to a
+  Thread when it participates in an AI/task/branch timeline.
 - `Run`: one concrete execution attempt by an Agent Runtime.
 - `RunStep`: append-only execution facts for a Run.
 

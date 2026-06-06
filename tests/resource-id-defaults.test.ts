@@ -33,6 +33,10 @@ describe('command resource id defaults', () => {
       id: 'thread_1',
       chat: 'https://pod.example/.data/chat/secretary/index.ttl#this',
     })).toBe('chat/secretary/index.ttl#thread_1')
+    expect(threadResource.buildId({
+      id: 'worker_thread_1',
+      task: 'https://pod.example/.data/task/index.ttl#task_1',
+    })).toBe('task/task_1/index.ttl#worker_thread_1')
     expect(messageResource.buildId({
       id: 'msg_1',
       chat: 'https://pod.example/.data/chat/default/index.ttl#this',
@@ -52,11 +56,29 @@ describe('command resource id defaults', () => {
       thread: 'https://pod.example/.data/chat/default/index.ttl#thread_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('chat/default/2026/05/18/deliveries.ttl#delivery_1')
+    expect(runResource.buildId({
+      id: 'worker_run_1',
+      task: 'https://pod.example/.data/task/index.ttl#task_1',
+      thread: 'https://pod.example/.data/task/task_1/index.ttl#worker_thread_1',
+      workspace: 'https://pod.example/workspaces/default/',
+      createdAt: new Date('2026-05-18T01:02:03.000Z'),
+    })).toBe('task/task_1/2026/05/18/runs.ttl#worker_run_1')
+    expect(deliveryResource.buildId({
+      id: 'worker_delivery_1',
+      task: 'https://pod.example/.data/task/index.ttl#task_1',
+      thread: 'https://pod.example/.data/task/task_1/index.ttl#worker_thread_1',
+      createdAt: new Date('2026-05-18T01:02:03.000Z'),
+    })).toBe('task/task_1/2026/05/18/deliveries.ttl#worker_delivery_1')
     expect(evidenceResource.buildId({
       id: 'evidence_1',
       run: 'https://pod.example/.data/chat/default/2026/05/18/runs.ttl#run_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('chat/default/2026/05/18/evidence.ttl#evidence_1')
+    expect(evidenceResource.buildId({
+      id: 'worker_evidence_1',
+      thread: 'https://pod.example/.data/task/task_1/index.ttl#worker_thread_1',
+      createdAt: new Date('2026-05-18T01:02:03.000Z'),
+    })).toBe('task/task_1/2026/05/18/evidence.ttl#worker_evidence_1')
     expect(reportResource.buildId({
       id: 'report_1',
       delivery: 'https://pod.example/.data/chat/default/2026/05/18/deliveries.ttl#delivery_1',
@@ -135,13 +157,13 @@ describe('command resource id defaults', () => {
     })).toBe('chat/default/2026/05/18/runs.ttl#run_millis')
   })
 
-  it('derives message storage from thread while retaining chat as a semantic relation', () => {
+  it('derives message storage from chat while retaining thread as a semantic relation', () => {
     expect(messageResource.buildId({
       id: 'msg_thread',
       chat: 'https://pod.example/.data/chat/default/index.ttl#this',
       thread: 'https://pod.example/.data/chat/secretary/index.ttl#thread_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
-    })).toBe('chat/secretary/2026/05/18/messages.ttl#msg_thread')
+    })).toBe('chat/default/2026/05/18/messages.ttl#msg_thread')
   })
 
   it('does not export command-surface path helpers', () => {

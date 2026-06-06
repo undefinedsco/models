@@ -1,7 +1,8 @@
-import { uri, boolean, object, podTable, string, timestamp, id } from '@undefineds.co/drizzle-solid'
+import { uri, boolean, object, podTable, string, timestamp, id, renderDefaultIdTemplate } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms, SIOC } from './namespaces'
 import { chatResource } from './chat.schema'
 import { taskResource } from './task.schema'
+import { resourceKey } from './resource-id-defaults'
 
 export type ThreadStatusType = 'active' | 'locked' | 'closed'
 
@@ -15,8 +16,8 @@ export const ThreadStatus = {
  * Thread resource.
  *
  * Product semantics:
- * - Thread is the concrete conversation or execution timeline/place under a
- *   Chat or Task.
+ * - Thread is the implicit concrete timeline/place under exactly one surface:
+ *   Chat for conversation timelines, or Task for task execution timelines.
  * - AI product runtime sessions map to Thread when they represent a concrete
  *   conversation timeline/place/run.
  * - Thread carries workspace/place relations and runtime metadata. Chat only
@@ -25,8 +26,8 @@ export const ThreadStatus = {
  *   `runtime`, etc. Do not name the generic thread id `piSessionId`.
  *
  * Storage structure (aligned with xpod):
- * - Thread stored as fragment in Chat's index.ttl
- * - Location: /.data/chat/{chat|id}/index.ttl#{id}
+ * - Chat thread location: /.data/chat/{chat|id}/index.ttl#{id}
+ * - Task thread location: /.data/task/{task|id}/index.ttl#{id}
  *
  * NOTE:
  * - `thread.workspace` is a storage-layer reference (URI) to a container/resource in CSS/Pod.
@@ -37,12 +38,26 @@ export const ThreadStatus = {
 export const threadResource = podTable(
   'thread',
   {
-    id: id('id').default('chat/{chat.id[0]}/index.ttl#{key}'),
+    id: id('id').default((key: string | undefined, row?: Record<string, unknown>) => (
+      renderDefaultIdTemplate(
+        row?.task
+          ? 'task/{task.id[-1]}/index.ttl#{key}'
+          : 'chat/{chat.id[0]}/index.ttl#{key}',
+        {
+          key: resourceKey(key, 'thread'),
+          row,
+          links: {
+            chat: chatResource,
+            task: taskResource,
+          },
+        },
+      )
+    )),
 
-    // Belongs to chat/counterpart. Stored as an RDF URI; short ids are resolved via chatResource's URI template by the ORM.
+    // Owner surface for conversation timelines. Do not set together with `task`.
     chat: uri('chat').predicate(SIOC.has_parent).link(chatResource),
 
-    // Optional work item this timeline is executing or discussing.
+    // Owner surface for task execution timelines. Do not set together with `chat`.
     task: uri('task').predicate(UDFS.task).link(taskResource),
 
     // Display / state
