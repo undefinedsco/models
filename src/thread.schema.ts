@@ -41,8 +41,8 @@ export const threadResource = podTable(
     id: id('id').default((key: string | undefined, row?: Record<string, unknown>) => (
       renderDefaultIdTemplate(
         row?.task
-          ? 'task/{task.id[-1]}/index.ttl#{key}'
-          : 'chat/{chat.id[0]}/index.ttl#{key}',
+          ? 'task/{task.key}/index.ttl#{key}'
+          : 'chat/{chat.key}/index.ttl#{key}',
         {
           key: resourceKey(key, 'thread'),
           row,

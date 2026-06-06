@@ -47,7 +47,7 @@ export const DeliveryKind = {
 export const deliveryResource = podTable(
   'delivery',
   {
-    id: id('id').default('{thread.id[0:2]}/{yyyy}/{MM}/{dd}/deliveries.ttl#{key}'),
+    id: id('id').default('{thread.dir}/{yyyy}/{MM}/{dd}/deliveries.ttl#{key}'),
 
     kind: string('kind').predicate(UDFS.deliveryKind).notNull().default(DeliveryKind.TASK_DISPATCH),
     status: string('status').predicate(UDFS.status).notNull().default(DeliveryStatus.PENDING),

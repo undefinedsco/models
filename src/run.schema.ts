@@ -51,7 +51,7 @@ export type RunStepTypeValue = (typeof RunStepType)[keyof typeof RunStepType]
 export const runResource = podTable(
   'run',
   {
-    id: id('id').default('{thread.id[0:2]}/{yyyy}/{MM}/{dd}/runs.ttl#{key}'),
+    id: id('id').default('{thread.dir}/{yyyy}/{MM}/{dd}/runs.ttl#{key}'),
 
     task: uri('task').predicate(UDFS.task).link(taskResource),
     delivery: uri('delivery').predicate(UDFS.delivery).link(deliveryResource),
@@ -95,7 +95,7 @@ export const runResource = podTable(
 export const runStepResource = podTable(
   'run_step',
   {
-    id: id('id').default('{run.id[0:5]}/runs.ttl#{key}'),
+    id: id('id').default('{run.doc}#{key}'),
     run: uri('run').predicate(UDFS.run).notNull().link(runResource),
     stepType: string('stepType').predicate(UDFS.stepType).notNull(),
     message: string('message').predicate(DCTerms.description),

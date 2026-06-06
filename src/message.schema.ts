@@ -36,7 +36,7 @@ export const MessageStatus = {
 export const messageResource = podTable(
   'chat_message',
   {
-    id: id('id').default('chat/{chat.id[0]}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'),
+    id: id('id').default('chat/{chat.key}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'),
 
     // Chat relation. In RDF this is an inverse Solid Chat link: <chat> wf:message <message>.
     chat: uri('chat').predicate(WF.message).inverse().notNull().link(chatResource),

@@ -11,7 +11,7 @@ import { DCTerms, UDFS } from './namespaces'
 export const skillResource = podTable(
   'skill',
   {
-    id: id('id').default('{agent.id[0]}/skills/{key}/'),
+    id: id('id').default('{agent.key}/skills/{key}/'),
 
     agent: uri('agent').predicate(UDFS.agent).notNull().link(agentResource),
     root: uri('root').predicate(UDFS.root),

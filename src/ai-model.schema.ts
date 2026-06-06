@@ -3,7 +3,7 @@ import { aiProviderResource } from "./ai-provider.schema"
 import { UDFS } from "./namespaces"
 
 export const aiModelResource = podTable("aiModel", {
-  id: id("id").default("{isProvidedBy.id[0]}#{key}"),
+  id: id("id").default("{isProvidedBy.doc}#{key}"),
   displayName: string("displayName").predicate(UDFS.displayName),
   modelType: string("modelType").predicate(UDFS.modelType).default("chat"),
   isProvidedBy: uri("isProvidedBy").predicate(UDFS.isProvidedBy).link(aiProviderResource),
