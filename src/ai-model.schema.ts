@@ -2,37 +2,8 @@ import { id, integer, podTable, string, timestamp, uri } from "@undefineds.co/dr
 import { aiProviderResource } from "./ai-provider.schema"
 import { UDFS } from "./namespaces"
 
-function normalizeAIModelResourcePart(value: unknown): string {
-  const raw = typeof value === "string"
-    ? value.trim()
-    : value && typeof value === "object"
-      ? String((value as Record<string, unknown>)["@id"] ?? (value as Record<string, unknown>).id ?? "")
-      : ""
-  if (!raw) return ""
-  if (raw.includes("#")) {
-    return raw.slice(raw.lastIndexOf("#") + 1)
-  }
-  return raw
-}
-
-function normalizeAIModelProviderPart(value: unknown): string {
-  const raw = typeof value === "string"
-    ? value.trim()
-    : value && typeof value === "object"
-      ? String((value as Record<string, unknown>)["@id"] ?? (value as Record<string, unknown>).id ?? "")
-      : ""
-  if (!raw) return ""
-  const document = raw.split("#", 1)[0]?.replace(/\/+$/u, "") ?? raw
-  const tail = document.split("/").filter(Boolean).pop() ?? document
-  return tail.endsWith(".ttl") ? tail.slice(0, -4) : tail
-}
-
 export const aiModelResource = podTable("aiModel", {
-  id: id("id").default((key: string | undefined, row?: Record<string, unknown>) => {
-    const modelId = normalizeAIModelResourcePart(key ?? row?.id)
-    const providerId = normalizeAIModelProviderPart(row?.isProvidedBy ?? row?.provider)
-    return providerId && modelId ? `${providerId}.ttl#${modelId}` : modelId
-  }),
+  id: id("id").default("{isProvidedBy.id[0]}#{key}"),
   displayName: string("displayName").predicate(UDFS.displayName),
   modelType: string("modelType").predicate(UDFS.modelType).default("chat"),
   isProvidedBy: uri("isProvidedBy").predicate(UDFS.isProvidedBy).link(aiProviderResource),
