@@ -73,12 +73,12 @@ describe('command resource id defaults', () => {
       id: 'evidence_1',
       run: 'https://pod.example/.data/chat/default/2026/05/18/runs.ttl#run_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
-    })).toBe('chat/default/2026/05/18/evidence.ttl#evidence_1')
+    })).toBe('evidence/2026/05/18.ttl#evidence_1')
     expect(evidenceResource.buildId({
       id: 'worker_evidence_1',
       thread: 'https://pod.example/.data/task/task_1/index.ttl#worker_thread_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
-    })).toBe('task/task_1/2026/05/18/evidence.ttl#worker_evidence_1')
+    })).toBe('evidence/2026/05/18.ttl#worker_evidence_1')
     expect(reportResource.buildId({
       id: 'report_1',
       delivery: 'https://pod.example/.data/chat/default/2026/05/18/deliveries.ttl#delivery_1',

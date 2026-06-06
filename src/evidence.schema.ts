@@ -1,11 +1,10 @@
-import { id, object, podTable, renderDefaultIdTemplate, string, text, timestamp, uri } from '@undefineds.co/drizzle-solid'
+import { id, object, podTable, string, text, timestamp, uri } from '@undefineds.co/drizzle-solid'
 import { DCTerms, SCHEMA, UDFS } from './namespaces'
 import { deliveryResource } from './delivery.schema'
 import { issueResource } from './issue.schema'
 import { runResource } from './run.schema'
 import { taskResource } from './task.schema'
 import { threadResource } from './thread.schema'
-import { resourceKey, workflowOwnerDir } from './resource-id-defaults'
 
 export type EvidenceKindType =
   | 'test'
@@ -40,14 +39,7 @@ export const EvidenceKind = {
 export const evidenceResource = podTable(
   'evidence',
   {
-    id: id('id').default((key: string | undefined, row?: Record<string, unknown>) => {
-      const localKey = resourceKey(key, 'evidence')
-      const ownerDir = workflowOwnerDir(row) ?? 'evidence'
-      return renderDefaultIdTemplate(`${ownerDir}/{yyyy}/{MM}/{dd}/evidence.ttl#{key}`, {
-        key: localKey,
-        row,
-      })
-    }),
+    id: id('id').default('evidence/{yyyy}/{MM}/{dd}.ttl#{key}'),
 
     evidenceKind: string('evidenceKind').predicate(UDFS.evidenceKind).notNull(),
     about: uri('about').predicate(SCHEMA.about).notNull(),
