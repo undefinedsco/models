@@ -37,7 +37,11 @@ export function aiModelResourceId(
 }
 
 export const aiModelResource = podTable("aiModel", {
-  id: id("id").default(aiModelResourceId),
+  id: id("id").default((key: string | undefined, row?: Record<string, unknown>) => {
+    const modelId = normalizeAIModelResourcePart(key ?? row?.id)
+    const providerId = normalizeAIModelProviderPart(row?.isProvidedBy ?? row?.provider)
+    return providerId && modelId ? `${providerId}.ttl#${modelId}` : modelId
+  }),
   displayName: string("displayName").predicate(UDFS.displayName),
   modelType: string("modelType").predicate(UDFS.modelType).default("chat"),
   isProvidedBy: uri("isProvidedBy").predicate(UDFS.isProvidedBy).link(aiProviderResource),

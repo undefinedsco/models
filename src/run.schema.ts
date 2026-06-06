@@ -136,7 +136,7 @@ export const runStepResource = podTable(
     run: uri('run').predicate(UDFS.run).notNull().link(runResource),
     stepType: string('stepType').predicate(UDFS.stepType).notNull(),
     message: string('message').predicate(DCTerms.description),
-    data: object('data').predicate(UDFS.metadata),
+    payload: object('payload').predicate(UDFS.payload),
     createdAt: timestamp('createdAt').predicate(DCTerms.created).notNull().defaultNow(),
   },
   {

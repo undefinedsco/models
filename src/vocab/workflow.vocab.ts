@@ -140,6 +140,6 @@ export const RunStepVocab = {
   run: UDFS.run,
   stepType: UDFS.stepType,
   message: DCTerms.description,
-  data: UDFS.metadata,
+  payload: UDFS.payload,
   createdAt: DCTerms.created,
 } as const

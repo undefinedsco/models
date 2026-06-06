@@ -112,6 +112,8 @@ describe('Wave A CP0 contracts: centralized vocabs', () => {
     expect((RunStepVocab as Record<string, unknown>).commandKind).toBeUndefined()
     expect((RunStepVocab as Record<string, unknown>).surface).toBeUndefined()
     expect(RunStepVocab.stepType).toBe(UDFS.stepType)
+    expect(RunStepVocab.payload).toBe(UDFS.payload)
+    expect((RunStepVocab as Record<string, unknown>).data).toBeUndefined()
     expect((TaskVocab as Record<string, unknown>).surfaceId).toBeUndefined()
     expect((DeliveryVocab as Record<string, unknown>).surfaceId).toBeUndefined()
     expect((RunVocab as Record<string, unknown>).surfaceId).toBeUndefined()

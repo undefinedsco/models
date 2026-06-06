@@ -247,5 +247,19 @@ describe('shared Solid resources', () => {
     expect((runStepResource.columns as Record<string, unknown>).commandKind).toBeUndefined()
     expect((runStepResource.columns as Record<string, unknown>).surface).toBeUndefined()
     expect((runStepResource.columns as Record<string, unknown>).runId).toBeUndefined()
+    expect((runStepResource.columns as Record<string, unknown>).payload).toBeDefined()
+    expect((runStepResource.columns as Record<string, unknown>).data).toBeUndefined()
+  })
+
+  it('keeps schema id defaults readable at the definition site', () => {
+    const sourceRoot = join(__dirname, '../src')
+    const sourceFiles = listSourceFiles(sourceRoot)
+    const hiddenIdDefaults = sourceFiles.flatMap((file) => {
+      const source = readFileSync(file, 'utf-8')
+      return Array.from(source.matchAll(/id\(\s*['"]id['"]\s*\)\.default\(\s*[A-Za-z0-9_]+ResourceId\s*\)/g))
+        .map((match) => `${file.replace(`${sourceRoot}/`, '')}:${match[0]}`)
+    })
+
+    expect(hiddenIdDefaults).toEqual([])
   })
 })

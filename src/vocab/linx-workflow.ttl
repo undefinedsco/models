@@ -161,7 +161,7 @@ udfs:objective a rdf:Property ;
 
 udfs:payload a rdf:Property ;
   rdfs:label "payload" ;
-  rdfs:comment "Structured delivery payload. It is implementation data, not a replacement for semantic URI relations." .
+  rdfs:comment "Structured runtime or delivery payload. It is implementation detail, not a replacement for semantic URI relations." .
 
 udfs:projection a rdf:Property ;
   rdfs:label "projection" ;
