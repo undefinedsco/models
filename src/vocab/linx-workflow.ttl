@@ -36,7 +36,7 @@ udfs:RunStep a rdfs:Class ;
 
 udfs:Evidence a rdfs:Class ;
   rdfs:label "Evidence" ;
-  rdfs:comment "Append-only proof or finding that supports a workflow control object. Evidence points to concrete tests, logs, diffs, artifacts, Pod projections, user validation, or review findings without owning status by itself." .
+  rdfs:comment "Append-only proof or finding metadata that supports a workflow control object. Long logs, diffs, screenshots, transcripts, and reports live as Pod files; Evidence stores queryable metadata and can point to the file via dcterms:source without owning status by itself." .
 
 udfs:Report a rdfs:Class ;
   rdfs:label "Report" ;
@@ -100,11 +100,6 @@ udfs:input a rdf:Property ;
   rdfs:label "input" ;
   rdfs:range rdfs:Resource ;
   rdfs:comment "Resource containing the concrete input or context projection used for a Run." .
-
-udfs:subject a rdf:Property ;
-  rdfs:label "subject" ;
-  rdfs:range rdfs:Resource ;
-  rdfs:comment "Primary workflow/control object that Evidence or Report is about." .
 
 udfs:targetThread a rdf:Property ;
   rdfs:label "target thread" ;
@@ -201,11 +196,6 @@ udfs:outcome a rdf:Property ;
   rdfs:label "outcome" ;
   rdfs:range rdfs:Literal ;
   rdfs:comment "Observed or reviewed outcome for Evidence or Report, for example accepted, rejected, reopened, partial_release, deferred, blocked, or change_requested." .
-
-udfs:artifact a rdf:Property ;
-  rdfs:label "artifact" ;
-  rdfs:range rdfs:Resource ;
-  rdfs:comment "Concrete artifact URI for evidence, such as a log, diff, patch, screenshot, report file, or Pod projection." .
 
 udfs:metricFacts a rdf:Property ;
   rdfs:label "metric facts" ;

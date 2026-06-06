@@ -26,6 +26,11 @@ udfs:workspace a rdf:Property ;
   rdfs:range rdfs:Resource ;
   rdfs:comment "Points at the runnable workspace URI for the thread." .
 
+udfs:inScope a rdf:Property ;
+  rdfs:domain rdfs:Resource ;
+  rdfs:range rdfs:Resource ;
+  rdfs:comment "Neutral LinX ownership relation from a Thread or Message to its command surface, such as a Chat or Task. Chat-scoped resources should also keep Solid Chat compatibility predicates such as sioc:has_parent or wf:message." .
+
 # Policy inheritance context (reserved; resolved via workspace root in CP0)
 udfs:policyRef a rdf:Property ;
   rdfs:domain rdfs:Resource ;

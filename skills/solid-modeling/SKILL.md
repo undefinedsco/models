@@ -36,9 +36,14 @@ Before adding a schema, decide what the resource fundamentally is.
 - File-primary resources have a meaningful body: markdown, JSONL, source file,
   artifact, uploaded file, or generated report. Examples include `Spec`,
   `Plan`, `Report`, and most `Evidence`.
-- For file-primary resources, model the queryable metadata: subject, kind,
-  status or outcome, actor/reviewer, evidence links, revision, body/artifact
-  URI, and relations to the controlling issue/task/run.
+- For file-primary resources, model only queryable metadata: aboutness, kind,
+  status or outcome, abstract/summary when it is needed for indexing,
+  actor/reviewer, evidence links, revision, and relations to the controlling
+  issue/task/run.
+- Evidence is file-primary when the proof body is a log, diff, patch,
+  transcript, screenshot, or report. Keep the body as a Pod file and store only
+  queryable metadata in TTL; use `schema:about` for the control object and
+  `dcterms:source` for the concrete evidence file when needed.
 - Do not create a parallel model just because a file needs metadata. Add schema
   fields only for facts that must be searched, joined, synchronized, audited, or
   used for routing/recovery across clients.
@@ -170,8 +175,9 @@ Use these concepts consistently across products:
   triggered, or one-off task intent.
 - `Thread`: implicit concrete timeline/place under exactly one command surface:
   Chat for conversation timelines, or Task for task execution timelines.
-- `Message`: human/runtime communication item in a Chat, optionally linked to a
-  Thread when it participates in an AI/task/branch timeline.
+- `Message`: human/runtime communication item in a command scope. It usually
+  belongs to a Chat, but task/runtime messages may belong to a Task or Thread
+  scope without inventing a Chat.
 - `Run`: one concrete execution attempt by an Agent Runtime.
 - `RunStep`: append-only execution facts for a Run.
 
@@ -185,10 +191,17 @@ Align with graph semantics:
 
 | Concept | Preferred RDF direction | Typical predicate |
 |---|---|---|
+| resource belongs to command scope | `resource -> scope` | `udfs:inScope` |
 | chat contains message | `chat -> message` | `wf:message` / project vocabulary |
+| chat owns thread | `thread -> chat` | `sioc:has_parent` for compatibility |
 | thread contains message | `thread -> message` | `sioc:has_member` or equivalent |
 | reply points to original | `replyMessage -> originalMessage` | `sioc:has_reply` / project predicate |
 | author/maker | `message -> maker` | `foaf:maker` |
+
+Use `udfs:inScope` for LinX product semantics when a Thread or Message can
+belong to either Chat or Task. Preserve Solid Chat compatibility by also writing
+`sioc:has_parent` for Chat-scoped Threads and `wf:message` for Chat-scoped
+Messages. Do not stretch Solid Chat predicates to mean Task ownership.
 
 When inverse predicates are supported, use them for read/write symmetry. If the
 ORM cannot safely express the inverse write, put the relation writer in the

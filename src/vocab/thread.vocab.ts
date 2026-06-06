@@ -1,6 +1,7 @@
 import { DCTerms, SIOC, UDFS } from '../namespaces'
 
 export const ThreadVocab = {
+  scope: UDFS.inScope,
   chat: SIOC.has_parent,
   task: UDFS.task,
   title: DCTerms.title,

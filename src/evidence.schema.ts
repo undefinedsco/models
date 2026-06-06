@@ -32,9 +32,11 @@ export const EvidenceKind = {
 /**
  * Evidence resource.
  *
- * Evidence is append-only proof or finding. The resource subject is the
- * evidence file/record itself; `about` points to the work/control object it
- * supports. It is not a status owner by itself.
+ * Evidence is append-only proof or finding metadata. Long evidence bodies
+ * such as logs, patches, screenshots, transcripts, and reports are Pod files;
+ * this TTL record stores the queryable meta and `source` points to the
+ * evidence file when one exists. `about` points to the work/control object it
+ * supports. Evidence is not a status owner by itself.
  */
 export const evidenceResource = podTable(
   'evidence',

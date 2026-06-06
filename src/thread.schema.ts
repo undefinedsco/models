@@ -18,6 +18,10 @@ export const ThreadStatus = {
  * Product semantics:
  * - Thread is the implicit concrete timeline/place under exactly one surface:
  *   Chat for conversation timelines, or Task for task execution timelines.
+ * - `scope` is the neutral LinX ownership relation for that surface. When the
+ *   scope is a Chat, also write `chat` so Solid Chat clients can keep using
+ *   sioc:has_parent. When the scope is a Task, also write `task` for workflow
+ *   indexes.
  * - AI product runtime sessions map to Thread when they represent a concrete
  *   conversation timeline/place/run.
  * - Thread carries workspace/place relations and runtime metadata. Chat only
@@ -40,9 +44,11 @@ export const threadResource = podTable(
   {
     id: id('id').default((key: string | undefined, row?: Record<string, unknown>) => (
       renderDefaultIdTemplate(
-        row?.task
+        row?.chat
+          ? 'chat/{chat.key}/index.ttl#{key}'
+          : row?.task
           ? 'task/{task.key}/index.ttl#{key}'
-          : 'chat/{chat.key}/index.ttl#{key}',
+          : '{scope.dir}/index.ttl#{key}',
         {
           key: resourceKey(key, 'thread'),
           row,
@@ -54,10 +60,13 @@ export const threadResource = podTable(
       )
     )),
 
-    // Owner surface for conversation timelines. Do not set together with `task`.
+    // Canonical product owner surface. The object can be a Chat, Task, or future command surface.
+    scope: uri('scope').predicate(UDFS.inScope),
+
+    // Solid Chat compatibility owner for conversation timelines. Do not set together with `task`.
     chat: uri('chat').predicate(SIOC.has_parent).link(chatResource),
 
-    // Owner surface for task execution timelines. Do not set together with `chat`.
+    // Workflow compatibility/index owner for task execution timelines. Do not set together with `chat`.
     task: uri('task').predicate(UDFS.task).link(taskResource),
 
     // Display / state

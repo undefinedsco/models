@@ -1,7 +1,8 @@
-import { object, podTable, uri, string, text, timestamp, id } from '@undefineds.co/drizzle-solid'
+import { object, podTable, uri, string, text, timestamp, id, renderDefaultIdTemplate } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms, FOAF, MEETING, SCHEMA, SIOC, WF } from './namespaces'
 import { chatResource } from './chat.schema'
 import { threadResource } from './thread.schema'
+import { resourceKey } from './resource-id-defaults'
 
 export type MessageRoleType = 'user' | 'assistant' | 'system'
 export type MessageStatusType = 'in_progress' | 'completed' | 'incomplete' | 'sent'
@@ -24,9 +25,13 @@ export const MessageStatus = {
  * Message resource (aligned with xpod).
  *
  * Product semantics:
- * - Message belongs to a Chat counterpart.
- * - Thread is optional and appears only when a message participates in an
- *   explicit AI/task/branch timeline.
+ * - Message belongs to a neutral product scope: usually a Chat, sometimes a
+ *   Task/thread execution timeline.
+ * - Chat remains the Solid Chat compatibility relation. When present, the
+ *   message is written under the Chat message bucket and projected through
+ *   wf:message.
+ * - Thread is optional and appears when a message participates in an explicit
+ *   AI/task/branch timeline.
  *
  * Storage structure:
  * - Location: /.data/chat/{chat|id}/{yyyy}/{MM}/{dd}/messages.ttl#{id}
@@ -36,10 +41,29 @@ export const MessageStatus = {
 export const messageResource = podTable(
   'chat_message',
   {
-    id: id('id').default('chat/{chat.key}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'),
+    id: id('id').default((key: string | undefined, row?: Record<string, unknown>) => (
+      renderDefaultIdTemplate(
+        row?.chat
+          ? 'chat/{chat.key}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'
+          : row?.thread
+          ? '{thread.dir}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'
+          : '{scope.dir}/{yyyy}/{MM}/{dd}/messages.ttl#{key}',
+        {
+          key: resourceKey(key, 'msg'),
+          row,
+          links: {
+            chat: chatResource,
+            thread: threadResource,
+          },
+        },
+      )
+    )),
 
-    // Chat relation. In RDF this is an inverse Solid Chat link: <chat> wf:message <message>.
-    chat: uri('chat').predicate(WF.message).inverse().notNull().link(chatResource),
+    // Canonical product owner scope. The object can be a Chat, Task, Thread, or future command surface.
+    scope: uri('scope').predicate(UDFS.inScope),
+
+    // Solid Chat compatibility relation. In RDF this is an inverse link: <chat> wf:message <message>.
+    chat: uri('chat').predicate(WF.message).inverse().link(chatResource),
 
     // Optional Thread relation. In RDF this is an inverse Solid Chat/SIOC link: <thread> sioc:has_member <message>.
     thread: uri('thread').predicate(SIOC.has_member).inverse().link(threadResource),
