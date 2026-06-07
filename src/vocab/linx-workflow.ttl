@@ -1,6 +1,7 @@
 @prefix udfs: <https://undefineds.co/ns#> .
 @prefix as: <https://www.w3.org/ns/activitystreams#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix sioc: <http://rdfs.org/sioc/ns#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
@@ -11,8 +12,9 @@
 
 # Classes
 udfs:Task a rdfs:Class ;
+  rdfs:subClassOf sioc:Container ;
   rdfs:label "Task" ;
-  rdfs:comment "Durable executable work unit. It describes what should be done, independent of schedule, runner selection, runtime prompt projection, or a concrete execution attempt." .
+  rdfs:comment "Durable executable work unit and thread parent container. It describes what should be done, independent of schedule, runner selection, runtime prompt projection, or a concrete execution attempt." .
 
 udfs:Schedule a rdfs:Class ;
   rdfs:label "Schedule" ;

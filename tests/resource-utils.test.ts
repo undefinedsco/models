@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   buildChatTargetRef,
   buildModelResourceIriForDatabase,
+  chatRepository,
   chatResource,
   extractChatTargetRef,
   extractChatThreadRef,
   resolveModelResourceIriForDatabase,
+  threadRepository,
   threadResource,
 } from '../src'
 import { extractApprovalIdFromApprovalRef } from '../src/approval.schema'
@@ -31,6 +33,29 @@ describe('resource reference helpers', () => {
     expect(buildChatTargetRef('https://alice.example/.data/chat/chat-1/index.ttl#this')).toBe('/.data/chat/chat-1/index.ttl#this')
   })
 
+  it('normalizes chat and thread relation targets through repositories', () => {
+    expect(chatRepository.target('https://alice.example/.data/chat/chat-1/index.ttl#this')).toEqual({
+      id: 'chat-1',
+    })
+    expect(chatRepository.idFromRef('https://alice.example/.data/chat/chat-1/index.ttl#this')).toBe('chat-1')
+    expect(chatRepository.idFromRef('chat-1')).toBeNull()
+    expect(chatRepository.iri('https://alice.example/profile/card#me', 'chat-1'))
+      .toBe('https://alice.example/.data/chat/chat-1/index.ttl#this')
+    expect(threadRepository.targetForChat('https://alice.example/.data/chat/chat-1/index.ttl#this', 'thread-1')).toEqual({
+      id: 'thread-1',
+      parent: '/.data/chat/chat-1/index.ttl#this',
+    })
+    expect(threadRepository.targetForChat('fallback', 'https://alice.example/.data/chat/chat-1/index.ttl#thread-1')).toEqual({
+      id: 'thread-1',
+      parent: '/.data/chat/chat-1/index.ttl#this',
+    })
+    expect(threadRepository.iriForChat('https://alice.example/profile/card#me', 'chat-1', 'thread-1'))
+      .toBe('https://alice.example/.data/chat/chat-1/index.ttl#thread-1')
+    expect(threadRepository.idForChat('chat-1', 'thread-1'))
+      .toBe('chat/chat-1/index.ttl#thread-1')
+    expect(threadRepository.idFromRef('https://alice.example/.data/chat/chat-1/index.ttl#thread-1')).toBe('thread-1')
+  })
+
   it('resolves model resource IRIs from database runtime context', () => {
     const database = {
       getSession: () => ({
@@ -42,7 +67,7 @@ describe('resource reference helpers', () => {
       .toBe('https://alice.example/.data/chat/chat-1/index.ttl#this')
     expect(resolveModelResourceIriForDatabase(database, threadResource, {
       id: 'thread-1',
-      chat: buildChatTargetRef('chat-1'),
+      parent: buildChatTargetRef('chat-1'),
     })).toBe('https://alice.example/.data/chat/chat-1/index.ttl#thread-1')
     expect(resolveModelResourceIriForDatabase({}, chatResource, { id: 'chat-2' }))
       .toBeNull()

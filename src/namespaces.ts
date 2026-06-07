@@ -74,6 +74,7 @@ export const SCHEMA = createNamespace('schema', 'http://schema.org/', {
 })
 
 export const SIOC = createNamespace('sioc', 'http://rdfs.org/sioc/ns#', {
+  Container: 'Container',
   Post: 'Post',
   Thread: 'Thread',
   Forum: 'Forum',
@@ -152,7 +153,6 @@ export const UDFS = createNamespace('udfs', 'https://undefineds.co/ns#', {
   sortKey: 'sortKey',
   hasThread: 'hasThread',
   inThread: 'inThread',
-  inScope: 'inScope',
   participants: 'participants',
   message: 'message',
   messageContent: 'messageContent',

@@ -84,9 +84,3 @@ export function extractChatTargetRef(uri: string | null | undefined): ChatTarget
 
   return { chatId: null, threadId: null, messageId: null }
 }
-
-export function resolveThreadChatId(
-  thread: Pick<Record<string, unknown>, 'chat'> | null | undefined,
-): string | null {
-  return extractChatIdFromChatRef(typeof thread?.chat === 'string' ? thread.chat : null)
-}

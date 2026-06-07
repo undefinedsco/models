@@ -1,6 +1,7 @@
-import { AS, DCTerms, SCHEMA, UDFS } from '../namespaces'
+import { AS, DCTerms, RDF, SCHEMA, UDFS } from '../namespaces'
 
 export const TaskVocab = {
+  rdfType: RDF.type,
   title: DCTerms.title,
   instruction: UDFS.instruction,
   prompt: UDFS.prompt,

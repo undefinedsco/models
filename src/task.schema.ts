@@ -1,5 +1,5 @@
 import { id, object, podTable, string, text, timestamp, uri } from '@undefineds.co/drizzle-solid'
-import { DCTerms, UDFS } from './namespaces'
+import { DCTerms, RDF, SIOC, UDFS } from './namespaces'
 
 export type TaskStatusType = 'open' | 'ready' | 'active' | 'blocked' | 'completed' | 'failed' | 'cancelled'
 
@@ -24,6 +24,10 @@ export const taskResource = podTable(
   'task',
   {
     id: id('id').default('index.ttl#{key}'),
+
+    // Resource config writes udfs:Task; keep sioc:Container explicit so
+    // task-owned threads can use the same sioc:has_parent relation as chats.
+    rdfType: uri('rdfType').array().predicate(RDF.type).notNull().default([SIOC.Container]),
 
     title: string('title').predicate(DCTerms.title),
     instruction: text('instruction').predicate(UDFS.instruction).notNull(),

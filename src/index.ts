@@ -71,7 +71,6 @@ export {
   extractChatTargetRef,
   extractChatThreadRef,
   extractThreadIdFromThreadRef,
-  resolveThreadChatId,
   toTimestamp,
   type ChatTargetRef,
   type ChatThreadRef,

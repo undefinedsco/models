@@ -42,7 +42,7 @@ export const fixtureChatDirectAI: ChatInsert = {
 
 export const fixtureThreadDirectAI: ThreadInsert = {
   id: 'thread-001',
-  chat: 'https://pod.example/.data/chat/chat-direct-ai-1/index.ttl#this',
+  parent: 'https://pod.example/.data/chat/chat-direct-ai-1/index.ttl#this',
   title: 'Main thread',
   starred: false,
 

@@ -7,6 +7,7 @@ import {
   UDFS,
   WF,
   SIOC,
+  RDF,
   ChatBaseVocab,
   MessageVocab,
   ContactVocab,
@@ -24,6 +25,7 @@ import type { ChatRow } from '../src/chat.schema'
 import type { ThreadRow } from '../src/thread.schema'
 import type { MessageRow } from '../src/message.schema'
 import type { DeliveryRow } from '../src/delivery.schema'
+import type { TaskRow } from '../src/task.schema'
 import type { ContactTypeValue } from '../src/contact.schema'
 
 import {
@@ -44,7 +46,7 @@ describe('Wave A CP0 contracts: namespaces', () => {
     expect(UDFS.policyRef).toBe('https://undefineds.co/ns#policyRef')
     expect(UDFS.policyVersion).toBe('https://undefineds.co/ns#policyVersion')
     expect(UDFS.parentThread).toBe('https://undefineds.co/ns#parentThread')
-    expect(UDFS.inScope).toBe('https://undefineds.co/ns#inScope')
+    expect((UDFS as Record<string, unknown>).inScope).toBeUndefined()
 
     expect(UDFS.coordinationId).toBe('https://undefineds.co/ns#coordinationId')
     expect((UDFS as Record<string, unknown>).subject).toBeUndefined()
@@ -56,7 +58,9 @@ describe('Wave A CP0 contracts: vocab ttl files', () => {
   it('includes TTL vocab definitions for subclassing and predicates', () => {
     const chatTtl = readFileSync(resolve(__dirname, '../src/vocab/linx-chat.ttl'), 'utf-8')
     expect(chatTtl).toContain('udfs:workspace')
-    expect(chatTtl).toContain('udfs:inScope')
+    expect(chatTtl).toContain('sioc:has_parent')
+    expect(chatTtl).toContain('sioc:Container')
+    expect(chatTtl).not.toContain('udfs:inScope')
     expect(chatTtl).toContain('wf:participant')
 
     const msgTtl = readFileSync(resolve(__dirname, '../src/vocab/linx-message.ttl'), 'utf-8')
@@ -64,6 +68,7 @@ describe('Wave A CP0 contracts: vocab ttl files', () => {
 
     const workflowTtl = readFileSync(resolve(__dirname, '../src/vocab/linx-workflow.ttl'), 'utf-8')
     expect(workflowTtl).toContain('udfs:Task a rdfs:Class')
+    expect(workflowTtl).toContain('rdfs:subClassOf sioc:Container')
     expect(workflowTtl).toContain('udfs:Schedule a rdfs:Class')
     expect(workflowTtl).toContain('udfs:AutomationRule a rdfs:Class')
     expect(workflowTtl).toContain('udfs:Delivery a rdfs:Class')
@@ -80,19 +85,22 @@ describe('Wave A CP0 contracts: vocab ttl files', () => {
 
 describe('Wave A CP0 contracts: centralized vocabs', () => {
   it('ChatBaseVocab uses flow/wf participant predicate', () => {
+    expect(ChatBaseVocab.rdfType).toBe(RDF.type)
     expect(ChatBaseVocab.participants).toBe(WF.participant)
   })
 
-  it('ThreadVocab exposes workspace context', () => {
-    expect(ThreadVocab.scope).toBe(UDFS.inScope)
+  it('ThreadVocab exposes parent container and workspace context', () => {
+    expect(ThreadVocab.parent).toBe(SIOC.has_parent)
     expect(ThreadVocab.workspace).toBe(UDFS.workspace)
-    expect(ThreadVocab.task).toBe(UDFS.task)
-    expect(ThreadVocab.chat).toBe(SIOC.has_parent)
+    expect((ThreadVocab as Record<string, unknown>).scope).toBeUndefined()
+    expect((ThreadVocab as Record<string, unknown>).task).toBeUndefined()
+    expect((ThreadVocab as Record<string, unknown>).chat).toBeUndefined()
   })
 
   it('MessageVocab exposes routing predicates', () => {
-    expect(MessageVocab.scope).toBe(UDFS.inScope)
+    expect((MessageVocab as Record<string, unknown>).scope).toBeUndefined()
     expect(MessageVocab.chat).toBe(WF.message)
+    expect(MessageVocab.thread).toBe(SIOC.has_member)
     expect(MessageVocab.routedBy).toBe(UDFS.routedBy)
     expect(MessageVocab.routeTargetAgent).toBe(UDFS.routeTargetAgent)
     expect(MessageVocab.coordinationId).toBe(UDFS.coordinationId)
@@ -106,6 +114,7 @@ describe('Wave A CP0 contracts: centralized vocabs', () => {
   it('Workflow vocab exposes semantic relation fields without storage partition or *Id/*Uri names', () => {
     expect((DeliveryVocab as Record<string, unknown>).commandKind).toBeUndefined()
     expect((DeliveryVocab as Record<string, unknown>).surface).toBeUndefined()
+    expect(TaskVocab.rdfType).toBe(RDF.type)
     expect(TaskVocab.issue).toBe(UDFS.issue)
     expect(TaskVocab.message).toBe(UDFS.message)
     expect((TaskVocab as Record<string, unknown>).thread).toBeUndefined()
@@ -142,14 +151,22 @@ describe('Wave A CP0 contracts: centralized vocabs', () => {
 
 describe('Wave A CP0 contracts: schema types', () => {
   it('ChatRow is a thin channel container', () => {
+    expectTypeOf<ChatRow>().toHaveProperty('rdfType')
     expectTypeOf<ChatRow>().toHaveProperty('participants')
     expectTypeOf<ChatRow>().not.toHaveProperty('chatType')
     expectTypeOf<ChatRow>().not.toHaveProperty('contact')
   })
 
-  it('ThreadRow contains workspace context only', () => {
-    expectTypeOf<ThreadRow>().toHaveProperty('scope')
+  it('TaskRow is a thread parent container', () => {
+    expectTypeOf<TaskRow>().toHaveProperty('rdfType')
+  })
+
+  it('ThreadRow contains parent and workspace context only', () => {
+    expectTypeOf<ThreadRow>().toHaveProperty('parent')
     expectTypeOf<ThreadRow>().toHaveProperty('workspace')
+    expectTypeOf<ThreadRow>().not.toHaveProperty('scope')
+    expectTypeOf<ThreadRow>().not.toHaveProperty('chat')
+    expectTypeOf<ThreadRow>().not.toHaveProperty('task')
     expectTypeOf<ThreadRow>().not.toHaveProperty('surface')
     expectTypeOf<ThreadRow>().not.toHaveProperty('commandKind')
     expectTypeOf<ThreadRow>().not.toHaveProperty('policyRef')
@@ -170,7 +187,8 @@ describe('Wave A CP0 contracts: schema types', () => {
   })
 
   it('MessageRow contains group/routing extensions', () => {
-    expectTypeOf<MessageRow>().toHaveProperty('scope')
+    expectTypeOf<MessageRow>().toHaveProperty('thread')
+    expectTypeOf<MessageRow>().not.toHaveProperty('scope')
     expectTypeOf<MessageRow>().toHaveProperty('senderName')
     expectTypeOf<MessageRow>().toHaveProperty('mentions')
     expectTypeOf<MessageRow>().toHaveProperty('coordinationId')

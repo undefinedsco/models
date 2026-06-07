@@ -25,13 +25,13 @@ export const MessageStatus = {
  * Message resource (aligned with xpod).
  *
  * Product semantics:
- * - Message belongs to a neutral product scope: usually a Chat, sometimes a
- *   Task/thread execution timeline.
+ * - Message belongs to a Thread timeline. Chat messages also keep the Chat
+ *   relation for Solid Chat compatibility and chat-bucketed storage.
  * - Chat remains the Solid Chat compatibility relation. When present, the
  *   message is written under the Chat message bucket and projected through
  *   wf:message.
- * - Thread is optional and appears when a message participates in an explicit
- *   AI/task/branch timeline.
+ * - Task ownership is derived through message.thread -> thread.parent. Do not
+ *   duplicate it as a custom Message scope relation.
  *
  * Storage structure:
  * - Location: /.data/chat/{chat|id}/{yyyy}/{MM}/{dd}/messages.ttl#{id}
@@ -45,9 +45,7 @@ export const messageResource = podTable(
       renderDefaultIdTemplate(
         row?.chat
           ? 'chat/{chat.key}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'
-          : row?.thread
-          ? '{thread.dir}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'
-          : '{scope.dir}/{yyyy}/{MM}/{dd}/messages.ttl#{key}',
+          : '{thread.dir}/{yyyy}/{MM}/{dd}/messages.ttl#{key}',
         {
           key: resourceKey(key, 'msg'),
           row,
@@ -59,14 +57,11 @@ export const messageResource = podTable(
       )
     )),
 
-    // Canonical product owner scope. The object can be a Chat, Task, Thread, or future command surface.
-    scope: uri('scope').predicate(UDFS.inScope),
-
     // Solid Chat compatibility relation. In RDF this is an inverse link: <chat> wf:message <message>.
     chat: uri('chat').predicate(WF.message).inverse().link(chatResource),
 
-    // Optional Thread relation. In RDF this is an inverse Solid Chat/SIOC link: <thread> sioc:has_member <message>.
-    thread: uri('thread').predicate(SIOC.has_member).inverse().link(threadResource),
+    // Timeline relation. In RDF this is an inverse Solid Chat/SIOC link: <thread> sioc:has_member <message>.
+    thread: uri('thread').predicate(SIOC.has_member).inverse().notNull().link(threadResource),
 
     // maker is the entity URI of the message author:
     // - User: their WebID (https://user.pod/profile/card#me)

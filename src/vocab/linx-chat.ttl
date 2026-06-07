@@ -8,7 +8,16 @@
 
 <> a owl:Ontology ;
   rdfs:label "LinX Chat/Thread Vocabulary (Wave A CP0)" ;
-  rdfs:comment "Company-level terms (udfs:) used by chat/thread contracts. Chat is a thin channel; behavioral differences are expressed via Message richContent blocks." .
+  rdfs:comment "Company-level terms (udfs:) used by chat/thread contracts. Chat is a thin channel; behavioral differences are expressed via Message richContent blocks. Threads point at their Chat or Task container with sioc:has_parent." .
+
+# LinX Chat resources are written as both mee:LongChat and sioc:Container so
+# sioc:Thread can use sioc:has_parent without a project-specific owner relation.
+mee:LongChat rdfs:subClassOf sioc:Container .
+
+sioc:has_parent a rdf:Property ;
+  rdfs:domain sioc:Thread ;
+  rdfs:range sioc:Container ;
+  rdfs:comment "Canonical parent container relation from a Thread to a Chat, Task, or future command surface container." .
 
 # --------------------------------------------
 # Predicates (company namespace)
@@ -25,11 +34,6 @@ udfs:workspace a rdf:Property ;
   rdfs:domain sioc:Thread ;
   rdfs:range rdfs:Resource ;
   rdfs:comment "Points at the runnable workspace URI for the thread." .
-
-udfs:inScope a rdf:Property ;
-  rdfs:domain rdfs:Resource ;
-  rdfs:range rdfs:Resource ;
-  rdfs:comment "Neutral LinX ownership relation from a Thread or Message to its command surface, such as a Chat or Task. Chat-scoped resources should also keep Solid Chat compatibility predicates such as sioc:has_parent or wf:message." .
 
 # Policy inheritance context (reserved; resolved via workspace root in CP0)
 udfs:policyRef a rdf:Property ;

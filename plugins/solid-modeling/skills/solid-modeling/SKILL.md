@@ -138,7 +138,7 @@ Use full URI relation fields:
 message.chat
 message.thread
 message.replyTo
-thread.chat
+thread.parent
 run.thread
 run.task
 ```
@@ -148,7 +148,7 @@ Avoid persisted relation fields such as:
 ```ts
 message.chatId
 message.threadId
-thread.chatId
+thread.parentId
 ```
 
 unless they are intentionally opaque literal protocol fields, not RDF links.
@@ -165,6 +165,15 @@ threadRepository.listByChatId(db, { chatId })
 These helpers should derive canonical Pod IRIs or base-relative ids internally.
 Do not force UI/CLI callers to manually construct Pod IRIs in every query.
 
+When an application needs to group, filter, or address records through a linked
+relation, push that need into the owning `models` repository/helper first. For
+example, app code should call a `threadRepository.targetForChat(...)` or
+`threadRepository.chatId(row)` style API instead of parsing
+`thread.parent` strings locally. If the same relation-target operation appears
+across multiple resources, then promote it down into `drizzle-solid` as a
+generic ORM helper. Do not add resource-specific `extractXFromY` parsing
+helpers in product shells.
+
 ## Chat, Task, Thread, Message, Run, Step
 
 Use these concepts consistently across products:
@@ -173,11 +182,10 @@ Use these concepts consistently across products:
   user is talking with.
 - `Task`: task-style command surface, parallel to Chat. It describes recurring,
   triggered, or one-off task intent.
-- `Thread`: implicit concrete timeline/place under exactly one command surface:
-  Chat for conversation timelines, or Task for task execution timelines.
-- `Message`: human/runtime communication item in a command scope. It usually
-  belongs to a Chat, but task/runtime messages may belong to a Task or Thread
-  scope without inventing a Chat.
+- `Thread`: implicit concrete timeline/place under exactly one parent
+  container. Chat and Task are both `sioc:Container`.
+- `Message`: human/runtime communication item in a Thread. Chat messages also
+  keep the Chat relation for Solid Chat compatibility.
 - `Run`: one concrete execution attempt by an Agent Runtime.
 - `RunStep`: append-only execution facts for a Run.
 
@@ -191,17 +199,17 @@ Align with graph semantics:
 
 | Concept | Preferred RDF direction | Typical predicate |
 |---|---|---|
-| resource belongs to command scope | `resource -> scope` | `udfs:inScope` |
 | chat contains message | `chat -> message` | `wf:message` / project vocabulary |
-| chat owns thread | `thread -> chat` | `sioc:has_parent` for compatibility |
+| thread parent container | `thread -> chat-or-task` | `sioc:has_parent` |
 | thread contains message | `thread -> message` | `sioc:has_member` or equivalent |
 | reply points to original | `replyMessage -> originalMessage` | `sioc:has_reply` / project predicate |
 | author/maker | `message -> maker` | `foaf:maker` |
 
-Use `udfs:inScope` for LinX product semantics when a Thread or Message can
-belong to either Chat or Task. Preserve Solid Chat compatibility by also writing
-`sioc:has_parent` for Chat-scoped Threads and `wf:message` for Chat-scoped
-Messages. Do not stretch Solid Chat predicates to mean Task ownership.
+Use `sioc:has_parent` as the canonical Thread parent relation. Chat and Task
+resources must be modeled as `sioc:Container`, so Thread does not need parallel
+`chat`, `task`, or custom `scope` ownership fields. Preserve Solid Chat
+compatibility with `wf:message` for Chat-contained Messages and
+`sioc:has_member` for Thread-contained Messages.
 
 When inverse predicates are supported, use them for read/write symmetry. If the
 ORM cannot safely express the inverse write, put the relation writer in the

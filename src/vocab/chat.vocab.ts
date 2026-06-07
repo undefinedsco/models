@@ -1,7 +1,9 @@
-import { DCTerms, SCHEMA, UDFS, WF } from '../namespaces'
+import { DCTerms, RDF, SCHEMA, UDFS, WF } from '../namespaces'
 
 /** Chat channel vocab (thin place/container). */
 export const ChatBaseVocab = {
+  rdfType: RDF.type,
+
   // Display
   title: DCTerms.title,
   description: DCTerms.description,

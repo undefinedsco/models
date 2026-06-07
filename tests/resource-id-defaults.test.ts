@@ -31,22 +31,12 @@ describe('command resource id defaults', () => {
     expect(taskResource.buildId({ id: 'task_1' })).toBe('index.ttl#task_1')
     expect(threadResource.buildId({
       id: 'thread_1',
-      chat: 'https://pod.example/.data/chat/secretary/index.ttl#this',
+      parent: 'https://pod.example/.data/chat/secretary/index.ttl#this',
     })).toBe('chat/secretary/index.ttl#thread_1')
     expect(threadResource.buildId({
-      id: 'thread_scope_chat',
-      scope: 'https://pod.example/.data/chat/secretary/index.ttl#this',
-      chat: 'https://pod.example/.data/chat/secretary/index.ttl#this',
-    })).toBe('chat/secretary/index.ttl#thread_scope_chat')
-    expect(threadResource.buildId({
       id: 'worker_thread_1',
-      task: 'https://pod.example/.data/task/index.ttl#task_1',
+      parent: 'https://pod.example/.data/task/index.ttl#task_1',
     })).toBe('task/task_1/index.ttl#worker_thread_1')
-    expect(threadResource.buildId({
-      id: 'worker_thread_scope',
-      scope: 'https://pod.example/.data/task/index.ttl#task_1',
-      task: 'https://pod.example/.data/task/index.ttl#task_1',
-    })).toBe('task/task_1/index.ttl#worker_thread_scope')
     expect(messageResource.buildId({
       id: 'msg_1',
       chat: 'https://pod.example/.data/chat/default/index.ttl#this',
@@ -55,7 +45,7 @@ describe('command resource id defaults', () => {
     })).toBe('chat/default/2026/05/18/messages.ttl#msg_1')
     expect(messageResource.buildId({
       id: 'task_msg_1',
-      scope: 'https://pod.example/.data/task/index.ttl#task_1',
+      thread: 'https://pod.example/.data/task/task_1/index.ttl#worker_thread_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('task/task_1/2026/05/18/messages.ttl#task_msg_1')
     expect(runResource.buildId({
@@ -181,18 +171,12 @@ describe('command resource id defaults', () => {
     })).toBe('chat/default/2026/05/18/messages.ttl#msg_thread')
   })
 
-  it('derives task-runtime message storage from thread or scope when no Chat exists', () => {
+  it('derives task-runtime message storage from thread when no Chat exists', () => {
     expect(messageResource.buildId({
       id: 'msg_thread_task',
       thread: 'https://pod.example/.data/task/task_1/index.ttl#worker_thread_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('task/task_1/2026/05/18/messages.ttl#msg_thread_task')
-
-    expect(messageResource.buildId({
-      id: 'msg_scope_task',
-      scope: 'https://pod.example/.data/task/index.ttl#task_1',
-      createdAt: new Date('2026-05-18T01:02:03.000Z'),
-    })).toBe('task/task_1/2026/05/18/messages.ttl#msg_scope_task')
   })
 
   it('does not export command-surface path helpers', () => {
