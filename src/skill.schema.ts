@@ -1,6 +1,8 @@
 import { boolean, id, object, podTable, string, timestamp, uri } from '@undefineds.co/drizzle-solid'
 import { agentResource } from './agent.schema'
 import { DCTerms, UDFS } from './namespaces'
+import { resourceKey } from './resource-id-defaults'
+import { agentKeyFromResourceRef } from './resource-identity'
 
 /**
  * Skill binding resource.
@@ -11,7 +13,10 @@ import { DCTerms, UDFS } from './namespaces'
 export const skillResource = podTable(
   'skill',
   {
-    id: id('id').default('{agent.key}/skills/{key}/'),
+    id: id('id').default((key: string | undefined, row?: Record<string, unknown>) => {
+      const agentRef = typeof row?.agent === 'string' ? row.agent : ''
+      return `${agentKeyFromResourceRef(agentRef)}/skills/${resourceKey(key, 'skill')}/`
+    }),
 
     agent: uri('agent').predicate(UDFS.agent).notNull().link(agentResource),
     root: uri('root').predicate(UDFS.root),
@@ -28,8 +33,8 @@ export const skillResource = podTable(
     updatedAt: timestamp('updatedAt').predicate(DCTerms.modified).notNull().defaultNow(),
   },
   {
-    base: '/agents/',
-    sparqlEndpoint: '/agents/-/sparql',
+    base: '/.data/agents/',
+    sparqlEndpoint: '/.data/agents/-/sparql',
     type: UDFS.Skill,
     namespace: UDFS,
   },

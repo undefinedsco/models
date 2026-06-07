@@ -86,6 +86,19 @@ export {
 } from './resource-refs'
 
 export {
+  agentHomeDirFromResourceId,
+  agentHomePathFromResourceId,
+  agentKeyFromResourceRef,
+  agentKeyFromResourceId,
+  agentResourceId,
+  asBaseRelativeResourceId,
+  asResourceIri,
+  requireRowResourceId,
+  type BaseRelativeResourceId,
+  type ResourceIri,
+} from './resource-identity'
+
+export {
   ThreadStatus,
   threadResource,
   threadTable,

@@ -1,8 +1,9 @@
 import { boolean, object, podTable, string, integer, timestamp, text, real, uri, id } from "@undefineds.co/drizzle-solid";
 import { UDFS, DCTerms, FOAF, VCARD } from "./namespaces";
+import { agentResourceId } from "./resource-identity";
 
 export const agentResource = podTable("agent", {
-  id: id("id").default("{key}/"),
+  id: id("id").default((key: string | undefined) => agentResourceId(key)),
   name: string("name").predicate(FOAF.name).notNull(),
   description: text("description").predicate(DCTerms.description),
   avatarUrl: uri("avatarUrl").predicate(VCARD.hasPhoto),
@@ -34,8 +35,8 @@ export const agentResource = podTable("agent", {
   updatedAt: timestamp("updatedAt").predicate(DCTerms.modified).notNull().defaultNow(),
   deletedAt: timestamp("deletedAt").predicate(UDFS.deletedAt),
 }, {
-  base: '/agents/',
-  sparqlEndpoint: '/agents/-/sparql',
+  base: '/.data/agents/',
+  sparqlEndpoint: '/.data/agents/-/sparql',
   type: FOAF.Agent,
   namespace: UDFS,
 });

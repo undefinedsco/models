@@ -35,7 +35,8 @@ Agent home container. LinX no longer supports executable Agents without an
 Agent filesystem/home.
 
 ```text
-/agents/{agentId}/
+/.data/agents/{agentId}/
+  index.ttl#this
   .meta
   profile/card
   config/
@@ -58,9 +59,10 @@ Agent home owns:
 - durable memory/index state
 - effective runtime snapshots
 
-The Agent resource identity is the context-root container itself, for example
-`/agents/__secretary__/`. A Solid `.meta` document may describe that container,
-but `.meta` is not the Agent identity.
+The Agent resource identity is `index.ttl#this` inside the context-root
+container, for example `/.data/agents/__secretary__/index.ttl#this`. A Solid
+`.meta` document may describe that container, but `.meta` is not the Agent
+identity.
 
 ### Contact / Person / Agent
 
@@ -87,8 +89,9 @@ Contact
   links to Agent context-root URI
 
 Agent
-  root: /agents/__secretary__/
-  meta: /agents/__secretary__/.meta
+  id: /.data/agents/__secretary__/index.ttl#this
+  root: /.data/agents/__secretary__/
+  meta: /.data/agents/__secretary__/.meta
   owns runtime capability/config
 ```
 
@@ -293,7 +296,7 @@ udfs:effectiveConfigSnapshot
 Actual Pod resource subjects should be user-owned Pod URLs, for example:
 
 ```text
-</agents/__secretary__/>
+</.data/agents/__secretary__/index.ttl#this>
 </.data/repositories/linx.ttl>
 </.data/workspaces/linx-feature-login/>
 </.data/sessions/2026/05/14/sess-123.ttl>
@@ -307,12 +310,12 @@ resource instance. Do not confuse the two.
 ```ttl
 <#sess-123>
   a udfs:Session ;
-  udfs:agent </agents/__secretary__/> ;
+  udfs:agent </.data/agents/__secretary__/index.ttl#this> ;
   udfs:inThread </.data/chat/chat-1/index.ttl#thread-1> ;
   udfs:workspace </.data/workspaces/linx-feature-login/> ;
   udfs:workspaceSnapshot </.data/workspaces/linx-feature-login/snapshots/2026-05-13T120000Z.ttl> ;
   udfs:effectiveConfigHash "sha256:..." ;
-  udfs:effectiveConfigSnapshot </agents/__secretary__/snapshots/2026-05-13T120000Z.ttl> .
+  udfs:effectiveConfigSnapshot </.data/agents/__secretary__/snapshots/2026-05-13T120000Z.ttl> .
 ```
 
 This keeps Session light and replayable: it references the Agent and the

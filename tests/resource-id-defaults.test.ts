@@ -2,6 +2,13 @@ import { describe, expect, it } from 'vitest'
 import * as Models from '../src'
 import {
   agentResource,
+  agentHomeDirFromResourceId,
+  agentHomePathFromResourceId,
+  agentKeyFromResourceId,
+  agentKeyFromResourceRef,
+  agentResourceId,
+  asBaseRelativeResourceId,
+  asResourceIri,
   aiModelResource,
   aiProviderResource,
   approvalResource,
@@ -121,14 +128,20 @@ describe('command resource id defaults', () => {
     })).toBe('openrouter.ttl#openai/gpt-4o-mini')
     expect(agentResource.buildId({
       id: '__secretary__',
-    })).toBe('__secretary__/')
+    })).toBe('__secretary__/index.ttl#this')
+    expect(agentResourceId('__secretary__')).toBe('__secretary__/index.ttl#this')
+    expect(agentResourceId('__secretary__/index.ttl#this')).toBe('__secretary__/index.ttl#this')
+    expect(agentKeyFromResourceId('__secretary__/index.ttl#this')).toBe('__secretary__')
+    expect(agentKeyFromResourceRef('https://pod.example/.data/agents/__secretary__/index.ttl#this')).toBe('__secretary__')
+    expect(agentHomeDirFromResourceId('__secretary__/index.ttl#this')).toBe('__secretary__/')
+    expect(agentHomePathFromResourceId('__secretary__/index.ttl#this')).toBe('/.data/agents/__secretary__/')
     expect(skillResource.buildId({
       id: 'symphony',
-      agent: 'https://pod.example/agents/__secretary__/',
+      agent: 'https://pod.example/.data/agents/__secretary__/index.ttl#this',
     })).toBe('__secretary__/skills/symphony/')
     expect(skillResource.buildId({
       id: 'symphony',
-      agent: '__secretary__',
+      agent: '__secretary__/index.ttl#this',
     })).toBe('__secretary__/skills/symphony/')
     expect(aiProviderResource.buildId({ id: 'openai' })).toBe('openai.ttl')
     expect(credentialResource.buildId({ id: 'openai-default' })).toBe('credentials.ttl#openai-default')
@@ -220,11 +233,26 @@ describe('command resource id defaults', () => {
     expect(aiModelResource.resolveUri('openai.ttl#gpt-5.5'))
       .toBe('/settings/providers/openai.ttl#gpt-5.5')
     expect(aiModelResource.getSubjectTemplate()).toBeUndefined()
-    expect(agentResource.resolveUri('__secretary__/'))
-      .toBe('/agents/__secretary__/')
+    expect(agentResource.resolveUri('__secretary__/index.ttl#this'))
+      .toBe('/.data/agents/__secretary__/index.ttl#this')
     expect(agentResource.getSubjectTemplate()).toBeUndefined()
     expect(skillResource.resolveUri('__secretary__/skills/symphony/'))
-      .toBe('/agents/__secretary__/skills/symphony/')
+      .toBe('/.data/agents/__secretary__/skills/symphony/')
     expect(skillResource.getSubjectTemplate()).toBeUndefined()
+  })
+
+  it('asserts resource ids and IRIs without parsing app-owned paths', () => {
+    expect(asBaseRelativeResourceId('chat/default/index.ttl#this')).toBe('chat/default/index.ttl#this')
+    expect(asResourceIri('https://pod.example/.data/chat/default/index.ttl#this'))
+      .toBe('https://pod.example/.data/chat/default/index.ttl#this')
+
+    expect(() => asBaseRelativeResourceId('https://pod.example/.data/chat/default/index.ttl#this'))
+      .toThrow('Resource id must be a base-relative resource id.')
+    expect(() => asResourceIri('chat/default/index.ttl#this'))
+      .toThrow('Resource IRI must be a full resource IRI.')
+    expect(() => agentResourceId('https://pod.example/.data/agents/__secretary__/index.ttl#this'))
+      .toThrow('Agent key must be a local key')
+    expect(() => agentKeyFromResourceId('__secretary__/'))
+      .toThrow('Agent resource id must use {agentKey}/index.ttl#this.')
   })
 })

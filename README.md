@@ -163,13 +163,14 @@ Contact
   entity: Agent context-root URI
 
 Agent
-  root: /agents/__secretary__/
-  meta: /agents/__secretary__/.meta
+  id: /.data/agents/__secretary__/index.ttl#this
+  root: /.data/agents/__secretary__/
+  meta: /.data/agents/__secretary__/.meta
 ```
 
 External people, services, or bots may appear as Contacts without being LinX
 Agents. If something is modeled as an executable LinX Agent, the Agent resource
-identity is the context-root container itself.
+identity is `index.ttl#this` inside the context-root container.
 
 ## Resource Ownership
 
@@ -203,7 +204,7 @@ Representative paths:
 /.data/chat/{chatId}/index.ttl#this
 /.data/chat/{chatId}/index.ttl#{threadId}
 /.data/chat/{chatId}/{yyyy}/{MM}/{dd}/messages.ttl#{messageId}
-/agents/{agentId}/
+/.data/agents/{agentId}/index.ttl#this
 /.data/sessions/{yyyy}/{MM}/{dd}/{sessionId}.ttl
 /settings/providers/{providerId}.ttl
 /settings/providers/{providerId}.ttl#{modelId}

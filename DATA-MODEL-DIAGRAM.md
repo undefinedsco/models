@@ -20,7 +20,8 @@ This diagram summarizes the current shared model contract in
 └──────┬───────┘
        │ owns defaults/capability
        ▼
-/agents/{agentKey}/
+/.data/agents/{agentKey}/
+  index.ttl#this
   .meta
   system/
   user/
@@ -35,9 +36,9 @@ This diagram summarizes the current shared model contract in
 
 Contact is the visible address-book/chat projection. Agent is the executable
 runtime context root. A Contact can point to an Agent, but it is not the Agent
-itself. The Agent resource identity is the container root, for example
-`/agents/__secretary__/`; `.meta` is only the storage document describing that
-container.
+itself. The Agent resource identity is the `index.ttl#this` resource inside the
+Agent home, for example `/.data/agents/__secretary__/index.ttl#this`; `.meta`
+is optional container metadata.
 
 ## Chat Graph
 

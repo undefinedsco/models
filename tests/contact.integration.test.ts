@@ -217,7 +217,7 @@ describe('Solid Pod Contact CRUD', () => {
     expect(agentRecord.instructions).toContain('helpful assistant')
 
     // 2. CREATE CONTACT pointing to agent
-    const agentEntityUri = agentSubject || `${env.webId!.replace('/profile/card#me', '')}/agents/${agentId}/`
+    const agentEntityUri = agentSubject || `${env.webId!.replace('/profile/card#me', '')}/.data/agents/${agentId}/index.ttl#this`
 
     const [contactCreated] = await database
       .insert(contactTable)

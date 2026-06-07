@@ -70,7 +70,7 @@ export const messageResource = podTable(
 
     // maker is the entity URI of the message author:
     // - User: their WebID (https://user.pod/profile/card#me)
-    // - AI: Agent URI (/agents/{id}/)
+    // - AI: Agent URI (/.data/agents/{id}/index.ttl#this)
     // - External: Contact URI (/.data/contacts/{id}.ttl#this)
     // No reference() constraint - accepts any valid URI.
     maker: uri('maker').predicate(FOAF.maker),
