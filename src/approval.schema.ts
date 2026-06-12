@@ -32,6 +32,8 @@ export const approvalResource = podTable(
     action: uri('action').predicate(ODRL.action).notNull(),
     risk: string('risk').predicate(UDFS.risk).notNull(),
     status: string('status').predicate(UDFS.status).notNull().default('pending'),
+    leaseOwner: string('leaseOwner').predicate(UDFS.leaseOwner),
+    leaseExpiresAt: timestamp('leaseExpiresAt').predicate(UDFS.leaseExpiresAt),
 
     // Decision identity (WebID semantics)
     assignedTo: uri('assignedTo').predicate(UDFS.assignedTo),

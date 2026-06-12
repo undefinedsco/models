@@ -13,6 +13,7 @@ import {
   evidenceResource,
   grantResource,
   inboxNotificationResource,
+  inputRequestResource,
   issueResource,
   messageResource,
   reportResource,
@@ -146,6 +147,10 @@ describe('command resource id defaults', () => {
     expect(contactResource.buildId({ id: 'person_1' })).toBe('person_1.ttl')
     expect(grantResource.buildId({ id: 'grant_1' })).toBe('grant_1.ttl')
     expect(inboxNotificationResource.buildId({ id: 'notification_1' })).toBe('notification_1.ttl')
+    expect(inputRequestResource.buildId({
+      id: 'input_1',
+      createdAt: new Date('2026-05-18T01:02:03.000Z'),
+    })).toBe('2026/05/18.ttl#input_1')
     expect(issueResource.buildId({ id: 'issue_1' })).toBe('issue_1.ttl')
     expect(sessionResource.buildId({
       id: 'session_1',

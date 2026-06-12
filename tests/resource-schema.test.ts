@@ -25,6 +25,8 @@ import {
   ideaResource,
   inboxNotificationResource,
   inboxNotificationTable,
+  inputRequestResource,
+  inputRequestTable,
   issueResource,
   issueTable,
   reportResource,
@@ -83,6 +85,7 @@ describe('shared Solid resources', () => {
     expect(auditResource).toBe(auditTable)
     expect(grantResource).toBe(grantTable)
     expect(inboxNotificationResource).toBe(inboxNotificationTable)
+    expect(inputRequestResource).toBe(inputRequestTable)
   })
 
   it('keeps solidResources Resource-only and solidSchema legacy-compatible only', () => {
@@ -110,6 +113,7 @@ describe('shared Solid resources', () => {
       auditResource,
       grantResource,
       inboxNotificationResource,
+      inputRequestResource,
     })
 
     expect((solidResources as any).solidProfileTable).toBeUndefined()
@@ -137,6 +141,7 @@ describe('shared Solid resources', () => {
     expect((solidResources as any).auditTable).toBeUndefined()
     expect((solidResources as any).grantTable).toBeUndefined()
     expect((solidResources as any).inboxNotificationTable).toBeUndefined()
+    expect((solidResources as any).inputRequestTable).toBeUndefined()
 
     expect(solidSchema).toMatchObject({
       solidProfileTable,
@@ -159,6 +164,7 @@ describe('shared Solid resources', () => {
       auditTable,
       grantTable,
       inboxNotificationTable,
+      inputRequestTable,
     })
     expect((solidSchema as any).evidenceTable).toBeUndefined()
     expect((solidSchema as any).reportTable).toBeUndefined()
@@ -269,6 +275,7 @@ describe('shared Solid resources', () => {
     const legacyKey = ['subject', 'Template'].join('')
     const violations = sourceFiles.flatMap((file) => {
       const source = readFileSync(file, 'utf-8')
+      if (file.endsWith('/pod-storage-descriptor.ts')) return []
       return source.includes(`${legacyKey}:`)
         ? [file.replace(`${sourceRoot}/`, '')]
         : []

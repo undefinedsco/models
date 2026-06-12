@@ -1,6 +1,6 @@
 {
   "name": "@undefineds.co/models",
-  "version": "0.2.37",
+  "version": "0.2.40",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",

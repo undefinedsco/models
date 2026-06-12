@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
+  approvalDescriptor,
   credentialDescriptor,
   createPodModelDescriptorRegistry,
   createPodSchema,
   createPodStorage,
+  inputRequestDescriptor,
+  officialPodModelDescriptors,
   UDFS,
 } from '../src'
 
@@ -18,7 +21,9 @@ describe('pod storage descriptors', () => {
 
   it('lists local descriptors without natural-language matching', () => {
     const podSchema = createPodSchema(createPodModelDescriptorRegistry())
-    expect(podSchema.list().map((descriptor) => descriptor.uri)).toEqual([UDFS.Credential])
+    expect(podSchema.list().map((descriptor) => descriptor.uri)).toEqual(
+      officialPodModelDescriptors.map((descriptor) => descriptor.uri),
+    )
     expect(podSchema.describe({ uri: UDFS.Credential })?.examples[0]).toEqual({
       request: '保存 Cloudflare tunnel token',
       match: {
@@ -26,6 +31,41 @@ describe('pod storage descriptors', () => {
         providerId: 'cloudflare',
         secretType: 'tunnel-token',
       },
+    })
+  })
+
+
+  it('describes approval requests as claimable control resources', () => {
+    expect(approvalDescriptor.uri).toBe(UDFS.ApprovalRequest)
+    expect(approvalDescriptor.storage.base).toBe('/.data/approvals/')
+    expect(approvalDescriptor.storage.resourceIdPattern).toBe('{id}')
+    expect(approvalDescriptor.fields.status.predicate).toBe(UDFS.status)
+    expect(approvalDescriptor.fields.leaseOwner.predicate).toBe(UDFS.leaseOwner)
+    expect(approvalDescriptor.fields.leaseExpiresAt.predicate).toBe(UDFS.leaseExpiresAt)
+    expect(approvalDescriptor.writableFields).toContain('leaseOwner')
+    expect(approvalDescriptor.writableFields).toContain('leaseExpiresAt')
+  })
+
+  it('describes input requests separately from approval requests', () => {
+    expect(inputRequestDescriptor.uri).toBe(UDFS.InputRequest)
+    expect(inputRequestDescriptor.storage.base).toBe('/.data/input-requests/')
+    expect(inputRequestDescriptor.fields.prompt.required).toBe(true)
+    expect(inputRequestDescriptor.fields.response.predicate).toBe(UDFS.response)
+    expect(inputRequestDescriptor.fields.leaseOwner.predicate).toBe(UDFS.leaseOwner)
+
+    const podSchema = createPodSchema(createPodModelDescriptorRegistry())
+    const descriptor = podSchema.describe({ uri: UDFS.InputRequest })
+    expect(descriptor?.resourceKind).toBe('input-request')
+  })
+
+  it('keeps approval descriptor storage in exact-id mode', () => {
+    expect(approvalDescriptor.storage).toEqual({
+      base: '/.data/approvals/',
+      resourceIdPattern: '{id}',
+    })
+    expect(inputRequestDescriptor.storage).toEqual({
+      base: '/.data/input-requests/',
+      resourceIdPattern: '{id}',
     })
   })
 

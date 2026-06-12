@@ -9,6 +9,8 @@ import {
   evidenceResource,
   grantResource,
   ideaResource,
+  inboxNotificationResource,
+  inputRequestResource,
   issueResource,
   reportResource,
   SCHEMA,
@@ -138,6 +140,20 @@ describe('issue schema', () => {
     expect(GrantReadVocab.summary).toEqual([DCTerms.abstract, UDFS.summary])
   })
 
+  it('keeps Solid inbox notifications as thin ActivityStreams envelopes', () => {
+    const inboxColumns = columnsOf(inboxNotificationResource)
+
+    expect(inboxColumns.rdfType).toBeDefined()
+    expect(inboxColumns.actor).toBeDefined()
+    expect(inboxColumns.object).toBeDefined()
+    expect(inboxColumns.createdAt).toBeDefined()
+    expect(inboxColumns.status).toBeUndefined()
+    expect(inboxColumns.leaseOwner).toBeUndefined()
+    expect(inboxColumns.leaseExpiresAt).toBeUndefined()
+    expect(inboxColumns.resolvedAt).toBeUndefined()
+    expect(inboxColumns.assignedTo).toBeUndefined()
+  })
+
   it('keeps approval and audit process links explicit instead of overloading ODRL target', () => {
     const approvalColumns = columnsOf(approvalResource)
     const auditColumns = columnsOf(auditResource)
@@ -146,9 +162,33 @@ describe('issue schema', () => {
     expect(approvalColumns.action).toBeDefined()
     expect(approvalColumns.chat).toBeDefined()
     expect(approvalColumns.thread).toBeDefined()
+    expect(approvalColumns.leaseOwner).toBeDefined()
+    expect(approvalColumns.leaseExpiresAt).toBeDefined()
+    expect(predicateOf(approvalResource, 'leaseOwner')).toBe(UDFS.leaseOwner)
+    expect(predicateOf(approvalResource, 'leaseExpiresAt')).toBe(UDFS.leaseExpiresAt)
 
     expect(auditColumns.entry).toBeDefined()
     expect(auditColumns.chat).toBeDefined()
     expect(auditColumns.thread).toBeDefined()
+  })
+
+  it('separates authority approvals from information input requests while sharing claim fields', () => {
+    const approvalColumns = columnsOf(approvalResource)
+    const inputColumns = columnsOf(inputRequestResource)
+
+    expect(approvalColumns.target).toBeDefined()
+    expect(approvalColumns.action).toBeDefined()
+    expect(approvalColumns.risk).toBeDefined()
+    expect(approvalColumns.approvalOptions).toBeDefined()
+
+    expect(inputColumns.prompt).toBeDefined()
+    expect(inputColumns.response).toBeDefined()
+    expect(inputColumns.inputOptions).toBeDefined()
+    expect(inputColumns.target).toBeUndefined()
+    expect(inputColumns.action).toBeUndefined()
+    expect(inputColumns.approvalOptions).toBeUndefined()
+    expect(predicateOf(inputRequestResource, 'leaseOwner')).toBe(UDFS.leaseOwner)
+    expect(predicateOf(inputRequestResource, 'leaseExpiresAt')).toBe(UDFS.leaseExpiresAt)
+    expect(predicateOf(inputRequestResource, 'response')).toBe(UDFS.response)
   })
 })

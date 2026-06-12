@@ -22,6 +22,7 @@ import { favoriteResource, favoriteTable } from './favorite/favorite.schema'
 import { grantResource, grantTable } from './grant.schema'
 import { ideaResource } from './idea.schema'
 import { inboxNotificationResource, inboxNotificationTable } from './inbox-notification.schema'
+import { inputRequestResource, inputRequestTable } from './input-request.schema'
 import { issueResource, issueTable } from './issue.schema'
 import { messageResource, messageTable } from './message.schema'
 import { solidProfileResource, solidProfileTable } from './profile.schema'
@@ -69,6 +70,7 @@ export const solidResources = {
   auditResource,
   grantResource,
   inboxNotificationResource,
+  inputRequestResource,
 }
 
 // Compatibility registry for existing drizzle-solid call sites that still import
@@ -104,4 +106,5 @@ export const solidSchema = {
   auditTable,
   grantTable,
   inboxNotificationTable,
+  inputRequestTable,
 }

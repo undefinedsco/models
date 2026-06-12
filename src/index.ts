@@ -346,6 +346,27 @@ export {
 } from './approval.schema'
 
 export {
+  claimApprovalRequest,
+  isApprovalStatusClaimable,
+  type ApprovalClaimDatabase,
+  type ApprovalClaimRequest,
+  type ApprovalClaimResult,
+  type ApprovalClaimStatus,
+} from './approval.repository'
+export {
+  claimControlRequest,
+  isControlRequestStatusClaimable,
+  type ClaimableControlRequestRow,
+  type ControlRequestClaimDatabase,
+  type ControlRequestClaimOptions,
+  type ControlRequestClaimResource,
+  type ControlRequestClaimResult,
+  type ControlRequestClaimRow,
+  type ControlRequestClaimStatus,
+  type ControlRequestClaimUpdate,
+} from './control-request.repository'
+
+export {
   auditResource,
   auditTable,
   extractAuditIdFromAuditRef,
@@ -378,8 +399,27 @@ export {
   type InboxNotificationUpdate,
 } from './inbox-notification.schema'
 
+export {
+  InputRequestStatus,
+  inputRequestResource,
+  inputRequestTable,
+  extractInputRequestIdFromInputRequestRef,
+  type InputRequestStatusType,
+  type InputRequestRow,
+  type InputRequestInsert,
+  type InputRequestUpdate,
+} from './input-request.schema'
+export {
+  claimInputRequest,
+  isInputRequestStatusClaimable,
+  type InputRequestClaimDatabase,
+  type InputRequestClaimRequest,
+  type InputRequestClaimResult,
+  type InputRequestClaimStatus,
+} from './input-request.repository'
+
 // Sidecar vocab + runtime contracts
-export { ApprovalVocab, AuditVocab, GrantVocab, GrantReadVocab, LegacyGrantVocab, InboxNotificationVocab } from './vocab/sidecar.vocab'
+export { ApprovalVocab, AuditVocab, GrantVocab, GrantReadVocab, InputRequestVocab, LegacyGrantVocab, InboxNotificationVocab } from './vocab/sidecar.vocab'
 export * from './sidecar/sidecar-events'
 export * from './sidecar/persistence-mapping'
 
@@ -487,10 +527,12 @@ export {
 } from './comunica-patches'
 
 export {
+  approvalDescriptor,
   credentialDescriptor,
   createPodModelDescriptorRegistry,
   createPodSchema,
   createPodStorage,
+  inputRequestDescriptor,
   officialPodModelDescriptors,
   podSchema,
   type PodModelDescriptor,

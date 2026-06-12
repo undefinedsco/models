@@ -74,6 +74,7 @@ export const SCHEMA = createNamespace('schema', 'http://schema.org/', {
 })
 
 export const SIOC = createNamespace('sioc', 'http://rdfs.org/sioc/ns#', {
+  Container: 'Container',
   Post: 'Post',
   Thread: 'Thread',
   Forum: 'Forum',
@@ -116,6 +117,7 @@ export const AS = createNamespace('as', 'https://www.w3.org/ns/activitystreams#'
 export const UDFS = createNamespace('udfs', 'https://undefineds.co/ns#', {
   // Types
   ApprovalRequest: 'ApprovalRequest',
+  InputRequest: 'InputRequest',
   AuditEntry: 'AuditEntry',
   AutonomyGrant: 'AutonomyGrant',
   Idea: 'Idea',
@@ -243,6 +245,7 @@ export const UDFS = createNamespace('udfs', 'https://undefineds.co/ns#', {
   ruleKind: 'ruleKind',
   instruction: 'instruction',
   input: 'input',
+  inputRequest: 'inputRequest',
   trigger: 'trigger',
   condition: 'condition',
   actions: 'actions',
@@ -289,6 +292,11 @@ export const UDFS = createNamespace('udfs', 'https://undefineds.co/ns#', {
   related: 'related',
   approval: 'approval',
   approvalOptions: 'approvalOptions',
+  inputOptions: 'inputOptions',
+  requestKind: 'requestKind',
+  requester: 'requester',
+  response: 'response',
+  answeredBy: 'answeredBy',
   effect: 'effect',
   expiresAt: 'expiresAt',
   riskCeiling: 'riskCeiling',
