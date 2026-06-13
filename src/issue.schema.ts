@@ -7,11 +7,14 @@ export type IssueStatus = 'open' | 'triaging' | 'in_progress' | 'blocked' | 'res
 export type IssuePriority = 'low' | 'medium' | 'high' | 'urgent'
 
 /**
- * User-facing work item.
+ * File-primary user-facing work item.
  *
  * Issue is the product entry for a requirement, bug, support item,
- * investigation, or feature request. Executable slices live in Task.
- * The visible process remains Chat/Thread/Message through chat/thread links.
+ * investigation, or feature request. The markdown document owns the
+ * human-readable problem statement, decision narrative, and acceptance
+ * explanation. This resource stores queryable lifecycle and routing metadata.
+ * Executable slices live in Task. The visible process remains
+ * Chat/Thread/Message through chat/thread links.
  */
 export const issueResource = podTable(
   'issue',
@@ -19,6 +22,7 @@ export const issueResource = podTable(
     id: id('id').default('{key}.ttl'),
 
     title: string('title').predicate(DCTerms.title).notNull(),
+    document: uri('document').predicate(DCTerms.source),
     description: text('description').predicate(DCTerms.description),
     status: string('status').predicate(UDFS.status).notNull().default('open'),
     priority: string('priority').predicate(UDFS.priority).default('medium'),

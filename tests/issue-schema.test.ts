@@ -39,6 +39,7 @@ describe('issue schema', () => {
     const ideaColumns = columnsOf(ideaResource)
 
     expect(ideaColumns.summary).toBeDefined()
+    expect(ideaColumns.document).toBeDefined()
     expect(ideaColumns.input).toBeDefined()
     expect(ideaColumns.status).toBeDefined()
     expect(ideaColumns.commitment).toBeDefined()
@@ -58,6 +59,7 @@ describe('issue schema', () => {
     const issueColumns = columnsOf(issueResource)
 
     expect(issueColumns.title).toBeDefined()
+    expect(issueColumns.document).toBeDefined()
     expect(issueColumns.description).toBeDefined()
     expect(issueColumns.status).toBeDefined()
     expect(issueColumns.priority).toBeDefined()
@@ -103,9 +105,12 @@ describe('issue schema', () => {
 
   it('uses community vocabularies for common issue/evidence/report predicates', () => {
     expect(predicateOf(ideaResource, 'summary')).toBe(DCTerms.abstract)
+    expect(predicateOf(ideaResource, 'document')).toBe(DCTerms.source)
     expect(predicateOf(ideaResource, 'input')).toBe(DCTerms.description)
     expect(predicateOf(ideaResource, 'related')).toBe(DCTerms.relation)
     expect(predicateOf(ideaResource, 'sourceMessages')).toBe(DCTerms.source)
+
+    expect(predicateOf(issueResource, 'document')).toBe(DCTerms.source)
 
     expect(predicateOf(evidenceResource, 'about')).toBe(SCHEMA.about)
     expect(predicateOf(evidenceResource, 'summary')).toBe(DCTerms.abstract)

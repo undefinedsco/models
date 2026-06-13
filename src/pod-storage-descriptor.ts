@@ -532,11 +532,12 @@ export const ideaDescriptor: PodModelDescriptor = {
   namespace: UDFS.NAMESPACE,
   class: UDFS.Idea,
   resourceKind: 'idea',
-  description: 'Lightweight candidate extracted from conversation before it is promoted to committed work.',
+  description: 'File-primary candidate extracted from conversation before it is promoted to committed work. The document owns human-readable content; meta owns status and routing facts.',
   storage: exactIdStorage('/.data/ideas/'),
   fields: {
     id: idField,
     summary: { type: 'string', predicate: DCTerms.abstract, required: true, description: 'Short summary of the idea.' },
+    document: { type: 'uri', predicate: DCTerms.source, description: 'Pod file that owns the idea body.' },
     input: { type: 'text', predicate: DCTerms.description, description: 'Original or synthesized input text.' },
     status: { type: 'string', predicate: UDFS.status, description: 'Idea lifecycle status.' },
     commitment: { type: 'string', predicate: UDFS.commitment, description: 'Commitment level such as thought, direction, tentative_decision, or committed.' },
@@ -555,7 +556,7 @@ export const ideaDescriptor: PodModelDescriptor = {
   },
   uniqueBy: ['id'],
   writableFields: [
-    'summary', 'input', 'status', 'commitment', 'affectedArea', 'currentUnderstanding',
+    'summary', 'document', 'input', 'status', 'commitment', 'affectedArea', 'currentUnderstanding',
     'openQuestions', 'related', 'conflicts', 'nextStep', 'promotedTo', 'chat',
     'thread', 'sourceMessages', 'createdBy', 'metadata',
   ],
@@ -576,7 +577,7 @@ export const issueDescriptor: PodModelDescriptor = {
   namespace: UDFS.NAMESPACE,
   class: UDFS.Issue,
   resourceKind: 'issue',
-  description: 'User-facing work item for a requirement, bug, support item, investigation, or feature request.',
+  description: 'File-primary user-facing work item for a requirement, bug, support item, investigation, or feature request. The document owns human-readable content; meta owns status and routing facts.',
   storage: {
     base: '/.data/issues/',
     resourceIdPattern: '{id}.ttl',
@@ -584,7 +585,8 @@ export const issueDescriptor: PodModelDescriptor = {
   },
   fields: {
     id: idField,
-    title: { type: 'string', predicate: DCTerms.title, required: true, description: 'Human-facing issue title.' },
+    title: { type: 'string', predicate: DCTerms.title, required: true, description: 'Compact issue label for list/search surfaces; the file owns the full title/body.' },
+    document: { type: 'uri', predicate: DCTerms.source, description: 'Pod file that owns the issue body.' },
     description: { type: 'text', predicate: DCTerms.description, description: 'Issue description.' },
     status: { type: 'string', predicate: UDFS.status, description: 'Issue lifecycle status.' },
     priority: { type: 'string', predicate: UDFS.priority, description: 'Issue priority.' },
@@ -600,7 +602,7 @@ export const issueDescriptor: PodModelDescriptor = {
   },
   uniqueBy: ['id'],
   writableFields: [
-    'title', 'description', 'status', 'priority', 'labels', 'chat', 'thread',
+    'title', 'document', 'description', 'status', 'priority', 'labels', 'chat', 'thread',
     'parentIssue', 'tasks', 'createdBy', 'assignedTo', 'closedAt', 'deletedAt',
   ],
   mergePolicy: 'upsert',

@@ -7,10 +7,11 @@ export type IdeaStatus = 'captured' | 'exploring' | 'candidate' | 'promoted' | '
 export type IdeaCommitment = 'thought' | 'direction' | 'tentative_decision' | 'committed'
 
 /**
- * Lightweight candidate extracted from conversation.
+ * File-primary candidate extracted from conversation.
  *
- * Idea is the buffer before committed work. It can reference source Messages
- * and related records, but it is not an Issue or Task until promoted.
+ * Idea is the buffer before committed work. The markdown document owns the
+ * human-readable input, context, and open questions; this resource stores
+ * queryable lifecycle and routing metadata.
  */
 export const ideaResource = podTable(
   'idea',
@@ -18,6 +19,7 @@ export const ideaResource = podTable(
     id: id('id').default('{yyyy}/{MM}/{dd}.ttl#{key}'),
 
     summary: string('summary').predicate(DCTerms.abstract).notNull(),
+    document: uri('document').predicate(DCTerms.source),
     input: text('input').predicate(DCTerms.description),
     status: string('status').predicate(UDFS.status).notNull().default('captured'),
     commitment: string('commitment').predicate(UDFS.commitment).notNull().default('thought'),
