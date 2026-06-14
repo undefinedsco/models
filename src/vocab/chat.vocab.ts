@@ -8,6 +8,7 @@ export const ChatBaseVocab = {
   avatarUrl: SCHEMA.image,
 
   // Participants (protocol-aligned)
+  contact: UDFS.hasContact,
   participants: WF.participant,
   metadata: UDFS.metadata,
 

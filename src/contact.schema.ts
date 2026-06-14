@@ -1,5 +1,5 @@
 import { podTable, string, text, timestamp, uri, boolean, id } from '@undefineds.co/drizzle-solid'
-import { UDFS, DCTerms, VCARD, AS, FOAF, RDF } from './namespaces'
+import { UDFS, DCTerms, VCARD, AS, SCHEMA, RDF } from './namespaces'
 
 export const ContactType = {
   SOLID: 'solid',
@@ -62,10 +62,10 @@ export const contactResource = podTable(
     name: string('name').predicate(VCARD.fn).notNull(),
     avatarUrl: uri('avatarUrl').predicate(VCARD.hasPhoto),
 
-    // The actual entity this contact represents
-    entity: uri('entity').predicate(FOAF.primaryTopic).notNull(),
+    // The Person, Agent, Chat, or external resource this contact card is about.
+    about: uri('about').predicate(SCHEMA.about).notNull(),
 
-    // Semantic classifier for the represented entity.
+    // Semantic classifier for the represented resource.
     rdfType: uri('rdfType').predicate(RDF.type).notNull().default(ContactClass.PERSON),
 
     // Runtime/source hint for fetch/handler selection.

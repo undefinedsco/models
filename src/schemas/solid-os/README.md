@@ -69,6 +69,7 @@
 
 - 能被跨端查询、同步、审批、审计或恢复的事实，不应塞进 `metadata`。
 - `metadata` 只放 opaque 协议 id、本地 cache key、UI 状态和兼容迁移信息。
+- 外部/API 协议 id 默认按 API namespace 隔离到 `metadata.protocols.<apiNs>`，例如 Matrix 的 `roomId/eventId/txnId` 或 ChatKit 的 `chat_id/thread_id`；新写入路径不要把这些 id 平铺到 metadata 根上。
 - 外部系统影响 Pod 关系时，优先建成显式 URI relation；不要把关系伪装成 `xxId` 再放进 metadata。
 
 ### Contact

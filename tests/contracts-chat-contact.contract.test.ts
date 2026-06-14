@@ -84,10 +84,8 @@ describe('Wave A CP0 contracts: centralized vocabs', () => {
   })
 
   it('ThreadVocab exposes workspace context', () => {
-    expect(ThreadVocab.scope).toBe(UDFS.inScope)
+    expect(ThreadVocab.parent).toBe(SIOC.has_parent)
     expect(ThreadVocab.workspace).toBe(UDFS.workspace)
-    expect(ThreadVocab.task).toBe(UDFS.task)
-    expect(ThreadVocab.chat).toBe(SIOC.has_parent)
   })
 
   it('MessageVocab exposes routing predicates', () => {
@@ -143,13 +141,16 @@ describe('Wave A CP0 contracts: centralized vocabs', () => {
 describe('Wave A CP0 contracts: schema types', () => {
   it('ChatRow is a thin channel container', () => {
     expectTypeOf<ChatRow>().toHaveProperty('participants')
+    expectTypeOf<ChatRow>().toHaveProperty('contact')
     expectTypeOf<ChatRow>().not.toHaveProperty('chatType')
-    expectTypeOf<ChatRow>().not.toHaveProperty('contact')
   })
 
   it('ThreadRow contains workspace context only', () => {
-    expectTypeOf<ThreadRow>().toHaveProperty('scope')
+    expectTypeOf<ThreadRow>().toHaveProperty('parent')
     expectTypeOf<ThreadRow>().toHaveProperty('workspace')
+    expectTypeOf<ThreadRow>().not.toHaveProperty('scope')
+    expectTypeOf<ThreadRow>().not.toHaveProperty('chat')
+    expectTypeOf<ThreadRow>().not.toHaveProperty('task')
     expectTypeOf<ThreadRow>().not.toHaveProperty('surface')
     expectTypeOf<ThreadRow>().not.toHaveProperty('commandKind')
     expectTypeOf<ThreadRow>().not.toHaveProperty('policyRef')

@@ -57,9 +57,11 @@ The shared chat/runtime model is:
 
 ```text
 Chat       = who or what the user is talking with
-Thread     = the concrete timeline/place/runtime context under a Chat
-Message    = a message in both a Chat and a Thread
-Session    = one Agent runtime execution bound to Agent + Thread + Workspace
+Task       = executable work surface parallel to Chat
+Thread     = concrete timeline/place/runtime context under one parent surface
+Message    = communication item in a Chat and optionally a Thread
+Run        = one Agent runtime execution attempt bound to Thread + Workspace
+Session    = lightweight runtime/collaboration lifecycle projection for a Thread
 Agent      = executable capability root with its own home/config filesystem
 Workspace  = concrete working code area/worktree metadata
 Repository = durable source-control metadata, not the working directory
@@ -160,7 +162,7 @@ AI Secretary has both:
 ```text
 Contact
   contactType: agent
-  entity: Agent context-root URI
+  about: Agent context-root URI
 
 Agent
   root: /agents/__secretary__/
@@ -202,6 +204,7 @@ Representative paths:
 /.data/contacts/{contactId}.ttl
 /.data/chat/{chatId}/index.ttl#this
 /.data/chat/{chatId}/index.ttl#{threadId}
+/.data/task/{taskId}/index.ttl#{threadId}
 /.data/chat/{chatId}/{yyyy}/{MM}/{dd}/messages.ttl#{messageId}
 /agents/{agentId}/
 /.data/sessions/{yyyy}/{MM}/{dd}/{sessionId}.ttl
@@ -217,8 +220,22 @@ queried, synced, approved, audited, or used to reconstruct shared state, model
 it as an explicit field or URI relation instead of hiding it in `metadata`.
 `metadata` is only for opaque protocol ids, local cache keys, UI state,
 compatibility data, and non-structural context. Prefer semantic relation names
-such as `chat`, `thread`, `message`, `task`, `delivery`, `session`,
-`workspace`, `source`, and `trigger`.
+such as `parent`, `chat`, `thread`, `message`, `task`, `delivery`, `session`,
+`workspace`, `source`, and `trigger`. Thread ownership is `parent` with
+`sioc:has_parent`.
+
+External/API ids use a fixed promotion rule:
+
+- `id` remains the Pod resource id, never an external system id.
+- Opaque adapter ids stay under `metadata.protocols.<apiNs>` by default, for
+  example `metadata.protocols.matrix.roomId/eventId/txnId` or
+  `metadata.protocols.chatkit.chat_id/thread_id`.
+- Promote an opaque id to a schema field only when it is required for
+  cross-client query, dedupe, audit, recovery, or a stable shared protocol
+  contract. The field description must say it is an external/runtime identifier,
+  not an RDF link.
+- Existing promoted examples are `Run.externalRunId`, `Message.toolCallId`,
+  `Message.coordinationId`, and `Contact.externalPlatform/externalId`.
 
 ## Design Rules
 

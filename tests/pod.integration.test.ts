@@ -136,7 +136,7 @@ describe('Solid Pod live CRUD core surfaces', () => {
 
     const chatIri = database.resolveLocatorIri(chatTable, { id: chatId })
     const chatResourceId = database.resolveResourceId(chatTable, chatIri)
-    const threadIri = database.resolveLocatorIri(threadTable, { id: threadId, chat: chatIri })
+    const threadIri = database.resolveLocatorIri(threadTable, { id: threadId, parent: chatIri })
     const threadResourceId = database.resolveResourceId(threadTable, threadIri)
 
     await step('chat.create', () => database.insert(chatTable).values({
@@ -159,7 +159,7 @@ describe('Solid Pod live CRUD core surfaces', () => {
 
     await step('thread.create', () => database.insert(threadTable).values({
       id: threadId,
-      chat: chatIri,
+      parent: chatIri,
       title: 'Pod CRUD thread',
       workspace: `${baseUrl}/workspace/${threadId}/`,
       metadata: { source: 'pod.integration.test' },
@@ -214,7 +214,6 @@ describe('Solid Pod live CRUD core surfaces', () => {
       owner: webId,
       chat: chatIri,
       thread: threadIri,
-      sessionType: 'direct',
       status: 'active',
       tool: 'linx',
       tokenUsage: 12,

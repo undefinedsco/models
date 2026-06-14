@@ -32,22 +32,20 @@ describe('command resource id defaults', () => {
     expect(taskResource.buildId({ id: 'task_1' })).toBe('index.ttl#task_1')
     expect(threadResource.buildId({
       id: 'thread_1',
-      chat: 'https://pod.example/.data/chat/secretary/index.ttl#this',
+      parent: 'https://pod.example/.data/chat/secretary/index.ttl#this',
     })).toBe('chat/secretary/index.ttl#thread_1')
     expect(threadResource.buildId({
-      id: 'thread_scope_chat',
-      scope: 'https://pod.example/.data/chat/secretary/index.ttl#this',
-      chat: 'https://pod.example/.data/chat/secretary/index.ttl#this',
-    })).toBe('chat/secretary/index.ttl#thread_scope_chat')
+      id: 'thread_parent_chat',
+      parent: 'https://pod.example/.data/chat/secretary/index.ttl#this',
+    })).toBe('chat/secretary/index.ttl#thread_parent_chat')
     expect(threadResource.buildId({
       id: 'worker_thread_1',
-      task: 'https://pod.example/.data/task/index.ttl#task_1',
+      parent: 'https://pod.example/.data/task/index.ttl#task_1',
     })).toBe('task/task_1/index.ttl#worker_thread_1')
     expect(threadResource.buildId({
-      id: 'worker_thread_scope',
-      scope: 'https://pod.example/.data/task/index.ttl#task_1',
-      task: 'https://pod.example/.data/task/index.ttl#task_1',
-    })).toBe('task/task_1/index.ttl#worker_thread_scope')
+      id: 'worker_thread_parent',
+      parent: 'https://pod.example/.data/task/index.ttl#task_1',
+    })).toBe('task/task_1/index.ttl#worker_thread_parent')
     expect(messageResource.buildId({
       id: 'msg_1',
       chat: 'https://pod.example/.data/chat/default/index.ttl#this',

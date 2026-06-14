@@ -11,7 +11,7 @@ This diagram summarizes the current shared model contract in
 │ relationship │
 │ projection   │
 └──────┬───────┘
-       │ entityUri
+       │ about
        ▼
 ┌──────────────┐        ┌──────────────┐
 │    Agent     │        │    Person    │
@@ -43,10 +43,10 @@ container.
 
 ```text
 ┌──────────────┐
-│     Chat     │  who/what the user is talking with
-│ #this        │
+│ Chat / Task  │  parent command surface
+│ #this / #task│
 └──────┬───────┘
-       │ has child timeline/place
+       │ sioc:has_parent
        ▼
 ┌──────────────┐
 │    Thread    │  concrete timeline/runtime/workspace place
@@ -55,25 +55,27 @@ container.
        │ contains messages
        ▼
 ┌──────────────┐
-│   Message    │  belongs to both Chat and Thread
+│   Message    │  belongs to Chat and optionally Thread
 │ #{messageId} │
 └──────────────┘
 ```
 
 Important relation rules:
 
-- `message.chat` is a URI relation to the Chat resource.
-- `message.thread` is a URI relation to the Thread resource.
-- `message.maker` is the author entity URI, for example a user WebID, Agent URI,
+- `thread.parent` is a URI relation using the standard `sioc:has_parent` predicate.
+- `message.chat` is a URI relation to the Chat resource when the message is chat-scoped.
+- `message.thread` is a URI relation to the Thread resource when it participates in a concrete timeline.
+- `message.maker` is the author resource IRI, for example a user WebID, Agent URI,
   or external Contact URI.
 - `chatId` and `threadId` can exist as UI/helper parameters, but persistent RDF
-  links should use `chat` and `thread` URI fields.
+  links should use `parent`, `chat`, and `thread` URI fields.
 
 Representative storage:
 
 ```text
 /.data/chat/{chatId}/index.ttl#this
 /.data/chat/{chatId}/index.ttl#{threadId}
+/.data/task/{taskId}/index.ttl#{threadId}
 /.data/chat/{chatId}/{yyyy}/{MM}/{dd}/messages.ttl#{messageId}
 ```
 
@@ -81,23 +83,23 @@ Representative storage:
 
 ```text
 ┌──────────────┐
-│   Session    │ one runtime execution
+│   Session    │ lightweight lifecycle projection
 └──────┬───────┘
        │ references
-       ├────────► Agent context-root URI
-       ├────────► Thread URI
-       └────────► Workspace URI
+       ├────────► Owner WebID / Agent URI
+       ├────────► optional Chat URI
+       └────────► Thread URI
 
-┌──────────────┐        ┌──────────────┐
-│  Workspace   │ ─────► │ Repository   │
-│ worktree/cwd │ link   │ source meta  │
-└──────────────┘        └──────────────┘
+┌──────────────┐        ┌──────────────┐        ┌──────────────┐
+│     Run      │ ─────► │  Workspace   │ ─────► │ Repository   │
+│ execution    │ link   │ worktree/cwd │ link   │ source meta  │
+└──────────────┘        └──────────────┘        └──────────────┘
 ```
 
 Session is intentionally light. It should not duplicate Git remote, branch,
 commit, cwd, dirty state, or repository metadata. Those belong to Workspace
-metadata. A Session may point to a Workspace snapshot when reproducibility is
-needed.
+metadata. Concrete execution attempts, workspace binding, lease/heartbeat, and
+external runtime ids belong to Run.
 
 Representative storage:
 

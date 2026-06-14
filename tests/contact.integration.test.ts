@@ -97,7 +97,7 @@ describe('Solid Pod Contact CRUD', () => {
         name: testName,
         alias: 'Solid Test Alias',
         contactType: 'solid',
-        entity: 'https://test.solidcommunity.net/profile/card#me',
+        about: 'https://test.solidcommunity.net/profile/card#me',
         isPublic: false,
         starred: true,
         note: 'Integration test - solid contact',
@@ -137,7 +137,7 @@ describe('Solid Pod Contact CRUD', () => {
     const now = new Date()
 
     // CREATE - use absolute URI to avoid relative URI issue
-    // For external contacts, entity should be self-referential but absolute
+    // For external contacts, about should be self-referential but absolute
     const [created] = await database
       .insert(contactTable)
       .values({
@@ -146,7 +146,7 @@ describe('Solid Pod Contact CRUD', () => {
         alias: '微信测试好友',
         contactType: 'external',
         // Use WebID as base to construct absolute URI
-        entity: `${env.webId!.replace('/profile/card#me', '')}/.data/contacts/${contactId}.ttl`,
+        about: `${env.webId!.replace('/profile/card#me', '')}/.data/contacts/${contactId}.ttl`,
         externalPlatform: 'wechat',
         externalId: testExternalId,
         isPublic: false,
@@ -217,7 +217,7 @@ describe('Solid Pod Contact CRUD', () => {
     expect(agentRecord.instructions).toContain('helpful assistant')
 
     // 2. CREATE CONTACT pointing to agent
-    const agentEntityUri = agentSubject || `${env.webId!.replace('/profile/card#me', '')}/agents/${agentId}/`
+    const agentAboutRef = agentSubject || `${env.webId!.replace('/profile/card#me', '')}/agents/${agentId}/`
 
     const [contactCreated] = await database
       .insert(contactTable)
@@ -226,7 +226,7 @@ describe('Solid Pod Contact CRUD', () => {
         name: testAgentName,
         alias: 'Test Bot',
         contactType: 'agent',
-        entity: agentEntityUri,
+        about: agentAboutRef,
         isPublic: false,
         starred: true,
         createdAt: now,
@@ -244,8 +244,8 @@ describe('Solid Pod Contact CRUD', () => {
       .where(eq(contactTable.name, testAgentName))
       .execute()
 
-    // Filter to find our specific contact (by entity containing our agentId)
-    const ourContact = contactRows.find(c => c.entity?.includes(agentId))
+    // Filter to find our specific contact (by about containing our agentId)
+    const ourContact = contactRows.find(c => c.about?.includes(agentId))
     expect(ourContact, 'agent contact created').toBeTruthy()
     expect(ourContact!.contactType).toBe('agent')
     expect(ourContact!.alias).toBe('Test Bot')

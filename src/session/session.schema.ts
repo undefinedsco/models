@@ -4,7 +4,6 @@ import { chatResource } from '../chat.schema'
 import { threadResource } from '../thread.schema'
 import { asPodResourceTemplateTarget } from '../repository'
 
-export type SessionType = 'direct' | 'group' | 'imported-readonly'
 export type SessionStatus = 'active' | 'paused' | 'completed' | 'error' | 'archived'
 
 export function buildRuntimeSessionIri(sessionId: string): string {
@@ -55,6 +54,10 @@ export function extractSessionIdFromSessionRef(sessionRef: string | null | undef
  * - Thread identifies the concrete conversation timeline/place/run. AI product
  *   runtime sessions map to Thread; this Session resource records lifecycle state
  *   and points to that Thread.
+ * - Conversation topology such as direct/group is not a Session field. It is
+ *   derived from the Chat/Thread surface, participants, or product policy. Legacy
+ *   `udfs:conversationType` data should be treated as deprecated compatibility
+ *   metadata, not written by new code.
  * - `archived` is a persistence-layer/session-lifecycle status; interactive runtime
  *   surfaces may continue to use the narrower active/paused/completed/error subset
  *   until they explicitly adopt archival semantics.
@@ -70,7 +73,6 @@ export const sessionResource = podTable(
     chat: uri('chat').predicate(UDFS.conversation).link(chatResource),
     thread: uri('thread').predicate(UDFS.inThread).link(threadResource),
 
-    sessionType: string('sessionType').predicate(UDFS.conversationType).notNull().default('direct'),
     status: string('status').predicate(UDFS.sessionStatus).notNull().default('active'),
     tool: string('tool').predicate(UDFS.sessionTool),
     tokenUsage: integer('tokenUsage').predicate(UDFS.tokenUsage).default(0),

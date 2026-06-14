@@ -68,7 +68,7 @@ export const messageResource = podTable(
     // Optional Thread relation. In RDF this is an inverse Solid Chat/SIOC link: <thread> sioc:has_member <message>.
     thread: uri('thread').predicate(SIOC.has_member).inverse().link(threadResource),
 
-    // maker is the entity URI of the message author:
+    // maker is the resource IRI of the message author:
     // - User: their WebID (https://user.pod/profile/card#me)
     // - AI: Agent URI (/agents/{id}/)
     // - External: Contact URI (/.data/contacts/{id}.ttl#this)

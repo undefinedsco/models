@@ -4,7 +4,6 @@ export const SessionVocab = {
   owner: UDFS.actor,
   chat: UDFS.conversation,
   thread: UDFS.inThread,
-  sessionType: UDFS.conversationType,
   status: UDFS.sessionStatus,
   tool: UDFS.sessionTool,
   tokenUsage: UDFS.tokenUsage,

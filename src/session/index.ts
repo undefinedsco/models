@@ -4,7 +4,6 @@ export {
   buildRuntimeSessionIri,
   extractSessionIdFromSessionRef,
   extractRuntimeSessionId,
-  type SessionType,
   type SessionStatus,
   type SessionRow,
   type SessionInsert,

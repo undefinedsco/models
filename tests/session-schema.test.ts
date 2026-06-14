@@ -29,7 +29,7 @@ describe('session schema', () => {
     expect(columns.thread).toBeDefined()
     expect(columns.chatId).toBeUndefined()
     expect(columns.threadId).toBeUndefined()
-    expect(columns.sessionType).toBeDefined()
+    expect(columns.sessionType).toBeUndefined()
     expect(columns.status).toBeDefined()
     expect(columns.tool).toBeDefined()
     expect(columns.tokenUsage).toBeDefined()

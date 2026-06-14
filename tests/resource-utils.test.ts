@@ -44,11 +44,11 @@ describe('resource reference helpers', () => {
       .toBe('https://alice.example/.data/chat/chat-1/index.ttl#this')
     expect(threadRepository.targetForChat('https://alice.example/.data/chat/chat-1/index.ttl#this', 'thread-1')).toEqual({
       id: 'thread-1',
-      chat: '/.data/chat/chat-1/index.ttl#this',
+      parent: '/.data/chat/chat-1/index.ttl#this',
     })
     expect(threadRepository.targetForChat('fallback', 'https://alice.example/.data/chat/chat-1/index.ttl#thread-1')).toEqual({
       id: 'thread-1',
-      chat: '/.data/chat/chat-1/index.ttl#this',
+      parent: '/.data/chat/chat-1/index.ttl#this',
     })
     expect(threadRepository.iriForChat('https://alice.example/profile/card#me', 'chat-1', 'thread-1'))
       .toBe('https://alice.example/.data/chat/chat-1/index.ttl#thread-1')
@@ -68,7 +68,7 @@ describe('resource reference helpers', () => {
       .toBe('https://alice.example/.data/chat/chat-1/index.ttl#this')
     expect(resolveModelResourceIriForDatabase(database, threadResource, {
       id: 'thread-1',
-      chat: buildChatTargetRef('chat-1'),
+      parent: buildChatTargetRef('chat-1'),
     })).toBe('https://alice.example/.data/chat/chat-1/index.ttl#thread-1')
     expect(resolveModelResourceIriForDatabase({}, chatResource, { id: 'chat-2' }))
       .toBeNull()

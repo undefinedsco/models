@@ -14,7 +14,7 @@ export const fixtureContactSolid: ContactInsert = {
   name: 'Alice',
   rdfType: ContactClass.PERSON,
   contactType: 'solid',
-  entity: 'https://pod.example/profile/card#me',
+  about: 'https://pod.example/profile/card#me',
   isPublic: false,
 } satisfies ContactInsert
 
@@ -23,7 +23,7 @@ export const fixtureContactAgentWorkspace: ContactInsert = {
   name: 'Secretary@linx',
   rdfType: ContactClass.AGENT,
   contactType: 'agent',
-  entity: 'https://pod.example/agents/__secretary__/',
+  about: 'https://pod.example/agents/__secretary__/',
   isPublic: false,
 } satisfies ContactInsert
 
@@ -42,7 +42,7 @@ export const fixtureChatDirectAI: ChatInsert = {
 
 export const fixtureThreadDirectAI: ThreadInsert = {
   id: 'thread-001',
-  chat: 'https://pod.example/.data/chat/chat-direct-ai-1/index.ttl#this',
+  parent: 'https://pod.example/.data/chat/chat-direct-ai-1/index.ttl#this',
   title: 'Main thread',
   starred: false,
 

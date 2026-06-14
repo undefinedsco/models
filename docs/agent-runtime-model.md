@@ -10,10 +10,10 @@ LinX uses an Agent-centered runtime model.
 
 ```text
 Agent owns capability.
-Thread owns the chat sub-timeline.
+Thread owns the concrete timeline under one parent command surface via `sioc:has_parent`.
 Repository owns source-control metadata.
 Workspace owns the concrete working code area.
-Session binds Agent + Thread + Workspace for one runtime execution.
+Run binds concrete Agent Runtime execution to Thread + Workspace; Session is a lightweight lifecycle projection for a Thread.
 ```
 
 The important correction is that rules, skills, MCP, backend, and compaction
@@ -68,8 +68,8 @@ Contact, Person, and Agent must remain distinct.
 
 Contact is the address-book/social projection: the object a user sees in
 Contacts and Chat lists. It answers "who or what am I talking to". Contact is
-the user's relationship/card for an entity; it is not necessarily the entity's
-canonical identity.
+the user's relationship/card about a person, agent, group, or external resource;
+it is not necessarily that resource's canonical identity.
 
 Person is a natural human identity. A Person may have a WebID/profile and may
 be represented by one or more Contacts in different users' Pods.
@@ -112,8 +112,9 @@ groups, while keeping Agent runtime configuration under Agent home.
 
 ### Thread
 
-Thread is the chat refinement concept: a concrete sub-timeline/place under a
-Chat. It answers "which run/timeline/place does this message belong to".
+Thread is the concrete sub-timeline/place under one parent command surface
+(Chat or Task). It answers "which run/timeline/place does this message belong
+to". Persist the owner as `thread.parent` using `sioc:has_parent`.
 
 Thread does not own rules, skills, MCP, backend, or compaction.
 
@@ -189,13 +190,14 @@ machine-local facts and should be literals, not resource identities.
 
 ### Session
 
-Session is one Agent runtime execution. It should be light.
+Session is a lightweight runtime/collaboration lifecycle projection for a
+Thread. It should be light.
 
 Session should reference:
 
-- Agent context-root URI
+- Owner WebID or Agent URI
+- Related Chat URI when the lifecycle projection is chat-scoped
 - Thread URI
-- Workspace URI
 
 Session should snapshot, not explode, Agent internals. Do not hang every rules,
 skills, MCP, backend, or compaction file from Session as individual relations.
@@ -205,14 +207,20 @@ the `.meta` storage document.
 Recommended Session fields:
 
 ```text
-agent                      Agent context-root URI
+owner                      owner WebID or Agent URI
+chat                       optional related Chat URI
 thread                     Thread URI
-workspace                  Workspace URI
-workspaceSnapshot          optional Workspace metadata snapshot URI/hash
-effectiveConfigHash        literal hash
-effectiveConfigSnapshot    optional Agent-owned snapshot URI
-status                     runtime lifecycle state
+status                     runtime/collaboration lifecycle state
+tool                       runtime tool/backend label
+tokenUsage                 aggregate token usage when available
+messages                   message URI list when a session needs a projection
+policy                     optional policy URI
+policyVersion              optional policy version
+metadata                   opaque adapter/UI metadata
 ```
+
+Concrete execution attempts, workspace binding, lease/heartbeat, and external
+runtime ids belong to `Run`, not Session.
 
 Session should not duplicate repository or Git metadata such as GitHub URL,
 branch, commit SHA, cwd, owner, dirty state, or default branch. Those belong to

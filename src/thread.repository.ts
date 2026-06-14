@@ -8,7 +8,7 @@ import {
 } from './chat.utils'
 
 export interface ChatThreadTarget extends Record<string, unknown> {
-  chat: string
+  parent: string
   id?: string
 }
 
@@ -19,12 +19,12 @@ export function buildChatThreadTarget(chatIdOrRef: string, threadIdOrRef?: strin
 
   return {
     ...(threadId ? { id: threadId } : {}),
-    chat: buildChatTargetRef(chatRef),
+    parent: buildChatTargetRef(chatRef),
   }
 }
 
-export function extractChatIdFromThread(row: Pick<ThreadRow, 'chat'> | null | undefined): string | null {
-  return extractChatIdFromChatRef(row?.chat)
+export function extractChatIdFromThread(row: Pick<ThreadRow, 'parent'> | null | undefined): string | null {
+  return extractChatIdFromChatRef(row?.parent)
 }
 
 export function readThreadRepositoryChatId(threadRef: string | null | undefined): string | null {

@@ -1,5 +1,6 @@
 import { boolean, object, podTable, string, text, timestamp, uri, id, integer } from '@undefineds.co/drizzle-solid'
 import { UDFS, DCTerms, SCHEMA, MEETING, WF } from './namespaces'
+import { contactResource } from './contact.schema'
 
 export type ChatMemberRole = 'owner' | 'admin' | 'member'
 export type ChatStatusType = 'active' | 'archived' | 'deleted'
@@ -49,7 +50,7 @@ export const chatResource = podTable(
     unreadCount: integer('unreadCount').predicate(UDFS.unreadCount).default(0),
 
     // Optional counterpart/contact represented by this channel. Stored as RDF URI; callers may pass a short contact id.
-    contact: uri('contact').predicate(UDFS.term('contact')).link('contact'),
+    contact: uri('contact').predicate(UDFS.hasContact).link(contactResource),
 
     // Explicit membership for group chats.
     participants: uri('participants')

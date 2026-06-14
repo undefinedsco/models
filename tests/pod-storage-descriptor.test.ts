@@ -1,12 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import {
   approvalDescriptor,
+  chatDescriptor,
+  contactDescriptor,
   credentialDescriptor,
   createPodModelDescriptorRegistry,
   createPodSchema,
   createPodStorage,
+  issueDescriptor,
   inputRequestDescriptor,
+  messageDescriptor,
   officialPodModelDescriptors,
+  runStepDescriptor,
+  threadDescriptor,
+  SIOC,
   UDFS,
 } from '../src'
 
@@ -32,6 +39,17 @@ describe('pod storage descriptors', () => {
         secretType: 'tunnel-token',
       },
     })
+  })
+
+  it('registers core chat/runtime descriptors as official models', () => {
+    expect(officialPodModelDescriptors).toEqual(expect.arrayContaining([
+      contactDescriptor,
+      chatDescriptor,
+      threadDescriptor,
+      messageDescriptor,
+    ]))
+    expect(threadDescriptor.fields.parent.predicate).toBe(SIOC.has_parent)
+    expect(messageDescriptor.fields.chat.predicate).toBeDefined()
   })
 
 
@@ -67,6 +85,18 @@ describe('pod storage descriptors', () => {
       base: '/.data/input-requests/',
       resourceIdPattern: '{id}',
     })
+  })
+
+  it('keeps descriptors in exact-id mode without legacy subject templates', () => {
+    for (const descriptor of officialPodModelDescriptors) {
+      expect(descriptor.storage).not.toHaveProperty('subjectTemplate')
+    }
+    expect(issueDescriptor.storage).toEqual({
+      base: '/.data/issues/',
+      resourceIdPattern: '{id}',
+    })
+    expect(runStepDescriptor.fields.payload.predicate).toBe(UDFS.payload)
+    expect((runStepDescriptor.fields as Record<string, unknown>).data).toBeUndefined()
   })
 
   it('queries RDF classes and field predicates deterministically', () => {

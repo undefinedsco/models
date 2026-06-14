@@ -130,6 +130,31 @@ random key or fragment id.
 
 Schema storage semantics and app ergonomics are different layers.
 
+
+## External Identifiers
+
+Do not treat every `*Id` as the same modeling problem.
+
+- Durable `id` fields are Pod resource ids, not external system ids.
+- If the value is actually a resource relationship, model it as a URI field
+  with a semantic name such as `provider`, `agent`, `message`, `task`, `run`,
+  `thread`, or `workspace`.
+- Opaque ids from an API adapter or external system stay under
+  `metadata.protocols.<apiNs>` by default. Keep protocol-native key names inside
+  that namespace, for example `metadata.protocols.matrix.roomId/eventId/txnId`
+  or `metadata.protocols.chatkit.chat_id/thread_id`.
+- Promote an opaque id to a first-class literal predicate only when it must be
+  queried, deduplicated, correlated, audited, recovered, or kept stable as a
+  shared protocol contract. The vocab description must say it is an
+  external/runtime identifier and not an RDF resource link. Examples:
+  `toolCallId`, `externalRunId`, `coordinationId`, and contact
+  `externalPlatform`/`externalId`.
+- If the value is only a vendor-specific optional parameter or debug payload,
+  keep it in metadata under the relevant namespace instead of adding a shared
+  top-level field.
+- Readers may tolerate legacy root-level metadata for migration, but new writers
+  must use the namespaced shape.
+
 ### Pod Schema Layer
 
 Use full URI relation fields:
@@ -138,7 +163,7 @@ Use full URI relation fields:
 message.chat
 message.thread
 message.replyTo
-thread.chat
+thread.parent
 run.thread
 run.task
 ```
@@ -148,7 +173,7 @@ Avoid persisted relation fields such as:
 ```ts
 message.chatId
 message.threadId
-thread.chatId
+thread.parentId
 ```
 
 unless they are intentionally opaque literal protocol fields, not RDF links.
@@ -173,8 +198,9 @@ Use these concepts consistently across products:
   user is talking with.
 - `Task`: task-style command surface, parallel to Chat. It describes recurring,
   triggered, or one-off task intent.
-- `Thread`: implicit concrete timeline/place under exactly one command surface:
-  Chat for conversation timelines, or Task for task execution timelines.
+- `Thread`: implicit concrete timeline/place under exactly one parent command
+  surface: Chat for conversation timelines, or Task for task execution
+  timelines. Persist that owner as `thread.parent` using `sioc:has_parent`.
 - `Message`: human/runtime communication item in a command scope. It usually
   belongs to a Chat, but task/runtime messages may belong to a Task or Thread
   scope without inventing a Chat.
@@ -191,17 +217,18 @@ Align with graph semantics:
 
 | Concept | Preferred RDF direction | Typical predicate |
 |---|---|---|
-| resource belongs to command scope | `resource -> scope` | `udfs:inScope` |
+| thread belongs to parent command surface | `thread -> parent` | `sioc:has_parent` |
+| resource belongs to generic command scope | `resource -> scope` | `udfs:inScope` when no standard predicate fits |
 | chat contains message | `chat -> message` | `wf:message` / project vocabulary |
-| chat owns thread | `thread -> chat` | `sioc:has_parent` for compatibility |
 | thread contains message | `thread -> message` | `sioc:has_member` or equivalent |
 | reply points to original | `replyMessage -> originalMessage` | `sioc:has_reply` / project predicate |
 | author/maker | `message -> maker` | `foaf:maker` |
 
-Use `udfs:inScope` for LinX product semantics when a Thread or Message can
-belong to either Chat or Task. Preserve Solid Chat compatibility by also writing
-`sioc:has_parent` for Chat-scoped Threads and `wf:message` for Chat-scoped
-Messages. Do not stretch Solid Chat predicates to mean Task ownership.
+Use `sioc:has_parent` as the canonical Thread owner relation even when the
+parent command surface is not a plain chat room. Use `udfs:inScope` only for
+resources that need a generic ownership relation and have no better standard
+predicate. Preserve Solid Chat compatibility for Chat-scoped Messages with
+`wf:message`.
 
 When inverse predicates are supported, use them for read/write symmetry. If the
 ORM cannot safely express the inverse write, put the relation writer in the
