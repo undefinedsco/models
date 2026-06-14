@@ -14,6 +14,10 @@ yarn workspace @undefineds.co/models build
 yarn workspace @undefineds.co/models test
 ```
 
+Release is tag-driven through GitHub Actions. See
+[`docs/RELEASE.md`](docs/RELEASE.md); do not use local `npm publish` as the
+normal release path.
+
 ```ts
 import {
   UDFS,

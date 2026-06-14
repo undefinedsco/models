@@ -18,9 +18,11 @@ Release automation validates this directory and packages:
 - a Claude Code plugin archive that contains the same skill source
 
 The publish workflow uploads those artifacts to the GitHub Release for the
-version tag. Plugin marketplace indexes live in the separate
-`undefinedsco/marketplace` repository so one marketplace can aggregate plugins
-from `models`, `xpod`, LinX, and future Undefineds repositories.
+version tag. The full tag-driven release process is documented in
+[`../docs/RELEASE.md`](../docs/RELEASE.md). Plugin marketplace indexes live in
+the separate `undefinedsco/marketplace` repository so one marketplace can
+aggregate plugins from `models`, `xpod`, LinX, and future Undefineds
+repositories.
 
 Codex users can install the skill from the repository path once these files are
 on `main`:
