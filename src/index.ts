@@ -107,7 +107,7 @@ export {
   type MessageInsert,
   type MessageUpdate,
 } from './message.schema'
-export { messageRepository } from './message.repository'
+export { messageRepository, type MessageListWhere } from './message.repository'
 
 export {
   TaskStatus,
