@@ -6,6 +6,8 @@ import {
   aiProviderResource,
   approvalResource,
   auditResource,
+  captureCandidateResource,
+  captureEventResource,
   chatResource,
   contactResource,
   credentialResource,
@@ -149,6 +151,18 @@ describe('command resource id defaults', () => {
       id: 'input_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('2026/05/18.ttl#input_1')
+    expect(captureCandidateResource.buildId({
+      id: 'candidate_1',
+      source: 'https://pod.example/.data/chat/default/2026/05/18/messages.ttl#msg_1',
+      summary: 'Potential project memory',
+      createdAt: new Date('2026-05-18T01:02:03.000Z'),
+    })).toBe('candidates/2026/05/18.ttl#candidate_1')
+    expect(captureEventResource.buildId({
+      id: 'event_1',
+      source: 'https://pod.example/.data/chat/default/2026/05/18/messages.ttl#msg_1',
+      decision: 'candidate_created',
+      createdAt: new Date('2026-05-18T01:02:03.000Z'),
+    })).toBe('events/2026/05/18.ttl#event_1')
     expect(issueResource.buildId({ id: 'issue_1' })).toBe('issue_1.ttl')
     expect(sessionResource.buildId({
       id: 'session_1',

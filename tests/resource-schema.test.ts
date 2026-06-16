@@ -11,6 +11,8 @@ import {
   approvalTable,
   auditResource,
   auditTable,
+  captureCandidateResource,
+  captureEventResource,
   chatResource,
   chatTable,
   contactResource,
@@ -109,6 +111,8 @@ describe('shared Solid resources', () => {
       settingsResource,
       ideaResource,
       issueResource,
+      captureCandidateResource,
+      captureEventResource,
       approvalResource,
       auditResource,
       grantResource,
@@ -137,6 +141,8 @@ describe('shared Solid resources', () => {
     expect((solidResources as any).settingsTable).toBeUndefined()
     expect((solidResources as any).ideaTable).toBeUndefined()
     expect((solidResources as any).issueTable).toBeUndefined()
+    expect((solidResources as any).captureCandidateTable).toBeUndefined()
+    expect((solidResources as any).captureEventTable).toBeUndefined()
     expect((solidResources as any).approvalTable).toBeUndefined()
     expect((solidResources as any).auditTable).toBeUndefined()
     expect((solidResources as any).grantTable).toBeUndefined()
@@ -187,6 +193,8 @@ describe('shared Solid resources', () => {
     expect(deliveryResource.hasCustomTemplate()).toBe(false)
     expect(evidenceResource.hasCustomTemplate()).toBe(false)
     expect(reportResource.hasCustomTemplate()).toBe(false)
+    expect(captureCandidateResource.hasCustomTemplate()).toBe(false)
+    expect(captureEventResource.hasCustomTemplate()).toBe(false)
     expect(runResource.hasCustomTemplate()).toBe(false)
     expect(runStepResource.hasCustomTemplate()).toBe(false)
     expect(agentResource.config.base).toBe('/agents/')
@@ -200,6 +208,8 @@ describe('shared Solid resources', () => {
     expect(deliveryResource.config.base).toBe('/.data/')
     expect(evidenceResource.config.base).toBe('/.data/')
     expect(reportResource.config.base).toBe('/.data/')
+    expect(captureCandidateResource.config.base).toBe('/.data/capture/')
+    expect(captureEventResource.config.base).toBe('/.data/capture/')
     expect(runResource.config.base).toBe('/.data/')
     expect(runStepResource.config.base).toBe('/.data/')
   })
@@ -246,6 +256,10 @@ describe('shared Solid resources', () => {
     expect((deliveryResource.columns as Record<string, unknown>).surface).toBeUndefined()
     expect((evidenceResource.columns as Record<string, unknown>).commandKind).toBeUndefined()
     expect((evidenceResource.columns as Record<string, unknown>).surface).toBeUndefined()
+    expect((captureCandidateResource.columns as Record<string, unknown>).sourceId).toBeUndefined()
+    expect((captureCandidateResource.columns as Record<string, unknown>).sourceUri).toBeUndefined()
+    expect((captureEventResource.columns as Record<string, unknown>).targetResourceId).toBeUndefined()
+    expect((captureEventResource.columns as Record<string, unknown>).sourceUri).toBeUndefined()
     expect((reportResource.columns as Record<string, unknown>).commandKind).toBeUndefined()
     expect((reportResource.columns as Record<string, unknown>).surface).toBeUndefined()
     expect((runResource.columns as Record<string, unknown>).commandKind).toBeUndefined()

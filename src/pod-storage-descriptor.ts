@@ -523,6 +523,128 @@ const idField: PodModelFieldDescriptor = {
   description: 'Base-relative resource id. For exact-id descriptors this includes the full document path and optional fragment.',
 }
 
+export const captureCandidateDescriptor: PodModelDescriptor = {
+  uri: UDFS.CaptureCandidate,
+  version: '1.0.0',
+  source: 'official',
+  trustLevel: 'high',
+  namespace: UDFS.NAMESPACE,
+  class: UDFS.CaptureCandidate,
+  resourceKind: 'capture-candidate',
+  description: 'Temporary capture suggestion created from observed or ambiguous content. It is not formal memory until promoted through the appropriate typed resource and control flow.',
+  storage: exactIdStorage('/.data/capture/'),
+  fields: {
+    id: idField,
+    source: { type: 'uri', predicate: DCTerms.source, required: true, description: 'Original message, file, URL, fetched document, or resource being considered.' },
+    summary: { type: 'text', predicate: DCTerms.abstract, required: true, description: 'Concise statement of what might be worth saving.' },
+    suggestedType: { type: 'uri', predicate: UDFS.suggestedType, description: 'Proposed formal resource class such as Idea, Evidence, Note, Decision, Preference, Link, or ContactInfo.' },
+    suggestedTarget: { type: 'uri', predicate: UDFS.suggestedTarget, description: 'Proposed folder, collection, project, task, issue, chat, or other scope.' },
+    confidence: { type: 'string', predicate: UDFS.confidence, description: 'Classifier confidence: high, medium, or low.' },
+    reason: { type: 'text', predicate: UDFS.reason, description: 'Short rationale for why this source might be worth capturing.' },
+    status: { type: 'string', predicate: UDFS.status, description: 'Candidate lifecycle status such as candidate, promoted, rejected, duplicate, ignored, or superseded.' },
+    sourceHash: { type: 'string', predicate: UDFS.sourceHash, description: 'Optional source digest for duplicate detection.' },
+    chat: { type: 'uri', predicate: UDFS.conversation, description: 'Related chat command surface.' },
+    thread: { type: 'uri', predicate: UDFS.inThread, description: 'Related concrete thread/work site.' },
+    task: { type: 'uri', predicate: UDFS.task, description: 'Related task.' },
+    run: { type: 'uri', predicate: UDFS.run, description: 'Related run.' },
+    actor: { type: 'uri', predicate: DCTerms.creator, description: 'Secretary, user, or worker that created the candidate.' },
+    metadata: { type: 'json', predicate: UDFS.metadata, description: 'Opaque adapter-local metadata; shared relations must be explicit fields.' },
+    createdAt: { type: 'timestamp', predicate: DCTerms.created, description: 'Creation timestamp.' },
+    updatedAt: { type: 'timestamp', predicate: DCTerms.modified, description: 'Last update timestamp.' },
+  },
+  uniqueBy: ['id'],
+  writableFields: [
+    'source',
+    'summary',
+    'suggestedType',
+    'suggestedTarget',
+    'confidence',
+    'reason',
+    'status',
+    'sourceHash',
+    'chat',
+    'thread',
+    'task',
+    'run',
+    'actor',
+    'metadata',
+    'updatedAt',
+  ],
+  mergePolicy: 'upsert',
+  examples: [
+    {
+      request: 'Create a capture candidate from an observed chat message',
+      match: {
+        id: 'candidates/2026/06/16.ttl#candidate_1',
+      },
+    },
+  ],
+}
+
+export const captureEventDescriptor: PodModelDescriptor = {
+  uri: UDFS.CaptureEvent,
+  version: '1.0.0',
+  source: 'official',
+  trustLevel: 'high',
+  namespace: UDFS.NAMESPACE,
+  class: UDFS.CaptureEvent,
+  resourceKind: 'capture-event',
+  description: 'Append-only capture decision ledger. It records direct commits, optimistic commits, candidate creation, promotion, rejection, correction, rollback, duplicate detection, and ignored decisions.',
+  storage: exactIdStorage('/.data/capture/'),
+  fields: {
+    id: idField,
+    source: { type: 'uri', predicate: DCTerms.source, required: true, description: 'Original message, file, URL, fetched document, or resource considered by capture.' },
+    captureCandidate: { type: 'uri', predicate: UDFS.captureCandidate, description: 'Candidate resource involved in this event, when applicable.' },
+    targetResource: { type: 'uri', predicate: UDFS.targetResource, description: 'Formal resource affected by this capture decision.' },
+    decision: { type: 'string', predicate: UDFS.captureDecision, required: true, description: 'Decision such as direct_commit, optimistic_commit, candidate_created, promoted, rejected, corrected, rollback, duplicate, or ignored.' },
+    suggestedType: { type: 'uri', predicate: UDFS.suggestedType, description: 'Type suggested at decision time.' },
+    suggestedTarget: { type: 'uri', predicate: UDFS.suggestedTarget, description: 'Target suggested at decision time.' },
+    confidence: { type: 'string', predicate: UDFS.confidence, description: 'Classifier confidence at decision time.' },
+    reason: { type: 'text', predicate: UDFS.reason, description: 'Explanation for the capture decision.' },
+    userCorrection: { type: 'text', predicate: UDFS.userCorrection, description: 'User correction to type, target, title, summary, or content.' },
+    approval: { type: 'uri', predicate: UDFS.approval, description: 'ApprovalRequest controlling an authority gate, if any.' },
+    inputRequest: { type: 'uri', predicate: UDFS.inputRequest, description: 'InputRequest controlling missing information, if any.' },
+    chat: { type: 'uri', predicate: UDFS.conversation, description: 'Related chat command surface.' },
+    thread: { type: 'uri', predicate: UDFS.inThread, description: 'Related concrete thread/work site.' },
+    task: { type: 'uri', predicate: UDFS.task, description: 'Related task.' },
+    run: { type: 'uri', predicate: UDFS.run, description: 'Related run.' },
+    actor: { type: 'uri', predicate: DCTerms.creator, description: 'Secretary, user, or worker that made or recorded the decision.' },
+    about: { type: 'uri', predicate: SCHEMA.about, description: 'Control object or semantic subject the event is about.' },
+    metadata: { type: 'json', predicate: UDFS.metadata, description: 'Opaque adapter-local metadata; shared relations must be explicit fields.' },
+    createdAt: { type: 'timestamp', predicate: DCTerms.created, description: 'Creation timestamp.' },
+  },
+  uniqueBy: ['id'],
+  writableFields: [
+    'source',
+    'captureCandidate',
+    'targetResource',
+    'decision',
+    'suggestedType',
+    'suggestedTarget',
+    'confidence',
+    'reason',
+    'userCorrection',
+    'approval',
+    'inputRequest',
+    'chat',
+    'thread',
+    'task',
+    'run',
+    'actor',
+    'about',
+    'metadata',
+  ],
+  mergePolicy: 'append',
+  examples: [
+    {
+      request: 'Record that a chat message became a capture candidate',
+      match: {
+        id: 'events/2026/06/16.ttl#event_1',
+      },
+    },
+  ],
+}
+
 export const contactDescriptor: PodModelDescriptor = {
   uri: UDFS.Contact,
   version: '1.0.0',
@@ -1081,6 +1203,8 @@ export const officialPodModelDescriptors = [
   runStepDescriptor,
   evidenceDescriptor,
   reportDescriptor,
+  captureCandidateDescriptor,
+  captureEventDescriptor,
   sessionDescriptor,
   approvalDescriptor,
   inputRequestDescriptor,
@@ -1257,6 +1381,10 @@ function invalid(code: string, message: string): PodStorageValidationResult & Po
 }
 
 function buildResourceId(descriptor: PodModelDescriptor, match: Record<string, unknown>): string {
+  if (descriptor.storage.resourceIdPattern === '{id}' && descriptor.uniqueBy.length === 1 && descriptor.uniqueBy[0] === 'id') {
+    return String(match.id)
+  }
+
   const raw = descriptor.uniqueBy.map((field) => String(match[field])).join('-')
   const localId = raw.replace(/[^a-zA-Z0-9_.-]+/g, '-')
   return descriptor.storage.resourceIdPattern.replace('{id}', localId)

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   approvalDescriptor,
+  captureCandidateDescriptor,
+  captureEventDescriptor,
   chatDescriptor,
   contactDescriptor,
   credentialDescriptor,
@@ -13,6 +15,7 @@ import {
   officialPodModelDescriptors,
   runStepDescriptor,
   threadDescriptor,
+  DCTerms,
   SIOC,
   UDFS,
 } from '../src'
@@ -74,6 +77,29 @@ describe('pod storage descriptors', () => {
     const podSchema = createPodSchema(createPodModelDescriptorRegistry())
     const descriptor = podSchema.describe({ uri: UDFS.InputRequest })
     expect(descriptor?.resourceKind).toBe('input-request')
+  })
+
+  it('describes capture candidates and events without owning approval state', () => {
+    expect(captureCandidateDescriptor.uri).toBe(UDFS.CaptureCandidate)
+    expect(captureCandidateDescriptor.storage).toEqual({
+      base: '/.data/capture/',
+      resourceIdPattern: '{id}',
+    })
+    expect(captureCandidateDescriptor.fields.source.predicate).toBe(DCTerms.source)
+    expect(captureCandidateDescriptor.fields.summary.predicate).toBe(DCTerms.abstract)
+    expect(captureCandidateDescriptor.fields.suggestedType.predicate).toBe(UDFS.suggestedType)
+    expect(captureCandidateDescriptor.fields.status.predicate).toBe(UDFS.status)
+    expect((captureCandidateDescriptor.fields as Record<string, unknown>).approvalStatus).toBeUndefined()
+
+    expect(captureEventDescriptor.uri).toBe(UDFS.CaptureEvent)
+    expect(captureEventDescriptor.storage).toEqual({
+      base: '/.data/capture/',
+      resourceIdPattern: '{id}',
+    })
+    expect(captureEventDescriptor.fields.decision.predicate).toBe(UDFS.captureDecision)
+    expect(captureEventDescriptor.fields.approval.predicate).toBe(UDFS.approval)
+    expect(captureEventDescriptor.fields.inputRequest.predicate).toBe(UDFS.inputRequest)
+    expect(captureEventDescriptor.mergePolicy).toBe('append')
   })
 
   it('keeps approval descriptor storage in exact-id mode', () => {
@@ -152,6 +178,27 @@ describe('pod storage descriptors', () => {
       resourceId: '#infra-cloudflare-tunnel-token',
       resourceUri: '/settings/credentials.ttl#infra-cloudflare-tunnel-token',
     })
+  })
+
+  it('preserves caller-provided exact ids for exact-id descriptor storage', () => {
+    const podStorage = createPodStorage()
+    const validation = podStorage.validate({
+      schemaUri: UDFS.CaptureCandidate,
+      operation: 'upsert',
+      match: {
+        id: 'candidates/2026/06/16.ttl#capture_cli_smoke',
+      },
+      set: {
+        source: 'https://pod.example/.data/chat/default/2026/06/16/messages.ttl#msg_1',
+        summary: 'Potential project memory',
+        confidence: 'medium',
+      },
+    })
+
+    expect(validation.ok).toBe(true)
+    if (!validation.ok) throw new Error(validation.error.message)
+    expect(validation.plan.resourceId).toBe('candidates/2026/06/16.ttl#capture_cli_smoke')
+    expect(validation.plan.resourceUri).toBe('/.data/capture/candidates/2026/06/16.ttl#capture_cli_smoke')
   })
 
   it('uses UDFS predicates as the primary credential contract', () => {

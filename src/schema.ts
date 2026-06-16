@@ -15,6 +15,7 @@ import { aiModelResource, aiModelTable } from './ai-model.schema'
 import { aiProviderResource, aiProviderTable } from './ai-provider.schema'
 import { chatResource, chatTable } from './chat.schema'
 import { contactResource, contactTable } from './contact.schema'
+import { captureCandidateResource, captureEventResource } from './capture.schema'
 import { credentialResource, credentialTable } from './credential.schema'
 import { deliveryResource, deliveryTable } from './delivery.schema'
 import { evidenceResource } from './evidence.schema'
@@ -64,6 +65,8 @@ export const solidResources = {
   settingsResource,
   ideaResource,
   issueResource,
+  captureCandidateResource,
+  captureEventResource,
 
   // Sidecar collaboration data
   approvalResource,

@@ -281,6 +281,33 @@ export {
   type SourceModule,
 } from './favorite'
 
+// Capture - Secretary capture candidates and decision ledger
+export {
+  CaptureCandidateStatus,
+  CaptureDecision,
+  captureCandidateResource,
+  captureEventResource,
+  type CaptureCandidateStatusType,
+  type CaptureConfidenceType,
+  type CaptureDecisionType,
+  type CaptureCandidateRow,
+  type CaptureCandidateInsert,
+  type CaptureCandidateUpdate,
+  type CaptureEventRow,
+  type CaptureEventInsert,
+  type CaptureEventUpdate,
+} from './capture.schema'
+export {
+  captureCandidateRepository,
+  captureEventRepository,
+  hasCaptureForSource,
+  listCaptureEventsBySource,
+  type CaptureCandidateListWhere,
+  type CaptureDuplicateCheckInput,
+  type CaptureEventListWhere,
+  type CaptureEventSourceReadDatabase,
+} from './capture.repository'
+
 // Settings - 用户设置
 export {
   settingsResource,
@@ -536,6 +563,8 @@ export {
 export {
   approvalDescriptor,
   automationRuleDescriptor,
+  captureCandidateDescriptor,
+  captureEventDescriptor,
   chatDescriptor,
   contactDescriptor,
   credentialDescriptor,

@@ -1,0 +1,42 @@
+import { DCTerms, SCHEMA, UDFS } from '../namespaces'
+
+export const CaptureCandidateVocab = {
+  source: DCTerms.source,
+  summary: DCTerms.abstract,
+  suggestedType: UDFS.suggestedType,
+  suggestedTarget: UDFS.suggestedTarget,
+  confidence: UDFS.confidence,
+  reason: UDFS.reason,
+  status: UDFS.status,
+  sourceHash: UDFS.sourceHash,
+  chat: UDFS.conversation,
+  thread: UDFS.inThread,
+  task: UDFS.task,
+  run: UDFS.run,
+  actor: DCTerms.creator,
+  metadata: UDFS.metadata,
+  createdAt: DCTerms.created,
+  updatedAt: DCTerms.modified,
+} as const
+
+export const CaptureEventVocab = {
+  source: DCTerms.source,
+  captureCandidate: UDFS.captureCandidate,
+  targetResource: UDFS.targetResource,
+  decision: UDFS.captureDecision,
+  suggestedType: UDFS.suggestedType,
+  suggestedTarget: UDFS.suggestedTarget,
+  confidence: UDFS.confidence,
+  reason: UDFS.reason,
+  userCorrection: UDFS.userCorrection,
+  approval: UDFS.approval,
+  inputRequest: UDFS.inputRequest,
+  chat: UDFS.conversation,
+  thread: UDFS.inThread,
+  task: UDFS.task,
+  run: UDFS.run,
+  actor: DCTerms.creator,
+  about: SCHEMA.about,
+  metadata: UDFS.metadata,
+  createdAt: DCTerms.created,
+} as const
