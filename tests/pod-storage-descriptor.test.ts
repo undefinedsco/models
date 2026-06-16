@@ -52,7 +52,9 @@ describe('pod storage descriptors', () => {
       messageDescriptor,
     ]))
     expect(threadDescriptor.fields.parent.predicate).toBe(SIOC.has_parent)
+    expect(messageDescriptor.fields.parent.predicate).toBe(SIOC.has_parent)
     expect(messageDescriptor.fields.chat.predicate).toBeDefined()
+    expect((messageDescriptor.fields as Record<string, unknown>).scope).toBeUndefined()
   })
 
 

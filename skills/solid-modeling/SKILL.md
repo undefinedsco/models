@@ -160,6 +160,7 @@ Do not treat every `*Id` as the same modeling problem.
 Use full URI relation fields:
 
 ```ts
+message.parent
 message.chat
 message.thread
 message.replyTo
@@ -201,9 +202,10 @@ Use these concepts consistently across products:
 - `Thread`: implicit concrete timeline/place under exactly one parent command
   surface: Chat for conversation timelines, or Task for task execution
   timelines. Persist that owner as `thread.parent` using `sioc:has_parent`.
-- `Message`: human/runtime communication item in a command scope. It usually
-  belongs to a Chat, but task/runtime messages may belong to a Task or Thread
-  scope without inventing a Chat.
+- `Message`: human/runtime communication item under exactly one parent command
+  surface/container. Persist that owner as `message.parent` using
+  `sioc:has_parent`. Keep `message.chat` only as Solid Chat compatibility and
+  `message.thread` only as the concrete timeline relation.
 - `Run`: one concrete execution attempt by an Agent Runtime.
 - `RunStep`: append-only execution facts for a Run.
 
@@ -218,17 +220,18 @@ Align with graph semantics:
 | Concept | Preferred RDF direction | Typical predicate |
 |---|---|---|
 | thread belongs to parent command surface | `thread -> parent` | `sioc:has_parent` |
+| message belongs to parent command surface/container | `message -> parent` | `sioc:has_parent` |
 | resource belongs to generic command scope | `resource -> scope` | `udfs:inScope` when no standard predicate fits |
 | chat contains message | `chat -> message` | `wf:message` / project vocabulary |
 | thread contains message | `thread -> message` | `sioc:has_member` or equivalent |
 | reply points to original | `replyMessage -> originalMessage` | `sioc:has_reply` / project predicate |
 | author/maker | `message -> maker` | `foaf:maker` |
 
-Use `sioc:has_parent` as the canonical Thread owner relation even when the
-parent command surface is not a plain chat room. Use `udfs:inScope` only for
-resources that need a generic ownership relation and have no better standard
-predicate. Preserve Solid Chat compatibility for Chat-scoped Messages with
-`wf:message`.
+Use `sioc:has_parent` as the canonical Thread and Message owner relation even
+when the parent command surface is not a plain chat room. Use `udfs:inScope`
+only for resources that need a generic ownership relation and have no better
+standard predicate. Preserve Solid Chat compatibility for Chat-scoped Messages
+with `wf:message`, but do not use `message.chat` to derive storage.
 
 When inverse predicates are supported, use them for read/write symmetry. If the
 ORM cannot safely express the inverse write, put the relation writer in the

@@ -50,13 +50,14 @@ describe('command resource id defaults', () => {
     })).toBe('task/task_1/index.ttl#worker_thread_parent')
     expect(messageResource.buildId({
       id: 'msg_1',
+      parent: 'https://pod.example/.data/chat/default/index.ttl#this',
       chat: 'https://pod.example/.data/chat/default/index.ttl#this',
       thread: 'https://pod.example/.data/chat/default/index.ttl#thread_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('chat/default/2026/05/18/messages.ttl#msg_1')
     expect(messageResource.buildId({
       id: 'task_msg_1',
-      scope: 'https://pod.example/.data/task/index.ttl#task_1',
+      parent: 'https://pod.example/.data/task/index.ttl#task_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('task/task_1/2026/05/18/messages.ttl#task_msg_1')
     expect(runResource.buildId({
@@ -189,27 +190,22 @@ describe('command resource id defaults', () => {
     })).toBe('chat/default/2026/05/18/runs.ttl#run_millis')
   })
 
-  it('derives message storage from chat while retaining thread as a semantic relation', () => {
+  it('derives message storage only from parent while retaining chat/thread as semantic relations', () => {
     expect(messageResource.buildId({
-      id: 'msg_thread',
+      id: 'msg_parent_chat',
+      parent: 'https://pod.example/.data/chat/default/index.ttl#this',
       chat: 'https://pod.example/.data/chat/default/index.ttl#this',
       thread: 'https://pod.example/.data/chat/secretary/index.ttl#thread_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
-    })).toBe('chat/default/2026/05/18/messages.ttl#msg_thread')
-  })
+    })).toBe('chat/default/2026/05/18/messages.ttl#msg_parent_chat')
 
-  it('derives task-runtime message storage from thread or scope when no Chat exists', () => {
     expect(messageResource.buildId({
-      id: 'msg_thread_task',
+      id: 'msg_parent_task',
+      parent: 'https://pod.example/.data/task/index.ttl#task_1',
+      chat: 'https://pod.example/.data/chat/default/index.ttl#this',
       thread: 'https://pod.example/.data/task/task_1/index.ttl#worker_thread_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
-    })).toBe('task/task_1/2026/05/18/messages.ttl#msg_thread_task')
-
-    expect(messageResource.buildId({
-      id: 'msg_scope_task',
-      scope: 'https://pod.example/.data/task/index.ttl#task_1',
-      createdAt: new Date('2026-05-18T01:02:03.000Z'),
-    })).toBe('task/task_1/2026/05/18/messages.ttl#msg_scope_task')
+    })).toBe('task/task_1/2026/05/18/messages.ttl#msg_parent_task')
   })
 
   it('does not export command-surface path helpers', () => {

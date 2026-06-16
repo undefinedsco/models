@@ -10,7 +10,7 @@ import {
 } from './message.schema'
 
 export interface MessageListWhere extends Record<string, unknown> {
-  scope?: string | null
+  parent?: string | null
   chat?: string | null
   thread?: string | null
   maker?: string | null
@@ -23,7 +23,7 @@ export interface MessageListWhere extends Record<string, unknown> {
 }
 
 const exactFilterColumns = {
-  scope: messageResource.scope,
+  parent: messageResource.parent,
   chat: messageResource.chat,
   thread: messageResource.thread,
   maker: messageResource.maker,
@@ -45,7 +45,7 @@ function messageListFilter(where?: MessageListWhere): QueryCondition | undefined
   if (!where) return undefined
 
   const filters = [
-    exactFilter('scope', where.scope),
+    exactFilter('parent', where.parent),
     exactFilter('chat', where.chat),
     exactFilter('thread', where.thread),
     exactFilter('maker', where.maker),

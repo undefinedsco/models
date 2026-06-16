@@ -177,6 +177,7 @@ describe('Solid Pod live CRUD core surfaces', () => {
 
     await step('message.create', () => database.insert(messageTable).values({
       id: messageId,
+      parent: chatIri,
       chat: chatIri,
       thread: threadIri,
       maker: webId,
@@ -186,7 +187,7 @@ describe('Solid Pod live CRUD core surfaces', () => {
       createdAt: now,
       updatedAt: now,
     }).execute())
-    const messageIri = database.resolveLocatorIri(messageTable, { id: messageId, chat: chatIri, createdAt: now })
+    const messageIri = database.resolveLocatorIri(messageTable, { id: messageId, parent: chatIri, createdAt: now })
     const messageResourceId = database.resolveResourceId(messageTable, messageIri)
     const messageDocUrl = messageIri.split('#')[0]
     await step('message.read', async () => expectResourceContains(session!, messageDocUrl, 'Pod CRUD message'))

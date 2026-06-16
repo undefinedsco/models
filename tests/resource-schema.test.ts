@@ -245,6 +245,8 @@ describe('shared Solid resources', () => {
     expect((messageResource.columns as Record<string, unknown>).commandKind).toBeUndefined()
     expect((messageResource.columns as Record<string, unknown>).surface).toBeUndefined()
     expect((messageResource.columns as Record<string, unknown>).messageResource).toBeUndefined()
+    expect((messageResource.columns as Record<string, unknown>).parent).toBeDefined()
+    expect((messageResource.columns as Record<string, unknown>).scope).toBeUndefined()
     expect((sessionResource.columns as Record<string, unknown>).ownerWebId).toBeUndefined()
     expect((sessionResource.columns as Record<string, unknown>).messageResources).toBeUndefined()
     expect((taskResource.columns as Record<string, unknown>).surface).toBeUndefined()

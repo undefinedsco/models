@@ -1,8 +1,7 @@
 import { DCTerms, FOAF, SCHEMA, SIOC, UDFS, WF } from '../namespaces'
 
 export const MessageVocab = {
-  // Existing
-  scope: UDFS.inScope,
+  parent: SIOC.has_parent,
   thread: SIOC.has_member,
   chat: WF.message,
   maker: FOAF.maker,

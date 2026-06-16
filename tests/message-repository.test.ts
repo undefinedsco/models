@@ -41,7 +41,7 @@ class MockDatabase<Row> {
 
 const baseMessage = {
   id: 'chat/default/2026/06/16/messages.ttl#msg-1',
-  scope: 'https://pod.example/.data/chat/default/index.ttl#this',
+  parent: 'https://pod.example/.data/chat/default/index.ttl#this',
   chat: 'https://pod.example/.data/chat/default/index.ttl#this',
   thread: 'https://pod.example/.data/chat/default/index.ttl#thread-1',
   maker: 'https://pod.example/profile/card#me',
@@ -70,6 +70,7 @@ describe('messageRepository', () => {
     const db = new MockDatabase<MessageRow>([baseMessage])
 
     await messageRepository.list(db as unknown as SolidDatabase, {
+      parent: 'https://pod.example/.data/chat/default/index.ttl#this',
       thread: 'https://pod.example/.data/chat/default/index.ttl#thread-1',
       role: 'user',
     })

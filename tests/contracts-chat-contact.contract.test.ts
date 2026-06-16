@@ -88,8 +88,9 @@ describe('Wave A CP0 contracts: centralized vocabs', () => {
     expect(ThreadVocab.workspace).toBe(UDFS.workspace)
   })
 
-  it('MessageVocab exposes routing predicates', () => {
-    expect(MessageVocab.scope).toBe(UDFS.inScope)
+  it('MessageVocab exposes parent and routing predicates', () => {
+    expect(MessageVocab.parent).toBe(SIOC.has_parent)
+    expect((MessageVocab as Record<string, unknown>).scope).toBeUndefined()
     expect(MessageVocab.chat).toBe(WF.message)
     expect(MessageVocab.routedBy).toBe(UDFS.routedBy)
     expect(MessageVocab.routeTargetAgent).toBe(UDFS.routeTargetAgent)
@@ -170,8 +171,9 @@ describe('Wave A CP0 contracts: schema types', () => {
     expectTypeOf<DeliveryRow>().not.toHaveProperty('surfaceId')
   })
 
-  it('MessageRow contains group/routing extensions', () => {
-    expectTypeOf<MessageRow>().toHaveProperty('scope')
+  it('MessageRow contains parent and group/routing extensions', () => {
+    expectTypeOf<MessageRow>().toHaveProperty('parent')
+    expectTypeOf<MessageRow>().not.toHaveProperty('scope')
     expectTypeOf<MessageRow>().toHaveProperty('senderName')
     expectTypeOf<MessageRow>().toHaveProperty('mentions')
     expectTypeOf<MessageRow>().toHaveProperty('coordinationId')

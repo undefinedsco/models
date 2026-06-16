@@ -29,7 +29,7 @@ udfs:workspace a rdf:Property ;
 udfs:inScope a rdf:Property ;
   rdfs:domain rdfs:Resource ;
   rdfs:range rdfs:Resource ;
-  rdfs:comment "Generic LinX ownership relation for resources that have no better standard predicate. Thread ownership uses sioc:has_parent; Chat-scoped messages use wf:message." .
+  rdfs:comment "Generic LinX ownership relation for resources that have no better standard predicate. Thread and Message ownership use sioc:has_parent; Chat-scoped messages may also expose wf:message for compatibility." .
 
 # Policy inheritance context (reserved; resolved via workspace root in CP0)
 udfs:policyRef a rdf:Property ;

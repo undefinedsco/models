@@ -25,42 +25,33 @@ export const MessageStatus = {
  * Message resource (aligned with xpod).
  *
  * Product semantics:
- * - Message belongs to a neutral product scope: usually a Chat, sometimes a
- *   Task/thread execution timeline.
- * - Chat remains the Solid Chat compatibility relation. When present, the
- *   message is written under the Chat message bucket and projected through
- *   wf:message.
+ * - Message belongs to exactly one parent command surface/container. That
+ *   parent can be a Chat, Task, Thread, or future command surface.
+ * - Chat remains the Solid Chat compatibility relation and is not used for
+ *   default storage resolution.
  * - Thread is optional and appears when a message participates in an explicit
  *   AI/task/branch timeline.
  *
  * Storage structure:
- * - Location: /.data/chat/{chat|id}/{yyyy}/{MM}/{dd}/messages.ttl#{id}
+ * - Location: /.data/{parent.dir}/{yyyy}/{MM}/{dd}/messages.ttl#{id}
  * - Date-based path for efficient time-range queries
- * - chat/thread are RDF URI relations. Short ids remain accepted at API/query call sites via ORM URI template resolution.
+ * - parent/chat/thread are RDF URI relations. Short ids remain accepted at API/query call sites via ORM URI template resolution.
  */
 export const messageResource = podTable(
   'chat_message',
   {
     id: id('id').default((key: string | undefined, row?: Record<string, unknown>) => (
       renderDefaultIdTemplate(
-        row?.chat
-          ? 'chat/{chat.key}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'
-          : row?.thread
-          ? '{thread.dir}/{yyyy}/{MM}/{dd}/messages.ttl#{key}'
-          : '{scope.dir}/{yyyy}/{MM}/{dd}/messages.ttl#{key}',
+        '{parent.dir}/{yyyy}/{MM}/{dd}/messages.ttl#{key}',
         {
           key: resourceKey(key, 'msg'),
           row,
-          links: {
-            chat: chatResource,
-            thread: threadResource,
-          },
         },
       )
     )),
 
-    // Canonical product owner scope. The object can be a Chat, Task, Thread, or future command surface.
-    scope: uri('scope').predicate(UDFS.inScope),
+    // Canonical product owner. The object can be a Chat, Task, Thread, or future command surface.
+    parent: uri('parent').predicate(SIOC.has_parent).notNull(),
 
     // Solid Chat compatibility relation. In RDF this is an inverse link: <chat> wf:message <message>.
     chat: uri('chat').predicate(WF.message).inverse().link(chatResource),
