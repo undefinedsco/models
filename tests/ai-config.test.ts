@@ -101,6 +101,7 @@ describe('ai-config shared core', () => {
         name: 'Claude Sonnet 4',
         enabled: true,
         capabilities: [],
+        modelType: 'chat',
         isCustom: true,
       },
     ])
@@ -295,6 +296,96 @@ describe('ai-config shared core', () => {
       status: 'active',
     })
     expect(plan.modelDeleteIds).toEqual([])
+  })
+
+  it('keeps parser models in the shared AI provider/model/credential config', () => {
+    const plan = buildAIConfigMutationPlan({
+      providerId: 'paddleocr',
+      currentProviderRows: [],
+      currentCredentialRows: [],
+      currentModelRows: [],
+      updates: {
+        enabled: true,
+        apiKey: 'paddle-token',
+        models: [
+          {
+            id: 'pp-ocrv6',
+            name: 'PP-OCRv6',
+            enabled: true,
+            capabilities: ['document-parse', 'ocr'],
+            modelType: 'parser',
+          },
+        ],
+      },
+    })
+
+    expect(plan.providerId).toBe('paddleocr')
+    expect(plan.providerPayload).toMatchObject({
+      id: 'paddleocr',
+      hasModel: aiConfigModelRef('paddleocr', 'pp-ocrv6'),
+    })
+    expect(plan.credentialPayload).toMatchObject({
+      id: 'paddleocr-default',
+      provider: aiConfigProviderRef('paddleocr'),
+      service: 'ai',
+      status: 'active',
+      apiKey: 'paddle-token',
+    })
+    expect(plan.modelUpserts).toHaveLength(1)
+    expect(plan.modelUpserts[0]).toMatchObject({
+      id: 'pp-ocrv6',
+      displayName: 'PP-OCRv6',
+      modelType: 'parser',
+      isProvidedBy: aiConfigProviderRef('paddleocr'),
+      status: 'active',
+    })
+  })
+
+  it('returns parser model type from AI config state reads', () => {
+    const states = buildAIConfigProviderStateMap({
+      fallbackToCatalogModels: false,
+      providerRows: [
+        {
+          id: 'paddleocr',
+          hasModel: '/settings/providers/paddleocr.ttl#pp-ocrv6',
+        },
+      ],
+      credentialRows: [
+        {
+          id: 'paddleocr-default',
+          provider: '/settings/providers/paddleocr.ttl',
+          service: 'ai',
+          status: 'active',
+          apiKey: 'paddle-token',
+        },
+      ],
+      modelRows: [
+        {
+          id: 'paddleocr.ttl#pp-ocrv6',
+          displayName: 'PP-OCRv6',
+          modelType: 'parser',
+          isProvidedBy: '/settings/providers/paddleocr.ttl',
+          status: 'active',
+        },
+      ],
+    })
+
+    expect(states.paddleocr).toMatchObject({
+      id: 'paddleocr',
+      enabled: true,
+      apiKey: 'paddle-token',
+      selectedModelId: 'pp-ocrv6',
+      models: [
+        {
+          id: 'pp-ocrv6',
+          name: 'PP-OCRv6',
+          enabled: true,
+          modelType: 'parser',
+          capabilities: [],
+          isCustom: true,
+        },
+      ],
+    })
   })
 
   it('creates a shared mutation plan for custom codex provider credentials', () => {

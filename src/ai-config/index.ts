@@ -16,6 +16,7 @@ export interface AIConfigModel {
   name: string
   enabled: boolean
   capabilities: string[]
+  modelType?: string
   isCustom?: boolean
 }
 
@@ -156,6 +157,11 @@ const AI_CONFIG_PROVIDER_CATALOG: readonly AIConfigProviderCatalogEntry[] = [
     displayName: 'CodeBuddy',
     defaultBaseUrl: 'https://api.codebuddy.ai/v1',
   },
+  {
+    id: 'paddleocr',
+    displayName: 'PaddleOCR',
+    aliases: ['paddle'],
+  },
 ]
 
 const AI_CONFIG_PROVIDER_MAP = new Map(
@@ -210,6 +216,10 @@ function existingDate(value: unknown): Date | undefined {
 
 function normalizeOptionalText(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined
+}
+
+function normalizeAIConfigModelType(value: unknown): string {
+  return normalizeOptionalText(value)?.toLowerCase() ?? 'chat'
 }
 
 function normalizeOptionalBoolean(value: unknown): boolean {
@@ -605,6 +615,7 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
       name: typeof row.displayName === 'string' && row.displayName.trim() ? row.displayName : modelId,
       enabled: (typeof row.status === 'string' ? row.status : 'active') !== 'inactive',
       capabilities: [],
+      modelType: normalizeAIConfigModelType(row.modelType),
       isCustom: !(resolveCatalogEntry(providerId, catalog)?.defaultModels ?? []).includes(modelId),
     })
     modelMap.set(providerId, list)
@@ -632,6 +643,7 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
           name: modelId,
           enabled: true,
           capabilities: [],
+          modelType: 'chat',
         }))
 
     const selectedModelId = normalizeAIConfigModelStorageId(
@@ -765,7 +777,7 @@ export function buildAIConfigMutationPlan(input: {
       modelUpserts.push({
         id: modelId,
         displayName: model.name || modelId,
-        modelType: 'chat',
+        modelType: normalizeAIConfigModelType(model.modelType),
         isProvidedBy: aiConfigProviderRef(providerId),
         status: model.enabled ? 'active' : 'inactive',
         createdAt: existingDate(existing?.createdAt) ?? now,
