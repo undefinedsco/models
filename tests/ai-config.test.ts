@@ -6,6 +6,7 @@ import {
   buildAIConfigDisconnectPlan,
   buildAIConfigMutationPlan,
   buildAIConfigProviderStateMap,
+  createAIConfigCredentialId,
   getAIConfigProviderFamilyIds,
   getAIConfigProviderMetadata,
   normalizeAIConfigModelId,
@@ -17,6 +18,15 @@ import {
 } from '../src/ai-config'
 
 describe('ai-config shared core', () => {
+  it('creates opaque credential ids and keeps human meaning in fields', () => {
+    const first = createAIConfigCredentialId()
+    const second = createAIConfigCredentialId()
+
+    expect(first).toMatch(/^cred_[a-z0-9_-]+$/u)
+    expect(second).toMatch(/^cred_[a-z0-9_-]+$/u)
+    expect(second).not.toBe(first)
+  })
+
   it('normalizes provider aliases to canonical ids', () => {
     expect(normalizeAIConfigProviderId('claude')).toBe('anthropic')
     expect(normalizeAIConfigProviderId('codex')).toBe('openai')
@@ -281,7 +291,7 @@ describe('ai-config shared core', () => {
       hasModel: aiConfigModelRef('anthropic', 'claude-sonnet-4'),
     })
     expect(plan.credentialPayload).toMatchObject({
-      id: 'anthropic-default',
+      id: expect.stringMatching(/^cred_[a-z0-9_-]+$/u),
       provider: aiConfigProviderRef('anthropic'),
       service: 'ai',
       status: 'active',
@@ -325,7 +335,7 @@ describe('ai-config shared core', () => {
       hasModel: aiConfigModelRef('paddleocr', 'pp-ocrv6'),
     })
     expect(plan.credentialPayload).toMatchObject({
-      id: 'paddleocr-default',
+      id: expect.stringMatching(/^cred_[a-z0-9_-]+$/u),
       provider: aiConfigProviderRef('paddleocr'),
       service: 'ai',
       status: 'active',
@@ -452,7 +462,7 @@ describe('ai-config shared core', () => {
       hasModel: aiConfigModelRef('stepfun', 'step-3.7-flash'),
     })
     expect(plan.credentialPayload).toMatchObject({
-      id: 'stepfun-default',
+      id: expect.stringMatching(/^cred_[a-z0-9_-]+$/u),
       provider: aiConfigProviderRef('stepfun'),
       service: 'ai',
       status: 'active',

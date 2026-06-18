@@ -370,8 +370,11 @@ export function getAIConfigDefaultBaseUrl(providerId: string): string | undefine
   return getAIConfigProviderMetadata(providerId).defaultBaseUrl
 }
 
-export function getDefaultAIConfigCredentialId(providerId: string): string {
-  return `${normalizeAIConfigProviderId(providerId)}-default`
+export function createAIConfigCredentialId(): string {
+  const random = typeof globalThis.crypto?.randomUUID === 'function'
+    ? globalThis.crypto.randomUUID().replace(/-/g, '').slice(0, 16)
+    : Math.random().toString(36).slice(2, 18)
+  return `cred_${random}`
 }
 
 export function aiConfigProviderRef(providerId: string): string {
@@ -733,7 +736,7 @@ export function buildAIConfigMutationPlan(input: {
       id:
         normalizeAIConfigResourceId(input.updates.credentialId) ||
         normalizeAIConfigResourceId(typeof existingCredential?.id === 'string' ? existingCredential.id : '') ||
-        getDefaultAIConfigCredentialId(providerId),
+        createAIConfigCredentialId(),
       provider: aiConfigProviderRef(providerId),
       service: typeof existingCredential?.service === 'string' && existingCredential.service ? existingCredential.service : 'ai',
       status:

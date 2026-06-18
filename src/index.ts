@@ -530,7 +530,7 @@ export {
   getAIConfigProviderFamilyIds,
   getAIConfigProviderIdsForBackend,
   getAIConfigProviderMetadata,
-  getDefaultAIConfigCredentialId,
+  createAIConfigCredentialId,
   normalizeAIConfigProviderId,
   normalizeAIConfigModelId,
   normalizeAIConfigResourceId,

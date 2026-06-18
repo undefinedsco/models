@@ -142,6 +142,7 @@ const selected = selectAIConfigCredential('openai', credentialRows, providerRows
 Selection semantics:
 
 - Only active `service = "ai"` credentials with an API key are candidates.
+- New credential ids are opaque random keys such as `cred_8f3k2x`; human meaning belongs in `label` and `isDefault`, not the URI fragment.
 - A credential marked `isDefault` is preferred.
 - If multiple defaults exist, the oldest `lastUsedAt` wins.
 - If no default exists, credentials rotate by oldest `lastUsedAt`.

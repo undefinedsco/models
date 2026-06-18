@@ -133,7 +133,7 @@ describe('command resource id defaults', () => {
       agent: '__secretary__',
     })).toBe('__secretary__/skills/symphony/')
     expect(aiProviderResource.buildId({ id: 'openai' })).toBe('openai.ttl')
-    expect(credentialResource.buildId({ id: 'openai-default' })).toBe('credentials.ttl#openai-default')
+    expect(credentialResource.buildId({ id: 'cred_abc123' })).toBe('credentials.ttl#cred_abc123')
     expect(approvalResource.buildId({
       id: 'approval_1',
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
