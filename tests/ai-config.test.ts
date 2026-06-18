@@ -43,6 +43,41 @@ describe('ai-config shared core', () => {
     expect(normalizeAIConfigResourceId('settings/providers/openai.ttl')).toBe('openai')
   })
 
+  it('normalizes Qwen aliases to the DashScope embedding provider catalog entry', () => {
+    expect(normalizeAIConfigProviderId('qwen')).toBe('dashscope')
+    expect(normalizeAIConfigProviderId('alibaba')).toBe('dashscope')
+
+    const metadata = getAIConfigProviderMetadata('qwen')
+    expect(metadata).toMatchObject({
+      id: 'dashscope',
+      displayName: 'DashScope',
+      defaultBaseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+      defaultModels: ['text-embedding-v4'],
+      defaultModelType: 'embedding',
+    })
+  })
+
+  it('exposes DashScope text-embedding-v4 as an embedding fallback catalog model', () => {
+    const states = buildAIConfigProviderStateMap({
+      providerRows: [],
+      credentialRows: [],
+      modelRows: [],
+    })
+
+    expect(states.dashscope).toMatchObject({
+      id: 'dashscope',
+      baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+      selectedModelId: 'text-embedding-v4',
+      models: [
+        {
+          id: 'text-embedding-v4',
+          modelType: 'embedding',
+          enabled: true,
+        },
+      ],
+    })
+  })
+
   it('keeps LinX cloud models out of Pod-backed user AI config defaults', () => {
     expect(normalizeAIConfigProviderId('undefineds')).toBe('undefineds')
 

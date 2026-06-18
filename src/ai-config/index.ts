@@ -9,6 +9,7 @@ export interface AIConfigProviderCatalogEntry {
   aliases?: string[]
   defaultBaseUrl?: string
   defaultModels?: string[]
+  defaultModelType?: string
 }
 
 export interface AIConfigModel {
@@ -89,6 +90,14 @@ export const DEFAULT_LINX_MODEL_ID = LINX_LITE_MODEL_ID
 export const UNDEFINEDS_AI_MODEL_IDS = [LINX_LITE_MODEL_ID, LINX_MODEL_ID] as const
 
 const AI_CONFIG_PROVIDER_CATALOG: readonly AIConfigProviderCatalogEntry[] = [
+  {
+    id: 'dashscope',
+    displayName: 'DashScope',
+    aliases: ['qwen', 'alibaba'],
+    defaultBaseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+    defaultModels: ['text-embedding-v4'],
+    defaultModelType: 'embedding',
+  },
   {
     id: 'openai',
     displayName: 'OpenAI',
@@ -646,7 +655,7 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
           name: modelId,
           enabled: true,
           capabilities: [],
-          modelType: 'chat',
+          modelType: metadata.defaultModelType ?? 'chat',
         }))
 
     const selectedModelId = normalizeAIConfigModelStorageId(
