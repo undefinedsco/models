@@ -143,6 +143,7 @@ Embedding defaults:
 
 - `dashscope` is the canonical provider id for Qwen/DashScope embedding; `qwen`, `alibaba`, and `dashscope-cn` normalize to `dashscope`.
 - The catalog default embedding model is `text-embedding-v4` with `modelType = "embedding"`; callers can use it as a fallback when the user has a DashScope credential but no explicit `AIConfig.embeddingModel`.
+- `paddleocr` has the official PaddleOCR AI Studio endpoint as provider `baseUrl`; users should only provide the TOKEN/API key credential.
 
 Selection semantics:
 

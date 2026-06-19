@@ -367,6 +367,7 @@ describe('ai-config shared core', () => {
     expect(plan.providerId).toBe('paddleocr')
     expect(plan.providerPayload).toMatchObject({
       id: 'paddleocr',
+      baseUrl: 'https://paddleocr.aistudio-app.com/api/v2/ocr/jobs',
       hasModel: aiConfigModelRef('paddleocr', 'pp-ocrv6'),
     })
     expect(plan.credentialPayload).toMatchObject({
