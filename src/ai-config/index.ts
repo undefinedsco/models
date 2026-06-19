@@ -93,8 +93,8 @@ const AI_CONFIG_PROVIDER_CATALOG: readonly AIConfigProviderCatalogEntry[] = [
   {
     id: 'dashscope',
     displayName: 'DashScope',
-    aliases: ['qwen', 'alibaba'],
-    defaultBaseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+    aliases: ['qwen', 'alibaba', 'dashscope-cn'],
+    defaultBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
     defaultModels: ['text-embedding-v4'],
     defaultModelType: 'embedding',
   },

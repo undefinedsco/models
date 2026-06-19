@@ -141,7 +141,7 @@ const selected = selectAIConfigCredential('openai', credentialRows, providerRows
 
 Embedding defaults:
 
-- `dashscope` is the canonical provider id for Qwen/DashScope embedding; `qwen` and `alibaba` normalize to `dashscope`.
+- `dashscope` is the canonical provider id for Qwen/DashScope embedding; `qwen`, `alibaba`, and `dashscope-cn` normalize to `dashscope`.
 - The catalog default embedding model is `text-embedding-v4` with `modelType = "embedding"`; callers can use it as a fallback when the user has a DashScope credential but no explicit `AIConfig.embeddingModel`.
 
 Selection semantics:

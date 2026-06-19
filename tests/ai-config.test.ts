@@ -51,7 +51,7 @@ describe('ai-config shared core', () => {
     expect(metadata).toMatchObject({
       id: 'dashscope',
       displayName: 'DashScope',
-      defaultBaseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+      defaultBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
       defaultModels: ['text-embedding-v4'],
       defaultModelType: 'embedding',
     })
@@ -66,7 +66,7 @@ describe('ai-config shared core', () => {
 
     expect(states.dashscope).toMatchObject({
       id: 'dashscope',
-      baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+      baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
       selectedModelId: 'text-embedding-v4',
       models: [
         {
