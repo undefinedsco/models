@@ -4,6 +4,31 @@ export type PodModelDescriptorSource = 'official' | 'verified-community' | 'deve
 export type PodModelDescriptorTrustLevel = 'high' | 'medium' | 'low'
 export type PodModelFieldType = 'string' | 'text' | 'number' | 'boolean' | 'timestamp' | 'uri' | 'json'
 export type PodModelMergePolicy = 'create-only' | 'upsert' | 'patch' | 'append'
+export type PodModelDescriptorDomain =
+  | 'capture'
+  | 'symphony'
+  | 'runtime'
+  | 'chat'
+  | 'identity'
+  | 'credential'
+  | 'settings'
+
+export interface PodModelIdSemantics {
+  /**
+   * True means caller-provided `id` is already a base-relative resource id.
+   * Callers must not reinterpret it as a slug/key or append another path
+   * template around it.
+   */
+  explicitId: boolean
+}
+
+export interface PodModelDocumentPathPolicy {
+  field: string
+  kind: 'document' | 'source'
+  contentType: string
+  defaultPathPattern: string
+  pathInputs: string[]
+}
 
 export interface PodModelFieldDescriptor {
   type: PodModelFieldType
@@ -16,6 +41,8 @@ export interface PodModelFieldDescriptor {
 
 export interface PodModelDescriptor {
   uri: string
+  aliases?: string[]
+  domains?: PodModelDescriptorDomain[]
   version: string
   source: PodModelDescriptorSource
   trustLevel: PodModelDescriptorTrustLevel
@@ -27,10 +54,17 @@ export interface PodModelDescriptor {
     base: string
     resourceIdPattern: string
   }
+  idSemantics?: PodModelIdSemantics
+  relationFields?: string[]
+  documentPathPolicy?: PodModelDocumentPathPolicy
   fields: Record<string, PodModelFieldDescriptor>
   uniqueBy: string[]
   writableFields: string[]
   mergePolicy: PodModelMergePolicy
+  exampleInput?: {
+    match: Record<string, unknown>
+    set?: Record<string, unknown>
+  }
   examples: Array<{
     request: string
     match: Record<string, unknown>
@@ -516,6 +550,10 @@ function exactIdStorage(base = '/.data/'): PodModelDescriptor['storage'] {
   }
 }
 
+const exactIdSemantics: PodModelIdSemantics = {
+  explicitId: true,
+}
+
 const idField: PodModelFieldDescriptor = {
   type: 'string',
   predicate: UDFS.term('id'),
@@ -525,6 +563,8 @@ const idField: PodModelFieldDescriptor = {
 
 export const captureCandidateDescriptor: PodModelDescriptor = {
   uri: UDFS.CaptureCandidate,
+  aliases: ['CaptureCandidate', 'CaptureDraft'],
+  domains: ['capture'],
   version: '1.0.0',
   source: 'official',
   trustLevel: 'high',
@@ -533,6 +573,8 @@ export const captureCandidateDescriptor: PodModelDescriptor = {
   resourceKind: 'capture-candidate',
   description: 'Temporary capture suggestion created from observed or ambiguous content. It is not formal memory until promoted through the appropriate typed resource and control flow.',
   storage: exactIdStorage('/.data/capture/'),
+  idSemantics: exactIdSemantics,
+  relationFields: ['source', 'suggestedType', 'suggestedTarget', 'chat', 'thread', 'task', 'run', 'actor'],
   fields: {
     id: idField,
     source: { type: 'uri', predicate: DCTerms.source, required: true, description: 'Original message, file, URL, fetched document, or resource being considered.' },
@@ -551,6 +593,16 @@ export const captureCandidateDescriptor: PodModelDescriptor = {
     metadata: { type: 'json', predicate: UDFS.metadata, description: 'Opaque adapter-local metadata; shared relations must be explicit fields.' },
     createdAt: { type: 'timestamp', predicate: DCTerms.created, description: 'Creation timestamp.' },
     updatedAt: { type: 'timestamp', predicate: DCTerms.modified, description: 'Last update timestamp.' },
+  },
+  exampleInput: {
+    match: {
+      id: 'candidates/2026/06/16.ttl#candidate_1',
+    },
+    set: {
+      source: 'https://pod.example/.data/chat/default/2026/06/16/messages.ttl#msg_1',
+      summary: 'Potential durable memory that needs a target type',
+      status: 'candidate',
+    },
   },
   uniqueBy: ['id'],
   writableFields: [
@@ -583,6 +635,8 @@ export const captureCandidateDescriptor: PodModelDescriptor = {
 
 export const captureEventDescriptor: PodModelDescriptor = {
   uri: UDFS.CaptureEvent,
+  aliases: ['CaptureEvent'],
+  domains: ['capture'],
   version: '1.0.0',
   source: 'official',
   trustLevel: 'high',
@@ -591,6 +645,8 @@ export const captureEventDescriptor: PodModelDescriptor = {
   resourceKind: 'capture-event',
   description: 'Append-only capture decision ledger. It records direct commits, optimistic commits, candidate creation, promotion, rejection, correction, rollback, duplicate detection, and ignored decisions.',
   storage: exactIdStorage('/.data/capture/'),
+  idSemantics: exactIdSemantics,
+  relationFields: ['source', 'captureCandidate', 'targetResource', 'suggestedType', 'suggestedTarget', 'approval', 'inputRequest', 'chat', 'thread', 'task', 'run', 'actor', 'about'],
   fields: {
     id: idField,
     source: { type: 'uri', predicate: DCTerms.source, required: true, description: 'Original message, file, URL, fetched document, or resource considered by capture.' },
@@ -640,6 +696,142 @@ export const captureEventDescriptor: PodModelDescriptor = {
       request: 'Record that a chat message became a capture candidate',
       match: {
         id: 'events/2026/06/16.ttl#event_1',
+      },
+    },
+  ],
+}
+
+export const modelingProposalDescriptor: PodModelDescriptor = {
+  uri: UDFS.ModelingProposal,
+  aliases: ['ModelingProposal'],
+  domains: ['capture'],
+  version: '1.0.0',
+  source: 'official',
+  trustLevel: 'high',
+  namespace: UDFS.NAMESPACE,
+  class: UDFS.ModelingProposal,
+  resourceKind: 'modeling-proposal',
+  description: 'Reviewable proposal for a new record type, schema, relation field, or folder policy when capture finds a durable signal but no current model fits.',
+  storage: exactIdStorage('/.data/capture/'),
+  idSemantics: exactIdSemantics,
+  relationFields: ['source', 'suggestedTarget', 'chat', 'thread', 'task', 'run', 'actor'],
+  fields: {
+    id: idField,
+    source: { type: 'uri', predicate: DCTerms.source, required: true, description: 'Original source that motivated the modeling proposal.' },
+    summary: { type: 'text', predicate: DCTerms.abstract, required: true, description: 'Concise summary of the missing model need.' },
+    proposedType: { type: 'string', predicate: UDFS.proposedType, required: true, description: 'Proposed record type or class alias.' },
+    proposedFields: { type: 'json', predicate: UDFS.proposedFields, description: 'Candidate fields, relation fields, and required flags.' },
+    folderPolicy: { type: 'json', predicate: UDFS.folderPolicy, description: 'Candidate file body path policy or semantic folder rule.' },
+    suggestedTarget: { type: 'uri', predicate: UDFS.suggestedTarget, description: 'Project, folder, thread, task, or other proposed scope.' },
+    reason: { type: 'text', predicate: UDFS.reason, description: 'Why existing descriptors do not fit.' },
+    status: { type: 'string', predicate: UDFS.status, description: 'Proposal lifecycle status such as proposed, accepted, rejected, or superseded.' },
+    chat: { type: 'uri', predicate: UDFS.conversation, description: 'Related chat command surface.' },
+    thread: { type: 'uri', predicate: UDFS.inThread, description: 'Related concrete thread/work site.' },
+    task: { type: 'uri', predicate: UDFS.task, description: 'Related task.' },
+    run: { type: 'uri', predicate: UDFS.run, description: 'Related run.' },
+    actor: { type: 'uri', predicate: DCTerms.creator, description: 'Secretary, user, or worker that created the proposal.' },
+    metadata: { type: 'json', predicate: UDFS.metadata, description: 'Opaque adapter-local metadata.' },
+    createdAt: { type: 'timestamp', predicate: DCTerms.created, description: 'Creation timestamp.' },
+    updatedAt: { type: 'timestamp', predicate: DCTerms.modified, description: 'Last update timestamp.' },
+  },
+  uniqueBy: ['id'],
+  writableFields: [
+    'source',
+    'summary',
+    'proposedType',
+    'proposedFields',
+    'folderPolicy',
+    'suggestedTarget',
+    'reason',
+    'status',
+    'chat',
+    'thread',
+    'task',
+    'run',
+    'actor',
+    'metadata',
+    'updatedAt',
+  ],
+  mergePolicy: 'upsert',
+  exampleInput: {
+    match: {
+      id: 'modeling-proposals/2026/06/30.ttl#proposal_1',
+    },
+    set: {
+      source: 'https://pod.example/.data/chat/default/2026/06/30/messages.ttl#msg_1',
+      summary: 'No current descriptor fits this durable signal',
+      proposedType: 'Preference',
+      status: 'proposed',
+    },
+  },
+  examples: [
+    {
+      request: 'Propose a new model when capture finds no matching record type',
+      match: {
+        id: 'modeling-proposals/2026/06/30.ttl#proposal_1',
+      },
+    },
+  ],
+}
+
+export const capturePolicyDescriptor: PodModelDescriptor = {
+  uri: UDFS.CapturePolicy,
+  aliases: ['CapturePolicy'],
+  domains: ['capture'],
+  version: '1.0.0',
+  source: 'official',
+  trustLevel: 'high',
+  namespace: UDFS.NAMESPACE,
+  class: UDFS.CapturePolicy,
+  resourceKind: 'capture-policy',
+  description: 'Scoped capture policy for user, agent, project, thread, or session capture behavior. It controls capture defaults without hardcoding record types in product shells.',
+  storage: exactIdStorage('/.data/capture/'),
+  idSemantics: exactIdSemantics,
+  relationFields: ['target', 'actor', 'chat', 'thread', 'task', 'run'],
+  fields: {
+    id: idField,
+    scope: { type: 'string', predicate: UDFS.inScope, required: true, description: 'Policy scope such as user, agent, project, thread, or session.' },
+    target: { type: 'uri', predicate: UDFS.inScope, description: 'Concrete scoped resource when the policy applies to a project, agent, thread, task, or run.' },
+    status: { type: 'string', predicate: UDFS.status, description: 'Policy lifecycle status such as active or disabled.' },
+    rules: { type: 'json', predicate: UDFS.policy, description: 'Structured capture rules, thresholds, preferred record types, and approval requirements.' },
+    actor: { type: 'uri', predicate: DCTerms.creator, description: 'User or agent that owns this policy.' },
+    chat: { type: 'uri', predicate: UDFS.conversation, description: 'Related chat command surface.' },
+    thread: { type: 'uri', predicate: UDFS.inThread, description: 'Related concrete thread/work site.' },
+    task: { type: 'uri', predicate: UDFS.task, description: 'Related task.' },
+    run: { type: 'uri', predicate: UDFS.run, description: 'Related run.' },
+    metadata: { type: 'json', predicate: UDFS.metadata, description: 'Opaque adapter-local metadata.' },
+    createdAt: { type: 'timestamp', predicate: DCTerms.created, description: 'Creation timestamp.' },
+    updatedAt: { type: 'timestamp', predicate: DCTerms.modified, description: 'Last update timestamp.' },
+  },
+  uniqueBy: ['id'],
+  writableFields: [
+    'scope',
+    'target',
+    'status',
+    'rules',
+    'actor',
+    'chat',
+    'thread',
+    'task',
+    'run',
+    'metadata',
+    'updatedAt',
+  ],
+  mergePolicy: 'upsert',
+  exampleInput: {
+    match: {
+      id: 'policies/project/linx-cli.ttl#this',
+    },
+    set: {
+      scope: 'project',
+      status: 'active',
+    },
+  },
+  examples: [
+    {
+      request: 'Configure capture policy for a project',
+      match: {
+        id: 'policies/project/linx-cli.ttl#this',
       },
     },
   ],
@@ -793,6 +985,8 @@ export const messageDescriptor: PodModelDescriptor = {
 
 export const ideaDescriptor: PodModelDescriptor = {
   uri: UDFS.Idea,
+  aliases: ['Idea'],
+  domains: ['capture'],
   version: '1.0.0',
   source: 'official',
   trustLevel: 'high',
@@ -801,6 +995,15 @@ export const ideaDescriptor: PodModelDescriptor = {
   resourceKind: 'idea',
   description: 'File-primary candidate extracted from conversation before it is promoted to committed work. The document owns human-readable content; meta owns status and routing facts.',
   storage: exactIdStorage('/.data/ideas/'),
+  idSemantics: exactIdSemantics,
+  relationFields: ['document', 'related', 'promotedTo', 'chat', 'thread', 'sourceMessages', 'createdBy'],
+  documentPathPolicy: {
+    field: 'document',
+    kind: 'document',
+    contentType: 'text/markdown',
+    defaultPathPattern: 'projects/{project}/ideas/{slug}.md',
+    pathInputs: ['project', 'slug'],
+  },
   fields: {
     id: idField,
     summary: { type: 'string', predicate: DCTerms.abstract, required: true, description: 'Short summary of the idea.' },
@@ -821,6 +1024,10 @@ export const ideaDescriptor: PodModelDescriptor = {
     createdBy: { type: 'uri', predicate: DCTerms.creator, description: 'Creator WebID or agent URI.' },
     metadata: { type: 'json', predicate: UDFS.metadata, description: 'Opaque adapter metadata.' },
   },
+  exampleInput: {
+    match: { id: '2026/05/28.ttl#idea_symphony_quality_metrics' },
+    set: { summary: 'Capture a fragmented product idea for later triage' },
+  },
   uniqueBy: ['id'],
   writableFields: [
     'summary', 'document', 'input', 'status', 'commitment', 'affectedArea', 'currentUnderstanding',
@@ -838,6 +1045,8 @@ export const ideaDescriptor: PodModelDescriptor = {
 
 export const issueDescriptor: PodModelDescriptor = {
   uri: UDFS.Issue,
+  aliases: ['Issue'],
+  domains: ['symphony', 'capture'],
   version: '1.0.0',
   source: 'official',
   trustLevel: 'high',
@@ -848,6 +1057,15 @@ export const issueDescriptor: PodModelDescriptor = {
   storage: {
     base: '/.data/issues/',
     resourceIdPattern: '{id}',
+  },
+  idSemantics: exactIdSemantics,
+  relationFields: ['document', 'chat', 'thread', 'parentIssue', 'tasks', 'createdBy', 'assignedTo'],
+  documentPathPolicy: {
+    field: 'document',
+    kind: 'document',
+    contentType: 'text/markdown',
+    defaultPathPattern: 'projects/{project}/issues/{slug}.md',
+    pathInputs: ['project', 'slug'],
   },
   fields: {
     id: idField,
@@ -882,6 +1100,8 @@ export const issueDescriptor: PodModelDescriptor = {
 
 export const taskDescriptor: PodModelDescriptor = {
   uri: UDFS.Task,
+  aliases: ['Task'],
+  domains: ['symphony'],
   version: '1.0.0',
   source: 'official',
   trustLevel: 'high',
@@ -890,6 +1110,8 @@ export const taskDescriptor: PodModelDescriptor = {
   resourceKind: 'task',
   description: 'Durable executable work unit. Scheduling, runner selection, and concrete attempts live outside Task.',
   storage: exactIdStorage('/.data/task/'),
+  idSemantics: exactIdSemantics,
+  relationFields: ['issue', 'message', 'workspace', 'assignedTo', 'source'],
   fields: {
     id: idField,
     title: { type: 'string', predicate: DCTerms.title, description: 'Task title.' },
@@ -981,6 +1203,8 @@ export const automationRuleDescriptor: PodModelDescriptor = {
 
 export const deliveryDescriptor: PodModelDescriptor = {
   uri: UDFS.Delivery,
+  aliases: ['Delivery'],
+  domains: ['symphony', 'runtime'],
   version: '1.0.0',
   source: 'official',
   trustLevel: 'high',
@@ -989,6 +1213,8 @@ export const deliveryDescriptor: PodModelDescriptor = {
   resourceKind: 'delivery',
   description: 'Internal handoff envelope between threads, sessions, agents, and runtimes.',
   storage: exactIdStorage(),
+  idSemantics: exactIdSemantics,
+  relationFields: ['task', 'source', 'target', 'chat', 'thread', 'targetThread', 'targetSession', 'actor', 'object'],
   fields: {
     id: idField,
     kind: { type: 'string', predicate: UDFS.deliveryKind, description: 'Delivery kind.' },
@@ -1024,6 +1250,8 @@ export const deliveryDescriptor: PodModelDescriptor = {
 
 export const runDescriptor: PodModelDescriptor = {
   uri: UDFS.Run,
+  aliases: ['Run'],
+  domains: ['symphony', 'runtime'],
   version: '1.0.0',
   source: 'official',
   trustLevel: 'high',
@@ -1032,6 +1260,8 @@ export const runDescriptor: PodModelDescriptor = {
   resourceKind: 'run',
   description: 'One concrete execution attempt by an agent runtime.',
   storage: exactIdStorage(),
+  idSemantics: exactIdSemantics,
+  relationFields: ['task', 'delivery', 'trigger', 'input', 'thread', 'workspace'],
   fields: {
     id: idField,
     task: { type: 'uri', predicate: UDFS.task, description: 'Task being executed.' },
@@ -1065,6 +1295,8 @@ export const runDescriptor: PodModelDescriptor = {
 
 export const runStepDescriptor: PodModelDescriptor = {
   uri: UDFS.RunStep,
+  aliases: ['RunStep'],
+  domains: ['symphony', 'runtime'],
   version: '1.0.0',
   source: 'official',
   trustLevel: 'high',
@@ -1073,6 +1305,8 @@ export const runStepDescriptor: PodModelDescriptor = {
   resourceKind: 'run_step',
   description: 'Append-only execution fact emitted while a run executes.',
   storage: exactIdStorage(),
+  idSemantics: exactIdSemantics,
+  relationFields: ['run'],
   fields: {
     id: idField,
     run: { type: 'uri', predicate: UDFS.run, required: true, description: 'Run this step belongs to.' },
@@ -1088,6 +1322,8 @@ export const runStepDescriptor: PodModelDescriptor = {
 
 export const evidenceDescriptor: PodModelDescriptor = {
   uri: UDFS.Evidence,
+  aliases: ['Evidence'],
+  domains: ['symphony', 'capture'],
   version: '1.0.0',
   source: 'official',
   trustLevel: 'high',
@@ -1096,6 +1332,15 @@ export const evidenceDescriptor: PodModelDescriptor = {
   resourceKind: 'evidence',
   description: 'Append-only proof or finding for a workflow control object.',
   storage: exactIdStorage(),
+  idSemantics: exactIdSemantics,
+  relationFields: ['about', 'issue', 'task', 'delivery', 'run', 'thread', 'source', 'actor'],
+  documentPathPolicy: {
+    field: 'source',
+    kind: 'source',
+    contentType: 'text/plain',
+    defaultPathPattern: 'projects/{project}/evidence/{slug}.txt',
+    pathInputs: ['project', 'slug'],
+  },
   fields: {
     id: idField,
     evidenceKind: { type: 'string', predicate: UDFS.evidenceKind, required: true, description: 'Evidence kind.' },
@@ -1119,6 +1364,8 @@ export const evidenceDescriptor: PodModelDescriptor = {
 
 export const reportDescriptor: PodModelDescriptor = {
   uri: UDFS.Report,
+  aliases: ['Report'],
+  domains: ['symphony', 'capture'],
   version: '1.0.0',
   source: 'official',
   trustLevel: 'high',
@@ -1127,6 +1374,15 @@ export const reportDescriptor: PodModelDescriptor = {
   resourceKind: 'report',
   description: 'Closure, review, handoff, status, or quality summary for a control object.',
   storage: exactIdStorage(),
+  idSemantics: exactIdSemantics,
+  relationFields: ['about', 'issue', 'task', 'delivery', 'run', 'thread', 'evidence', 'reviewer', 'actor', 'source'],
+  documentPathPolicy: {
+    field: 'source',
+    kind: 'document',
+    contentType: 'text/markdown',
+    defaultPathPattern: 'projects/{project}/reports/{slug}.md',
+    pathInputs: ['project', 'slug'],
+  },
   fields: {
     id: idField,
     reportKind: { type: 'string', predicate: UDFS.reportKind, required: true, description: 'Report kind.' },
@@ -1203,8 +1459,10 @@ export const officialPodModelDescriptors = [
   runStepDescriptor,
   evidenceDescriptor,
   reportDescriptor,
+  capturePolicyDescriptor,
   captureCandidateDescriptor,
   captureEventDescriptor,
+  modelingProposalDescriptor,
   sessionDescriptor,
   approvalDescriptor,
   inputRequestDescriptor,
@@ -1214,18 +1472,26 @@ export function createPodModelDescriptorRegistry(
   descriptors: readonly PodModelDescriptor[] = officialPodModelDescriptors,
 ) {
   const byUri = new Map(descriptors.map((descriptor) => [descriptor.uri, descriptor]))
+  const byAlias = new Map<string, PodModelDescriptor>()
+  for (const descriptor of descriptors) {
+    for (const alias of descriptor.aliases ?? []) {
+      byAlias.set(normalizeDescriptorAlias(alias), descriptor)
+    }
+    byAlias.set(normalizeDescriptorAlias(descriptor.resourceKind), descriptor)
+  }
 
   return {
-    list(filter: { source?: PodModelDescriptorSource; resourceKind?: string } = {}): PodModelDescriptor[] {
+    list(filter: { source?: PodModelDescriptorSource; resourceKind?: string; domain?: PodModelDescriptorDomain } = {}): PodModelDescriptor[] {
       return descriptors.filter((descriptor) => {
         if (filter.source && descriptor.source !== filter.source) return false
         if (filter.resourceKind && descriptor.resourceKind !== filter.resourceKind) return false
+        if (filter.domain && !(descriptor.domains ?? []).includes(filter.domain)) return false
         return true
       })
     },
 
-    describe(uri: string): PodModelDescriptor | null {
-      return byUri.get(uri) ?? null
+    describe(uriOrAlias: string): PodModelDescriptor | null {
+      return byUri.get(uriOrAlias) ?? byAlias.get(normalizeDescriptorAlias(uriOrAlias)) ?? null
     },
   }
 }
@@ -1235,22 +1501,24 @@ export const podSchema = createPodSchema()
 export function createPodSchema(
   registry = createPodModelDescriptorRegistry(),
 ) {
-  const resolveDescriptors = (input: { uri?: string; schemaUri?: string } = {}) => {
-    const uri = input.uri ?? input.schemaUri
-    if (!uri) return registry.list()
-    const descriptor = registry.describe(uri)
+  const resolveDescriptors = (input: { uri?: string; schemaUri?: string; alias?: string; domain?: PodModelDescriptorDomain } = {}) => {
+    const uriOrAlias = input.uri ?? input.schemaUri ?? input.alias
+    if (!uriOrAlias) return registry.list({ domain: input.domain })
+    const descriptor = registry.describe(uriOrAlias)
     return descriptor ? [descriptor] : []
   }
 
   return {
     list: registry.list,
-    describe(uriOrInput: string | { uri: string } | { schemaUri: string }) {
-      const uri = typeof uriOrInput === 'string'
+    describe(uriOrInput: string | { uri?: string; schemaUri?: string; alias?: string }) {
+      const uriOrAlias = typeof uriOrInput === 'string'
         ? uriOrInput
         : 'uri' in uriOrInput
           ? uriOrInput.uri
-          : uriOrInput.schemaUri
-      return registry.describe(uri)
+          : 'schemaUri' in uriOrInput
+            ? uriOrInput.schemaUri
+            : uriOrInput.alias
+      return uriOrAlias ? registry.describe(uriOrAlias) : null
     },
     classes(input: { uri?: string; schemaUri?: string } = {}): PodSchemaClassEntry[] {
       return resolveDescriptors(input).map((descriptor) => ({
@@ -1267,6 +1535,7 @@ export function createPodSchema(
       query: string
       source?: PodModelDescriptorSource
       resourceKind?: string
+      domain?: PodModelDescriptorDomain
       limit?: number
     }): PodSchemaSearchEntry[] {
       const terms = normalizeSearchTerms(input.query)
@@ -1275,6 +1544,7 @@ export function createPodSchema(
       return registry.list({
         source: input.source,
         resourceKind: input.resourceKind,
+        domain: input.domain,
       })
         .map((descriptor) => scoreDescriptorSearch(descriptor, terms))
         .filter((entry): entry is PodSchemaSearchEntry => entry !== null)
@@ -1319,6 +1589,11 @@ export function createPodStorage(
       if (!descriptor) return invalid('descriptor_not_found', `Descriptor not found: ${schemaUri}`)
       if (input.operation !== 'upsert') return invalid('unsupported_operation', `Unsupported operation: ${input.operation}`)
 
+      const unknownMatchFields = Object.keys(input.match).filter((field) => !descriptor.fields[field])
+      if (unknownMatchFields.length > 0) {
+        return invalid('unknown_match_fields', `Fields are not modeled: ${unknownMatchFields.join(', ')}`)
+      }
+
       const missingKeys = descriptor.uniqueBy.filter((field) => !input.match[field])
       if (missingKeys.length > 0) {
         return invalid('missing_match_fields', `Missing match fields: ${missingKeys.join(', ')}`)
@@ -1331,6 +1606,9 @@ export function createPodStorage(
       }
 
       const resourceId = buildResourceId(descriptor, input.match)
+      if (hasDuplicatedPathComposition(resourceId)) {
+        return invalid('duplicate_resource_path', `Resource id contains duplicated path composition: ${resourceId}`)
+      }
       const plan: PodStorageMutationPlan = {
         id: `plan_${resourceId.replace(/[^a-zA-Z0-9_.-]+/g, '-')}`,
         schemaUri: descriptor.uri,
@@ -1373,6 +1651,10 @@ export function createPodStorage(
   }
 }
 
+function normalizeDescriptorAlias(alias: string): string {
+  return alias.toLowerCase().replace(/[^a-z0-9]+/gu, '')
+}
+
 function invalid(code: string, message: string): PodStorageValidationResult & PodStorageCommitResult {
   return {
     ok: false,
@@ -1391,7 +1673,28 @@ function buildResourceId(descriptor: PodModelDescriptor, match: Record<string, u
 }
 
 function buildResourceUri(descriptor: PodModelDescriptor, resourceId: string): string {
-  return `${descriptor.storage.base}${resourceId}`
+  const normalizedResourceId = resourceId.replace(/^\/+/u, '')
+  const normalizedStorageBase = descriptor.storage.base.replace(/^\/+/u, '')
+  if (normalizedResourceId === normalizedStorageBase || normalizedResourceId.startsWith(normalizedStorageBase)) {
+    return `/${normalizedResourceId}`
+  }
+  return `${descriptor.storage.base}${resourceId.replace(/^\/+/u, '')}`
+}
+
+function hasDuplicatedPathComposition(resourceId: string): boolean {
+  const pathPart = resourceId.split('#', 1)[0]
+  const segments = pathPart.split('/').filter(Boolean)
+  for (let start = 0; start < segments.length; start += 1) {
+    const remaining = segments.length - start
+    for (let length = 2; length <= Math.floor(remaining / 2); length += 1) {
+      const first = segments.slice(start, start + length)
+      const second = segments.slice(start + length, start + (length * 2))
+      if (first.length === second.length && first.every((segment, index) => segment === second[index])) {
+        return true
+      }
+    }
+  }
+  return false
 }
 
 function normalizeSearchTerms(query: string): string[] {

@@ -1,6 +1,10 @@
 import { id, podTable, string, text, timestamp, uri } from '@undefineds.co/drizzle-solid'
 import { DCTerms, UDFS } from './namespaces'
 import { chatResource } from './chat.schema'
+import {
+  buildPersonalLinkedContextFilePath,
+  type PersonalLinkedContextPathPolicy,
+} from './personal-linked-context-paths'
 import { threadResource } from './thread.schema'
 
 export type IssueStatus = 'open' | 'triaging' | 'in_progress' | 'blocked' | 'resolved' | 'closed'
@@ -16,7 +20,7 @@ export type IssuePriority = 'low' | 'medium' | 'high' | 'urgent'
  * Executable slices live in Task. The visible process remains
  * Chat/Thread/Message through chat/thread links.
  */
-export const issueResource = podTable(
+export const issueResource = Object.assign(podTable(
   'issue',
   {
     id: id('id').default('{key}.ttl'),
@@ -47,7 +51,17 @@ export const issueResource = podTable(
     type: UDFS.Issue,
     namespace: UDFS,
   },
-)
+), {
+  defaultDocumentPath(
+    row?: Record<string, unknown>,
+    policy?: PersonalLinkedContextPathPolicy,
+  ): string {
+    return buildPersonalLinkedContextFilePath('issues', row, policy, {
+      defaultExtension: 'md',
+      titleFields: ['title', 'description', 'id'],
+    })
+  },
+})
 
 // Compatibility alias. New model code should prefer `issueResource`.
 export const issueTable = issueResource

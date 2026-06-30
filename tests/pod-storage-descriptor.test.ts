@@ -9,6 +9,7 @@ import {
   createPodModelDescriptorRegistry,
   createPodSchema,
   createPodStorage,
+  ideaDescriptor,
   issueDescriptor,
   inputRequestDescriptor,
   messageDescriptor,
@@ -201,6 +202,136 @@ describe('pod storage descriptors', () => {
     if (!validation.ok) throw new Error(validation.error.message)
     expect(validation.plan.resourceId).toBe('candidates/2026/06/16.ttl#capture_cli_smoke')
     expect(validation.plan.resourceUri).toBe('/.data/capture/candidates/2026/06/16.ttl#capture_cli_smoke')
+  })
+
+  it('does not prepend descriptor storage base to exact base-relative ids', () => {
+    const podStorage = createPodStorage()
+    const validation = podStorage.validate({
+      schemaUri: UDFS.CaptureCandidate,
+      operation: 'upsert',
+      match: {
+        id: '.data/capture/drafts/2026/06/30.ttl#plc_acceptance',
+      },
+      set: {
+        summary: 'PLC acceptance draft should resolve exactly once',
+        status: 'pending',
+      },
+    })
+
+    expect(validation.ok).toBe(true)
+    if (!validation.ok) throw new Error(validation.error.message)
+    expect(validation.plan.resourceId).toBe('.data/capture/drafts/2026/06/30.ttl#plc_acceptance')
+    expect(validation.plan.resourceUri).toBe('/.data/capture/drafts/2026/06/30.ttl#plc_acceptance')
+    expect(validation.plan.resourceUri).not.toContain('/.data/capture/.data/capture/')
+  })
+
+  it('exposes discovery metadata needed by AI Pod tools', () => {
+    const podSchema = createPodSchema(createPodModelDescriptorRegistry())
+
+    const idea = podSchema.describe({ alias: 'Idea' })
+    expect(idea?.uri).toBe(UDFS.Idea)
+    expect(idea?.aliases).toContain('Idea')
+    expect(idea?.domains).toEqual(expect.arrayContaining(['capture']))
+    expect(idea?.relationFields).toEqual(expect.arrayContaining([
+      'document',
+      'chat',
+      'thread',
+      'sourceMessages',
+    ]))
+    expect(idea?.idSemantics).toEqual({
+      explicitId: true,
+    })
+    expect(idea?.documentPathPolicy).toMatchObject({
+      field: 'document',
+      kind: 'document',
+      contentType: 'text/markdown',
+      defaultPathPattern: 'projects/{project}/ideas/{slug}.md',
+      pathInputs: ['project', 'slug'],
+    })
+    expect(idea?.exampleInput).toMatchObject({
+      match: { id: '2026/05/28.ttl#idea_symphony_quality_metrics' },
+      set: { summary: 'Capture a fragmented product idea for later triage' },
+    })
+
+    const symphonySchemas = podSchema.list({ domain: 'symphony' }).map((descriptor) => descriptor.uri)
+    expect(symphonySchemas).toEqual(expect.arrayContaining([
+      UDFS.Issue,
+      UDFS.Task,
+      UDFS.Run,
+      UDFS.Report,
+      UDFS.Evidence,
+    ]))
+    expect(symphonySchemas).not.toContain(UDFS.Credential)
+  })
+
+  it('formalizes capture fallback records for draft and modeling-proposal flows', () => {
+    const podSchema = createPodSchema(createPodModelDescriptorRegistry())
+
+    const captureDraft = podSchema.describe({ alias: 'CaptureDraft' })
+    expect(captureDraft?.uri).toBe(UDFS.CaptureCandidate)
+    expect(captureDraft?.aliases).toEqual(expect.arrayContaining(['CaptureCandidate', 'CaptureDraft']))
+    expect(captureDraft?.domains).toEqual(expect.arrayContaining(['capture']))
+
+    const modelingProposal = podSchema.describe({ alias: 'ModelingProposal' })
+    expect(modelingProposal?.uri).toBe(UDFS.ModelingProposal)
+    expect(modelingProposal?.storage).toEqual({
+      base: '/.data/capture/',
+      resourceIdPattern: '{id}',
+    })
+    expect(modelingProposal?.fields.proposedType.required).toBe(true)
+    expect(modelingProposal?.fields.folderPolicy.predicate).toBe(UDFS.folderPolicy)
+  })
+
+  it('formalizes capture policy as a discoverable scoped model', () => {
+    const podSchema = createPodSchema(createPodModelDescriptorRegistry())
+
+    const capturePolicy = podSchema.describe({ alias: 'CapturePolicy' })
+    expect(capturePolicy?.uri).toBe(UDFS.CapturePolicy)
+    expect(capturePolicy?.domains).toEqual(expect.arrayContaining(['capture']))
+    expect(capturePolicy?.storage).toEqual({
+      base: '/.data/capture/',
+      resourceIdPattern: '{id}',
+    })
+    expect(capturePolicy?.fields.scope.required).toBe(true)
+    expect(capturePolicy?.fields.target.predicate).toBe(UDFS.inScope)
+    expect(capturePolicy?.fields.rules.type).toBe('json')
+    expect(capturePolicy?.exampleInput).toMatchObject({
+      match: { id: 'policies/project/linx-cli.ttl#this' },
+      set: { scope: 'project', status: 'active' },
+    })
+  })
+
+  it('rejects unknown fields and duplicated path composition before commit', () => {
+    const podStorage = createPodStorage()
+
+    const duplicatePath = podStorage.validate({
+      schemaUri: UDFS.Idea,
+      operation: 'upsert',
+      match: {
+        id: 'projects/foo/ideas/projects/foo/ideas/bar.ttl#this',
+      },
+      set: {
+        summary: 'Duplicated path composition',
+      },
+    })
+    expect(duplicatePath.ok).toBe(false)
+    if (duplicatePath.ok) throw new Error('expected duplicate path validation to fail')
+    expect(duplicatePath.error.code).toBe('duplicate_resource_path')
+
+    const unknownMatchField = podStorage.validate({
+      schemaUri: UDFS.Idea,
+      operation: 'upsert',
+      match: {
+        id: '2026/06/30.ttl#idea_unknown_field',
+        surprise: 'not-modeled',
+      },
+      set: {
+        summary: 'Unknown fields should not pass through xpod writes',
+      },
+    })
+    expect(unknownMatchField.ok).toBe(false)
+    if (unknownMatchField.ok) throw new Error('expected unknown field validation to fail')
+    expect(unknownMatchField.error.code).toBe('unknown_match_fields')
   })
 
   it('uses UDFS predicates as the primary credential contract', () => {

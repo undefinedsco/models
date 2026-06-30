@@ -1,6 +1,10 @@
 import { id, object, podTable, string, text, timestamp, uri } from '@undefineds.co/drizzle-solid'
 import { DCTerms, UDFS } from './namespaces'
 import { chatResource } from './chat.schema'
+import {
+  buildPersonalLinkedContextFilePath,
+  type PersonalLinkedContextPathPolicy,
+} from './personal-linked-context-paths'
 import { threadResource } from './thread.schema'
 
 export type IdeaStatus = 'captured' | 'exploring' | 'candidate' | 'promoted' | 'deferred' | 'rejected' | 'superseded'
@@ -13,7 +17,7 @@ export type IdeaCommitment = 'thought' | 'direction' | 'tentative_decision' | 'c
  * human-readable input, context, and open questions; this resource stores
  * queryable lifecycle and routing metadata.
  */
-export const ideaResource = podTable(
+export const ideaResource = Object.assign(podTable(
   'idea',
   {
     id: id('id').default('{yyyy}/{MM}/{dd}.ttl#{key}'),
@@ -46,7 +50,17 @@ export const ideaResource = podTable(
     type: UDFS.Idea,
     namespace: UDFS,
   },
-)
+), {
+  defaultDocumentPath(
+    row?: Record<string, unknown>,
+    policy?: PersonalLinkedContextPathPolicy,
+  ): string {
+    return buildPersonalLinkedContextFilePath('ideas', row, policy, {
+      defaultExtension: 'md',
+      titleFields: ['summary', 'input', 'id'],
+    })
+  },
+})
 
 export type IdeaRow = typeof ideaResource.$inferSelect
 export type IdeaInsert = typeof ideaResource.$inferInsert

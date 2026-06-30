@@ -3,6 +3,10 @@ import { DCTerms, SCHEMA, UDFS } from './namespaces'
 import { deliveryResource } from './delivery.schema'
 import { evidenceResource } from './evidence.schema'
 import { issueResource } from './issue.schema'
+import {
+  buildPersonalLinkedContextFilePath,
+  type PersonalLinkedContextPathPolicy,
+} from './personal-linked-context-paths'
 import { runResource } from './run.schema'
 import { taskResource } from './task.schema'
 import { threadResource } from './thread.schema'
@@ -52,7 +56,7 @@ export const ReportOutcome = {
  * summary resource. The resource subject is the report file/record itself;
  * `about` points to the control object being summarized.
  */
-export const reportResource = podTable(
+export const reportResource = Object.assign(podTable(
   'report',
   {
     id: id('id').default((key: string | undefined, row?: Record<string, unknown>) => {
@@ -93,7 +97,17 @@ export const reportResource = podTable(
     type: UDFS.Report,
     namespace: UDFS,
   },
-)
+), {
+  defaultDocumentPath(
+    row?: Record<string, unknown>,
+    policy?: PersonalLinkedContextPathPolicy,
+  ): string {
+    return buildPersonalLinkedContextFilePath('reports', row, policy, {
+      defaultExtension: 'md',
+      titleFields: ['summary', 'reportKind', 'id'],
+    })
+  },
+})
 
 export type ReportRow = typeof reportResource.$inferSelect
 export type ReportInsert = typeof reportResource.$inferInsert

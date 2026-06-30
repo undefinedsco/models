@@ -2,6 +2,10 @@ import { id, object, podTable, string, text, timestamp, uri } from '@undefineds.
 import { DCTerms, SCHEMA, UDFS } from './namespaces'
 import { deliveryResource } from './delivery.schema'
 import { issueResource } from './issue.schema'
+import {
+  buildPersonalLinkedContextFilePath,
+  type PersonalLinkedContextPathPolicy,
+} from './personal-linked-context-paths'
 import { runResource } from './run.schema'
 import { taskResource } from './task.schema'
 import { threadResource } from './thread.schema'
@@ -38,7 +42,7 @@ export const EvidenceKind = {
  * evidence file when one exists. `about` points to the work/control object it
  * supports. Evidence is not a status owner by itself.
  */
-export const evidenceResource = podTable(
+export const evidenceResource = Object.assign(podTable(
   'evidence',
   {
     id: id('id').default('evidence/{yyyy}/{MM}/{dd}.ttl#{key}'),
@@ -66,7 +70,17 @@ export const evidenceResource = podTable(
     type: UDFS.Evidence,
     namespace: UDFS,
   },
-)
+), {
+  defaultSourcePath(
+    row?: Record<string, unknown>,
+    policy?: PersonalLinkedContextPathPolicy,
+  ): string {
+    return buildPersonalLinkedContextFilePath('evidence', row, policy, {
+      defaultExtension: 'txt',
+      titleFields: ['summary', 'evidenceKind', 'id'],
+    })
+  },
+})
 
 export type EvidenceRow = typeof evidenceResource.$inferSelect
 export type EvidenceInsert = typeof evidenceResource.$inferInsert
