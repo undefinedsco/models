@@ -1,7 +1,6 @@
 import { eq, id, integer, podTable, string, text, timestamp, uri } from '@undefineds.co/drizzle-solid'
 import { credentialResource } from './credential.schema'
 import { UDFS } from './namespaces'
-import type { SolidDatabase } from './repository'
 
 export const GatewayAccessKeyDeployment = {
   local: 'local',
@@ -70,10 +69,46 @@ export interface FindFreshQuotaSnapshotInput {
 
 export type QuotaSnapshotUpsert = QuotaSnapshotInsert & { id: string }
 
-type AIGatewayRepositoryDb = Pick<
-  SolidDatabase,
-  'findById' | 'updateById' | 'insert' | 'select'
->
+interface InsertExecution<TRow> {
+  execute(): Promise<TRow[]>
+}
+
+interface InsertValues<TInsert, TRow> {
+  values(value: TInsert): InsertExecution<TRow>
+}
+
+interface SelectExecution<TRow> {
+  execute(): Promise<TRow[]>
+}
+
+interface SelectWhere<TRow> {
+  where(condition: unknown): SelectExecution<TRow>
+}
+
+interface SelectFrom<TRow> {
+  from(resource: typeof quotaSnapshotResource): SelectWhere<TRow>
+}
+
+interface AIGatewayRepositoryDb {
+  findById<TRow>(resource: typeof gatewayAccessKeyResource | typeof quotaSnapshotResource, id: string): Promise<TRow | null>
+  findByIri<TRow>(resource: typeof gatewayAccessKeyResource | typeof quotaSnapshotResource, iri: string): Promise<TRow | null>
+  updateById<TRow>(
+    resource: typeof gatewayAccessKeyResource | typeof quotaSnapshotResource,
+    id: string,
+    data: GatewayAccessKeyUpdate | QuotaSnapshotUpdate,
+  ): Promise<TRow | null>
+  updateByIri<TRow>(
+    resource: typeof gatewayAccessKeyResource | typeof quotaSnapshotResource,
+    iri: string,
+    data: GatewayAccessKeyUpdate | QuotaSnapshotUpdate,
+  ): Promise<TRow | null>
+  insert(resource: typeof quotaSnapshotResource): InsertValues<QuotaSnapshotInsert, QuotaSnapshotRow>
+  select(): SelectFrom<QuotaSnapshotRow>
+}
+
+const ABSOLUTE_IRI = /^[a-zA-Z][a-zA-Z\d+.-]*:/
+const GATEWAY_ACCESS_KEY_DEPLOYMENTS = new Set<string>(Object.values(GatewayAccessKeyDeployment))
+const QUOTA_SNAPSHOT_STATUSES = new Set<string>(Object.values(QuotaSnapshotStatus))
 
 function asDate(value: unknown): Date | null {
   if (value instanceof Date) return value
@@ -89,38 +124,94 @@ function timestampMs(value: unknown): number {
 }
 
 function isFreshQuotaSnapshot(row: QuotaSnapshotRow, now: Date): boolean {
-  if (row.status !== QuotaSnapshotStatus.available) return false
   const expiresAt = asDate(row.expiresAt)
   return !expiresAt || expiresAt.getTime() > now.getTime()
 }
 
+function isAbsoluteIri(value: string): boolean {
+  return ABSOLUTE_IRI.test(value)
+}
+
+function isGatewayAccessKeyDeployment(value: unknown): value is GatewayAccessKeyDeploymentType {
+  return typeof value === 'string' && GATEWAY_ACCESS_KEY_DEPLOYMENTS.has(value)
+}
+
+function isQuotaSnapshotStatus(value: unknown): value is QuotaSnapshotStatusType {
+  return typeof value === 'string' && QUOTA_SNAPSHOT_STATUSES.has(value)
+}
+
+function assertGatewayAccessKeyDeployment(value: unknown): asserts value is GatewayAccessKeyDeploymentType {
+  if (!isGatewayAccessKeyDeployment(value)) {
+    throw new Error(`Invalid Gateway access key deployment: ${String(value)}`)
+  }
+}
+
+function assertQuotaSnapshotStatus(value: unknown): asserts value is QuotaSnapshotStatusType {
+  if (!isQuotaSnapshotStatus(value)) {
+    throw new Error(`Invalid quota snapshot status: ${String(value)}`)
+  }
+}
+
+function quotaSnapshotUpdate(snapshot: QuotaSnapshotUpsert): QuotaSnapshotUpdate {
+  const { id: _id, ...patch } = snapshot
+  return patch
+}
+
+export function validateGatewayAccessKey(input: GatewayAccessKeyInsert): GatewayAccessKeyInsert & { deployment: GatewayAccessKeyDeploymentType } {
+  assertGatewayAccessKeyDeployment(input.deployment)
+  return { ...input, deployment: input.deployment }
+}
+
+export function validateQuotaSnapshot(input: QuotaSnapshotUpsert): QuotaSnapshotUpsert & { status: QuotaSnapshotStatusType } {
+  assertQuotaSnapshotStatus(input.status)
+  return { ...input, status: input.status }
+}
+
 export const aiGatewayRepository = {
+  validateAccessKey: validateGatewayAccessKey,
+  validateQuotaSnapshot,
+
   findAccessKeyById(
     db: AIGatewayRepositoryDb,
     idValue: string,
   ): Promise<GatewayAccessKeyRow | null> {
+    if (isAbsoluteIri(idValue)) {
+      return db.findByIri<GatewayAccessKeyRow>(gatewayAccessKeyResource, idValue)
+    }
     return db.findById<GatewayAccessKeyRow>(gatewayAccessKeyResource, idValue)
   },
 
   revokeAccessKey(
     db: AIGatewayRepositoryDb,
     input: { id: string; revokedAt?: Date | string | number },
-  ): Promise<GatewayAccessKeyRow> {
-    return db.updateById(gatewayAccessKeyResource, input.id, {
+  ): Promise<GatewayAccessKeyRow | null> {
+    const patch = {
       revokedAt: asDate(input.revokedAt) ?? new Date(),
-    }) as Promise<GatewayAccessKeyRow>
+    }
+    if (isAbsoluteIri(input.id)) {
+      return db.updateByIri<GatewayAccessKeyRow>(gatewayAccessKeyResource, input.id, patch)
+    }
+    return db.updateById<GatewayAccessKeyRow>(gatewayAccessKeyResource, input.id, patch)
   },
 
   async upsertQuotaSnapshot(
     db: AIGatewayRepositoryDb,
     snapshot: QuotaSnapshotUpsert,
-  ): Promise<QuotaSnapshotRow> {
-    const existing = await db.findById<QuotaSnapshotRow>(quotaSnapshotResource, snapshot.id)
+  ): Promise<QuotaSnapshotRow | null> {
+    const validSnapshot = validateQuotaSnapshot(snapshot)
+    const existing = isAbsoluteIri(validSnapshot.id)
+      ? await db.findByIri<QuotaSnapshotRow>(quotaSnapshotResource, validSnapshot.id)
+      : await db.findById<QuotaSnapshotRow>(quotaSnapshotResource, validSnapshot.id)
+
     if (existing) {
-      return db.updateById(quotaSnapshotResource, snapshot.id, snapshot) as Promise<QuotaSnapshotRow>
+      const patch = quotaSnapshotUpdate(validSnapshot)
+      return isAbsoluteIri(validSnapshot.id)
+        ? db.updateByIri<QuotaSnapshotRow>(quotaSnapshotResource, validSnapshot.id, patch)
+        : db.updateById<QuotaSnapshotRow>(quotaSnapshotResource, validSnapshot.id, patch)
     }
-    const [created] = await db.insert(quotaSnapshotResource).values(snapshot).execute() as QuotaSnapshotRow[]
-    return created
+
+    const [created] = await db.insert(quotaSnapshotResource).values(validSnapshot).execute()
+    return created ?? null
   },
 
   async findFreshQuotaSnapshot(
@@ -132,7 +223,7 @@ export const aiGatewayRepository = {
       .select()
       .from(quotaSnapshotResource)
       .where(eq(quotaSnapshotResource.credential, input.credential))
-      .execute() as QuotaSnapshotRow[]
+      .execute()
 
     return rows
       .filter((row) => row.credential === input.credential && isFreshQuotaSnapshot(row, now))

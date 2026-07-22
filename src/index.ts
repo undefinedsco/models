@@ -528,6 +528,8 @@ export {
   quotaSnapshotResource,
   quotaSnapshotTable,
   QuotaSnapshotStatus,
+  validateGatewayAccessKey,
+  validateQuotaSnapshot,
   type FindFreshQuotaSnapshotInput,
   type GatewayAccessKeyDeploymentType,
   type GatewayAccessKeyRow,

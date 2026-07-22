@@ -8,6 +8,7 @@ import {
   UDFS,
   type GatewayAccessKeyRow,
   type GatewayAccessKeyUpdate,
+  type QuotaSnapshotStatusType,
   type QuotaSnapshotInsert,
   type QuotaSnapshotRow,
   type QuotaSnapshotUpdate,
@@ -125,6 +126,17 @@ describe('AI Gateway shared resources', () => {
         if (resource === gatewayAccessKeyResource) return { ...accessKey, ...data }
         return { ...quota, ...data }
       },
+      async findByIri(resource: unknown, iri: string) {
+        calls.push(['findByIri', resource, iri])
+        if (resource === gatewayAccessKeyResource) return accessKey
+        if (resource === quotaSnapshotResource) return quota
+        return null
+      },
+      async updateByIri(resource: unknown, iri: string, data: GatewayAccessKeyUpdate | QuotaSnapshotUpdate) {
+        calls.push(['updateByIri', resource, iri, data])
+        if (resource === gatewayAccessKeyResource) return { ...accessKey, ...data }
+        return { ...quota, ...data }
+      },
       insert(resource: unknown) {
         calls.push(['insert', resource])
         return {
@@ -189,6 +201,216 @@ describe('AI Gateway shared resources', () => {
       ['insert', quotaSnapshotResource],
       ['from', quotaSnapshotResource],
     ]))
+  })
+
+  it('dispatches canonical absolute IRIs through IRI repository methods', async () => {
+    const now = new Date('2026-07-01T00:00:00.000Z')
+    const keyIri = 'https://pod.example/.data/ai/gateway/access-keys.ttl#key_1'
+    const quotaIri = 'https://pod.example/.data/ai/gateway/quota.ttl#quota_1'
+    const calls: Array<[string, unknown, unknown?, unknown?]> = []
+    const accessKey = {
+      id: 'ai/gateway/access-keys.ttl#key_1',
+      owner: 'https://pod.example/profile/card#me',
+      secretHash: 'sha256:abc',
+      deployment: 'cloud',
+    } as GatewayAccessKeyRow
+    const quota = {
+      id: 'ai/gateway/quota.ttl#quota_1',
+      credential: 'https://pod.example/settings/credentials.ttl#cred_1',
+      status: 'available',
+      expiresAt: new Date('2026-07-01T01:00:00.000Z'),
+      observedAt: now,
+    } as QuotaSnapshotRow
+    const db = {
+      async findById(resource: unknown, id: string) {
+        calls.push(['findById', resource, id])
+        return null
+      },
+      async findByIri(resource: unknown, iri: string) {
+        calls.push(['findByIri', resource, iri])
+        return resource === gatewayAccessKeyResource ? accessKey : quota
+      },
+      async updateById(resource: unknown, id: string, data: GatewayAccessKeyUpdate | QuotaSnapshotUpdate) {
+        calls.push(['updateById', resource, id, data])
+        return null
+      },
+      async updateByIri(resource: unknown, iri: string, data: GatewayAccessKeyUpdate | QuotaSnapshotUpdate) {
+        calls.push(['updateByIri', resource, iri, data])
+        return resource === gatewayAccessKeyResource ? { ...accessKey, ...data } : { ...quota, ...data }
+      },
+      insert(resource: unknown) {
+        calls.push(['insert', resource])
+        return {
+          values(value: QuotaSnapshotInsert) {
+            calls.push(['values', resource, value])
+            return { async execute() { return [{ ...quota, ...value }] } }
+          },
+        }
+      },
+      select() {
+        return {
+          from(resource: unknown) {
+            return {
+              where(condition: unknown) {
+                calls.push(['where', resource, condition])
+                return { async execute() { return [] } }
+              },
+            }
+          },
+        }
+      },
+    }
+
+    await expect(aiGatewayRepository.findAccessKeyById(db as never, keyIri)).resolves.toBe(accessKey)
+    await expect(aiGatewayRepository.revokeAccessKey(db as never, {
+      id: keyIri,
+      revokedAt: now,
+    })).resolves.toMatchObject({ revokedAt: now })
+    await expect(aiGatewayRepository.upsertQuotaSnapshot(db as never, {
+      id: quotaIri,
+      credential: 'https://pod.example/settings/credentials.ttl#cred_1',
+      status: 'available',
+      expiresAt: new Date('2026-07-01T01:00:00.000Z'),
+      observedAt: now,
+    })).resolves.toMatchObject({ id: 'ai/gateway/quota.ttl#quota_1' })
+
+    expect(calls).toEqual(expect.arrayContaining([
+      ['findByIri', gatewayAccessKeyResource, keyIri],
+      ['updateByIri', gatewayAccessKeyResource, keyIri, { revokedAt: now }],
+      ['findByIri', quotaSnapshotResource, quotaIri],
+      ['updateByIri', quotaSnapshotResource, quotaIri, {
+        credential: 'https://pod.example/settings/credentials.ttl#cred_1',
+        status: 'available',
+        expiresAt: new Date('2026-07-01T01:00:00.000Z'),
+        observedAt: now,
+      }],
+    ]))
+    expect(calls.some(([method]) => method === 'findById' || method === 'updateById')).toBe(false)
+  })
+
+  it('keeps quota freshness independent from provider status', async () => {
+    const now = new Date('2026-07-01T00:00:00.000Z')
+    const credential = 'https://pod.example/settings/credentials.ttl#cred_1'
+    const rows = (['available', 'unsupported', 'error'] as QuotaSnapshotStatusType[]).map((status, index) => ({
+      id: `ai/gateway/quota.ttl#quota_${index + 1}`,
+      credential,
+      status,
+      observedAt: new Date(`2026-07-01T00:0${index}:00.000Z`),
+      expiresAt: new Date('2026-07-01T01:00:00.000Z'),
+    })) as QuotaSnapshotRow[]
+    const db = {
+      select() {
+        return {
+          from() {
+            return {
+              where() {
+                return { async execute() { return rows } }
+              },
+            }
+          },
+        }
+      },
+    }
+
+    await expect(aiGatewayRepository.findFreshQuotaSnapshot(db as never, {
+      credential,
+      now,
+    })).resolves.toMatchObject({ status: 'error' })
+  })
+
+  it('returns null for not-found updates and empty inserts without updating id fields', async () => {
+    const calls: Array<[string, unknown, unknown?, unknown?]> = []
+    const db = {
+      async findById(resource: unknown, id: string) {
+        calls.push(['findById', resource, id])
+        return resource === quotaSnapshotResource && id === 'quota_1'
+          ? { id: 'ai/gateway/quota.ttl#quota_1' }
+          : null
+      },
+      async findByIri(resource: unknown, iri: string) {
+        calls.push(['findByIri', resource, iri])
+        return null
+      },
+      async updateById(resource: unknown, id: string, data: QuotaSnapshotUpdate) {
+        calls.push(['updateById', resource, id, data])
+        return null
+      },
+      async updateByIri(resource: unknown, iri: string, data: QuotaSnapshotUpdate) {
+        calls.push(['updateByIri', resource, iri, data])
+        return null
+      },
+      insert(resource: unknown) {
+        calls.push(['insert', resource])
+        return {
+          values(value: QuotaSnapshotInsert) {
+            calls.push(['values', resource, value])
+            return { async execute() { return [] } }
+          },
+        }
+      },
+    }
+
+    await expect(aiGatewayRepository.revokeAccessKey(db as never, {
+      id: 'missing-key',
+      revokedAt: '2026-07-01T00:00:00.000Z',
+    })).resolves.toBeNull()
+
+    await expect(aiGatewayRepository.upsertQuotaSnapshot(db as never, {
+      id: 'quota_1',
+      credential: 'https://pod.example/settings/credentials.ttl#cred_1',
+      status: 'available',
+    })).resolves.toBeNull()
+
+    await expect(aiGatewayRepository.upsertQuotaSnapshot(db as never, {
+      id: 'quota_empty',
+      credential: 'https://pod.example/settings/credentials.ttl#cred_1',
+      status: 'available',
+    })).resolves.toBeNull()
+
+    expect(calls).toEqual(expect.arrayContaining([
+      ['updateById', quotaSnapshotResource, 'quota_1', {
+        credential: 'https://pod.example/settings/credentials.ttl#cred_1',
+        status: 'available',
+      }],
+      ['values', quotaSnapshotResource, {
+        id: 'quota_empty',
+        credential: 'https://pod.example/settings/credentials.ttl#cred_1',
+        status: 'available',
+      }],
+    ]))
+    expect(calls.some(([method, resource,, data]) => (
+      (method === 'updateById' || method === 'updateByIri') &&
+      resource === quotaSnapshotResource &&
+      typeof data === 'object' &&
+      data !== null &&
+      'id' in data
+    ))).toBe(false)
+  })
+
+  it('rejects invalid Gateway deployment and quota status values at model boundaries', async () => {
+    const db = {
+      async findById() { return null },
+      async findByIri() { return null },
+      insert(resource: unknown) {
+        return {
+          values(value: QuotaSnapshotInsert) {
+            return { async execute() { return [{ id: 'ai/gateway/quota.ttl#quota_1', ...value }] } }
+          },
+        }
+      },
+    }
+
+    expect(() => aiGatewayRepository.validateAccessKey({
+      id: 'key_1',
+      owner: 'https://pod.example/profile/card#me',
+      secretHash: 'sha256:abc',
+      deployment: 'edge',
+    })).toThrow('Invalid Gateway access key deployment')
+    await expect(aiGatewayRepository.upsertQuotaSnapshot(db as never, {
+      id: 'quota_1',
+      credential: 'https://pod.example/settings/credentials.ttl#cred_1',
+      status: 'pending',
+    } as never)).rejects.toThrow('Invalid quota snapshot status')
   })
 
   it('registers descriptors for credential, gateway access key, and quota snapshot discovery', () => {
