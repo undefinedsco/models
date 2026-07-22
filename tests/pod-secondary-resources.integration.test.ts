@@ -114,7 +114,8 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       lastUsedAt: now,
       failCount: 0,
     }).execute()
-    await expect(database.findByIri(credentialTable, credentialIri)).resolves.toMatchObject({
+    const credential = await database.findByIri(credentialTable, credentialIri)
+    expect(credential).toMatchObject({
       id: `credentials.ttl#${credentialId}`,
       authMode: 'oauth',
       encryptedSecret: 'ciphertext-smoke',
@@ -125,6 +126,9 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       accountLabel: 'console@example.test',
       label: 'Smoke credential',
     })
+    expect(credential?.expiresAt).toEqual(now)
+    expect(credential?.lastRefreshAt).toEqual(now)
+    expect(credential?.reauthRequired).toBe(false)
     await expect(database.findById(credentialTable, credentialId)).resolves.toMatchObject({
       id: `credentials.ttl#${credentialId}`,
       label: 'Smoke credential',
@@ -135,6 +139,29 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       failCount: 1,
     })).resolves.toMatchObject({ label: 'Smoke credential updated', failCount: 1 })
     await expectDeleted(database, credentialTable, credentialIri)
+
+    const legacyCredentialId = `legacy-credential-${crypto.randomUUID()}`
+    const legacyCredentialIri = database.resolveLocatorIri(credentialTable, { id: legacyCredentialId })
+    await database.insert(credentialTable).values({
+      id: legacyCredentialId,
+      provider: providerIri,
+      service: 'ai',
+      status: 'active',
+      apiKey: 'legacy-secret-smoke',
+      label: 'Legacy API key credential',
+    }).execute()
+    await expect(database.findByIri(credentialTable, legacyCredentialIri)).resolves.toMatchObject({
+      id: `credentials.ttl#${legacyCredentialId}`,
+      authMode: 'apiKey',
+      apiKey: 'legacy-secret-smoke',
+      label: 'Legacy API key credential',
+    })
+    await expect(database.findById(credentialTable, legacyCredentialId)).resolves.toMatchObject({
+      id: `credentials.ttl#${legacyCredentialId}`,
+      authMode: 'apiKey',
+      apiKey: 'legacy-secret-smoke',
+    })
+    await expectDeleted(database, credentialTable, legacyCredentialIri)
 
     const modelId = `model-${crypto.randomUUID()}`
     const modelLocator = { id: modelId, isProvidedBy: providerIri }
