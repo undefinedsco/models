@@ -199,6 +199,9 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
     const quotaIri = database.resolveLocatorIri(quotaSnapshotResource, { id: quotaId })
     await database.insert(quotaSnapshotResource).values({
       id: quotaId,
+      owner: webId,
+      deployment: 'local',
+      provider: 'kimi',
       credential: credentialIri,
       status: 'available',
       balance: 42,
@@ -209,6 +212,9 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
     }).execute()
     await expect(database.findByIri(quotaSnapshotResource, quotaIri)).resolves.toMatchObject({
       id: quotaResourceId,
+      owner: webId,
+      deployment: 'local',
+      provider: 'kimi',
       credential: credentialIri,
       status: 'available',
       balance: 42,

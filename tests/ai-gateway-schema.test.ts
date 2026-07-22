@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   aiGatewayRepository,
   gatewayAccessKeyResource,
+  quotaSnapshotId,
   quotaSnapshotResource,
   solidResources,
   solidSchema,
@@ -71,6 +72,9 @@ describe('AI Gateway shared resources', () => {
     })
 
     expect(columnsOf(quotaSnapshotResource)).toMatchObject({
+      owner: expect.anything(),
+      deployment: expect.anything(),
+      provider: expect.anything(),
       credential: expect.anything(),
       status: expect.anything(),
       balance: expect.anything(),
@@ -79,13 +83,47 @@ describe('AI Gateway shared resources', () => {
       expiresAt: expect.anything(),
       source: expect.anything(),
     })
+    expect(columnsOf(quotaSnapshotResource).ownerId).toBeUndefined()
     expect(columnsOf(quotaSnapshotResource).credentialId).toBeUndefined()
+    expect(predicateOf(quotaSnapshotResource, 'owner')).toBe(UDFS.owner)
+    expect(predicateOf(quotaSnapshotResource, 'deployment')).toBe(UDFS.deployment)
+    expect(predicateOf(quotaSnapshotResource, 'provider')).toBe(UDFS.provider)
     expect(predicateOf(quotaSnapshotResource, 'credential')).toBe(UDFS.credential)
     expect(predicateOf(quotaSnapshotResource, 'status')).toBe(UDFS.status)
     expect(predicateOf(quotaSnapshotResource, 'balance')).toBe(UDFS.balance)
     expect(predicateOf(quotaSnapshotResource, 'windows')).toBe(UDFS.windows)
     expect(predicateOf(quotaSnapshotResource, 'observedAt')).toBe(UDFS.observedAt)
     expect(predicateOf(quotaSnapshotResource, 'source')).toBe(UDFS.source)
+  })
+
+  it('builds stable quota snapshot ids from a hash without requiring scope to be decoded from ids', () => {
+    const longOwner = `https://pod.example/${'very-long-owner-segment/'.repeat(12)}profile/card#me`
+    const longCredential = `https://pod.example/.data/${'deep/'.repeat(40)}credentials.ttl#${'credential-fragment-'.repeat(20)}a`
+    const same = quotaSnapshotId({
+      owner: longOwner,
+      deployment: 'cloud',
+      provider: 'KIMI',
+      credential: longCredential,
+    })
+    const again = quotaSnapshotId({
+      owner: longOwner,
+      deployment: 'cloud',
+      provider: 'kimi',
+      credential: longCredential,
+    })
+    const differentCredential = quotaSnapshotId({
+      owner: longOwner,
+      deployment: 'cloud',
+      provider: 'kimi',
+      credential: `${longCredential}-different`,
+    })
+
+    expect(same).toBe(again)
+    expect(same).toMatch(/^ai\/gateway\/quota\.ttl#kimi-cloud-[a-f0-9]{64}$/)
+    expect(same.length).toBeLessThan(110)
+    expect(same).not.toContain(longOwner)
+    expect(same).not.toContain(longCredential)
+    expect(differentCredential).not.toBe(same)
   })
 
   it('registers gateway resources in Resource and compatibility schema registries', () => {
@@ -97,9 +135,11 @@ describe('AI Gateway shared resources', () => {
 
   it('exposes repository helpers that hide exact resource ids from callers', async () => {
     const now = new Date('2026-07-01T00:00:00.000Z')
+    const owner = 'https://pod.example/profile/card#me'
+    const credential = 'https://pod.example/settings/credentials.ttl#cred_1'
     const accessKey: GatewayAccessKeyRow = {
       id: 'ai/gateway/access-keys.ttl#key_1',
-      owner: 'https://pod.example/profile/card#me',
+      owner,
       secretHash: 'sha256:abc',
       name: 'Laptop Codex',
       deployment: 'cloud',
@@ -108,7 +148,10 @@ describe('AI Gateway shared resources', () => {
     } as GatewayAccessKeyRow
     const quota: QuotaSnapshotRow = {
       id: 'ai/gateway/quota.ttl#quota_1',
-      credential: 'https://pod.example/settings/credentials.ttl#cred_1',
+      owner,
+      deployment: 'cloud',
+      provider: 'kimi',
+      credential,
       status: 'available',
       balance: 1200,
       windows: '[{"unit":"day","remaining":1200}]',
@@ -184,7 +227,10 @@ describe('AI Gateway shared resources', () => {
     })).resolves.toMatchObject({ revokedAt: now })
     await expect(aiGatewayRepository.upsertQuotaSnapshot(db as never, {
       id: 'quota_1',
-      credential: 'https://pod.example/settings/credentials.ttl#cred_1',
+      owner,
+      deployment: 'cloud',
+      provider: 'kimi',
+      credential,
       status: 'available',
       balance: 1200,
       windows: '[{"unit":"day","remaining":1200}]',
@@ -193,8 +239,17 @@ describe('AI Gateway shared resources', () => {
       source: 'provider',
     })).resolves.toMatchObject({ id: 'quota_1' })
     await expect(aiGatewayRepository.findFreshQuotaSnapshot(db as never, {
-      credential: 'https://pod.example/settings/credentials.ttl#cred_1',
+      owner,
+      deployment: 'cloud',
+      provider: 'kimi',
+      credential,
       now,
+    })).resolves.toBe(quota)
+    await expect(aiGatewayRepository.findLatestQuotaSnapshot(db as never, {
+      owner,
+      deployment: 'cloud',
+      provider: 'kimi',
+      credential,
     })).resolves.toBe(quota)
 
     expect(calls).toEqual(expect.arrayContaining([
@@ -208,18 +263,23 @@ describe('AI Gateway shared resources', () => {
 
   it('dispatches canonical absolute IRIs through IRI repository methods', async () => {
     const now = new Date('2026-07-01T00:00:00.000Z')
+    const owner = 'https://pod.example/profile/card#me'
+    const credential = 'https://pod.example/settings/credentials.ttl#cred_1'
     const keyIri = 'https://pod.example/.data/ai/gateway/access-keys.ttl#key_1'
     const quotaIri = 'https://pod.example/.data/ai/gateway/quota.ttl#quota_1'
     const calls: Array<[string, unknown, unknown?, unknown?]> = []
     const accessKey = {
       id: 'ai/gateway/access-keys.ttl#key_1',
-      owner: 'https://pod.example/profile/card#me',
+      owner,
       secretHash: 'sha256:abc',
       deployment: 'cloud',
     } as GatewayAccessKeyRow
     const quota = {
       id: 'ai/gateway/quota.ttl#quota_1',
-      credential: 'https://pod.example/settings/credentials.ttl#cred_1',
+      owner,
+      deployment: 'cloud',
+      provider: 'kimi',
+      credential,
       status: 'available',
       expiresAt: new Date('2026-07-01T01:00:00.000Z'),
       observedAt: now,
@@ -271,7 +331,10 @@ describe('AI Gateway shared resources', () => {
     })).resolves.toMatchObject({ revokedAt: now })
     await expect(aiGatewayRepository.upsertQuotaSnapshot(db as never, {
       id: quotaIri,
-      credential: 'https://pod.example/settings/credentials.ttl#cred_1',
+      owner,
+      deployment: 'cloud',
+      provider: 'kimi',
+      credential,
       status: 'available',
       expiresAt: new Date('2026-07-01T01:00:00.000Z'),
       observedAt: now,
@@ -282,7 +345,10 @@ describe('AI Gateway shared resources', () => {
       ['updateByIri', gatewayAccessKeyResource, keyIri, { revokedAt: now }],
       ['findByIri', quotaSnapshotResource, quotaIri],
       ['updateByIri', quotaSnapshotResource, quotaIri, {
-        credential: 'https://pod.example/settings/credentials.ttl#cred_1',
+        owner,
+        deployment: 'cloud',
+        provider: 'kimi',
+        credential,
         status: 'available',
         expiresAt: new Date('2026-07-01T01:00:00.000Z'),
         observedAt: now,
@@ -293,9 +359,13 @@ describe('AI Gateway shared resources', () => {
 
   it('keeps quota freshness independent from provider status', async () => {
     const now = new Date('2026-07-01T00:00:00.000Z')
+    const owner = 'https://pod.example/profile/card#me'
     const credential = 'https://pod.example/settings/credentials.ttl#cred_1'
     const rows = (['available', 'unsupported', 'error'] as QuotaSnapshotStatusType[]).map((status, index) => ({
       id: `ai/gateway/quota.ttl#quota_${index + 1}`,
+      owner,
+      deployment: 'cloud',
+      provider: 'kimi',
       credential,
       status,
       observedAt: new Date(`2026-07-01T00:0${index}:00.000Z`),
@@ -316,9 +386,65 @@ describe('AI Gateway shared resources', () => {
     }
 
     await expect(aiGatewayRepository.findFreshQuotaSnapshot(db as never, {
+      owner,
+      deployment: 'cloud',
+      provider: 'kimi',
       credential,
       now,
     })).resolves.toMatchObject({ status: 'error' })
+  })
+
+  it('requires persisted quota scope fields and never matches legacy rows missing scope', async () => {
+    const now = new Date('2026-07-01T00:00:00.000Z')
+    const owner = 'https://pod.example/profile/card#me'
+    const credential = 'https://pod.example/settings/credentials.ttl#cred_1'
+    const rows = [
+      {
+        id: 'ai/gateway/quota.ttl#legacy',
+        credential,
+        status: 'available',
+        observedAt: new Date('2026-07-01T00:05:00.000Z'),
+        expiresAt: new Date('2026-07-01T01:00:00.000Z'),
+      },
+      {
+        id: quotaSnapshotId({ owner, deployment: 'cloud', provider: 'kimi', credential }),
+        owner,
+        deployment: 'cloud',
+        provider: 'kimi',
+        credential,
+        status: 'unsupported',
+        observedAt: new Date('2026-07-01T00:01:00.000Z'),
+        expiresAt: new Date('2026-07-01T01:00:00.000Z'),
+      },
+    ] as QuotaSnapshotRow[]
+    const db = {
+      select() {
+        return {
+          from() {
+            return {
+              where() {
+                return { async execute() { return rows } }
+              },
+            }
+          },
+        }
+      },
+    }
+
+    await expect(aiGatewayRepository.findFreshQuotaSnapshot(db as never, {
+      owner,
+      deployment: 'cloud',
+      provider: 'kimi',
+      credential,
+      now,
+    })).resolves.toMatchObject({ status: 'unsupported' })
+    await expect(aiGatewayRepository.findFreshQuotaSnapshot(db as never, {
+      owner: 'https://pod.example/other#me',
+      deployment: 'cloud',
+      provider: 'kimi',
+      credential,
+      now,
+    })).resolves.toBeNull()
   })
 
   it('returns null for not-found updates and empty inserts without updating id fields', async () => {
@@ -360,23 +486,35 @@ describe('AI Gateway shared resources', () => {
 
     await expect(aiGatewayRepository.upsertQuotaSnapshot(db as never, {
       id: 'quota_1',
+      owner: 'https://pod.example/profile/card#me',
+      deployment: 'cloud',
+      provider: 'kimi',
       credential: 'https://pod.example/settings/credentials.ttl#cred_1',
       status: 'available',
     })).resolves.toBeNull()
 
     await expect(aiGatewayRepository.upsertQuotaSnapshot(db as never, {
       id: 'quota_empty',
+      owner: 'https://pod.example/profile/card#me',
+      deployment: 'cloud',
+      provider: 'kimi',
       credential: 'https://pod.example/settings/credentials.ttl#cred_1',
       status: 'available',
     })).resolves.toBeNull()
 
     expect(calls).toEqual(expect.arrayContaining([
       ['updateById', quotaSnapshotResource, 'quota_1', {
+        owner: 'https://pod.example/profile/card#me',
+        deployment: 'cloud',
+        provider: 'kimi',
         credential: 'https://pod.example/settings/credentials.ttl#cred_1',
         status: 'available',
       }],
       ['values', quotaSnapshotResource, {
         id: 'quota_empty',
+        owner: 'https://pod.example/profile/card#me',
+        deployment: 'cloud',
+        provider: 'kimi',
         credential: 'https://pod.example/settings/credentials.ttl#cred_1',
         status: 'available',
       }],
@@ -411,6 +549,9 @@ describe('AI Gateway shared resources', () => {
     })).toThrow('Invalid Gateway access key deployment')
     await expect(aiGatewayRepository.upsertQuotaSnapshot(db as never, {
       id: 'quota_1',
+      owner: 'https://pod.example/profile/card#me',
+      deployment: 'cloud',
+      provider: 'kimi',
       credential: 'https://pod.example/settings/credentials.ttl#cred_1',
       status: 'pending',
     } as never)).rejects.toThrow('Invalid quota snapshot status')
@@ -449,6 +590,9 @@ describe('AI Gateway shared resources', () => {
       uniqueBy: ['id'],
     })
     expect(quotaSnapshotDescriptor.fields.credential).toMatchObject({ type: 'uri', predicate: UDFS.credential })
+    expect(quotaSnapshotDescriptor.fields.owner).toMatchObject({ type: 'uri', predicate: UDFS.owner })
+    expect(quotaSnapshotDescriptor.fields.deployment).toMatchObject({ type: 'string', predicate: UDFS.deployment })
+    expect(quotaSnapshotDescriptor.fields.provider).toMatchObject({ type: 'string', predicate: UDFS.provider })
     expect(quotaSnapshotDescriptor.fields.windows).toMatchObject({ type: 'text', predicate: UDFS.windows })
     expect(quotaSnapshotDescriptor.fields.credentialId).toBeUndefined()
 

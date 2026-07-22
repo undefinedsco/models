@@ -346,6 +346,24 @@ export const quotaSnapshotDescriptor: PodModelDescriptor = {
       required: true,
       description: 'Credential resource URI this quota snapshot describes.',
     },
+    owner: {
+      type: 'uri',
+      predicate: UDFS.owner,
+      required: true,
+      description: 'WebID that owns the credential and quota snapshot.',
+    },
+    deployment: {
+      type: 'string',
+      predicate: UDFS.deployment,
+      required: true,
+      description: 'Gateway deployment scope: local or cloud.',
+    },
+    provider: {
+      type: 'string',
+      predicate: UDFS.provider,
+      required: true,
+      description: 'Normalized provider id for the quota snapshot.',
+    },
     status: {
       type: 'string',
       predicate: UDFS.status,
