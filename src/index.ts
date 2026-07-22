@@ -84,6 +84,18 @@ export {
   resolveModelResourceIriForDatabase,
   type ModelResourceTarget,
 } from './resource-refs'
+export {
+  aiRuntimeRepository,
+  buildAiRuntimeCredentialId,
+  buildAiRuntimeCredentialIri,
+  buildAiRuntimeCredentialTarget,
+  getAiRuntimeProviderCredential,
+  upsertAiRuntimeProviderCredential,
+  type AiRuntimeCredentialDb,
+  type AiRuntimeCredentialTargetInput,
+  type AiRuntimeCredentialUpsertInput,
+  type AiRuntimeDeployment,
+} from './ai-runtime.repository'
 
 export {
   ThreadStatus,

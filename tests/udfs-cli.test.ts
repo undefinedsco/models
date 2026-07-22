@@ -5,13 +5,15 @@ import { describe, expect, it } from 'vitest'
 import { UDFS } from '../src'
 
 const execFileAsync = promisify(execFile)
+const cliNodeArgs = ['--preserve-symlinks', 'dist/bin/udfs.js']
+const cliExecOptions = {
+  cwd: new URL('..', import.meta.url),
+  encoding: 'utf8' as const,
+}
 
 describe('udfs cli', () => {
   it('describes pod schema descriptors', () => {
-    const output = execFileSync(process.execPath, ['dist/bin/udfs.js', 'schema', 'describe', UDFS.Credential], {
-      cwd: new URL('..', import.meta.url),
-      encoding: 'utf8',
-    })
+    const output = execFileSync(process.execPath, [...cliNodeArgs, 'schema', 'describe', UDFS.Credential], cliExecOptions)
     const descriptor = JSON.parse(output)
     expect(descriptor.uri).toBe(UDFS.Credential)
     expect(descriptor.storage.base).toBe('/settings/credentials.ttl')
@@ -20,15 +22,12 @@ describe('udfs cli', () => {
 
   it('searches schema descriptors by text', () => {
     const output = execFileSync(process.execPath, [
-      'dist/bin/udfs.js',
+      ...cliNodeArgs,
       'schema',
       'search',
       '--query',
       'cloudflare tunnel token',
-    ], {
-      cwd: new URL('..', import.meta.url),
-      encoding: 'utf8',
-    })
+    ], cliExecOptions)
     const results = JSON.parse(output)
     expect(results[0]).toMatchObject({
       uri: UDFS.Credential,
@@ -40,30 +39,24 @@ describe('udfs cli', () => {
 
   it('queries schema classes and predicates', () => {
     const classesOutput = execFileSync(process.execPath, [
-      'dist/bin/udfs.js',
+      ...cliNodeArgs,
       'schema',
       'classes',
       '--uri',
       UDFS.Credential,
-    ], {
-      cwd: new URL('..', import.meta.url),
-      encoding: 'utf8',
-    })
+    ], cliExecOptions)
     const classes = JSON.parse(classesOutput)
     expect(classes[0].class).toBe(UDFS.Credential)
 
     const predicatesOutput = execFileSync(process.execPath, [
-      'dist/bin/udfs.js',
+      ...cliNodeArgs,
       'schema',
       'predicates',
       '--uri',
       UDFS.Credential,
       '--field',
       'apiKey',
-    ], {
-      cwd: new URL('..', import.meta.url),
-      encoding: 'utf8',
-    })
+    ], cliExecOptions)
     const predicates = JSON.parse(predicatesOutput)
     expect(predicates).toEqual([
       expect.objectContaining({
@@ -77,7 +70,7 @@ describe('udfs cli', () => {
 
   it('validates descriptor-backed storage mutations without committing', () => {
     const output = execFileSync(process.execPath, [
-      'dist/bin/udfs.js',
+      ...cliNodeArgs,
       'storage',
       'validate',
       '--input',
@@ -94,10 +87,7 @@ describe('udfs cli', () => {
           status: 'active',
         },
       }),
-    ], {
-      cwd: new URL('..', import.meta.url),
-      encoding: 'utf8',
-    })
+    ], cliExecOptions)
     const result = JSON.parse(output)
     expect(result.ok).toBe(true)
     expect(result.plan.resourceId).toBe('#infra-cloudflare-tunnel-token')
@@ -106,7 +96,7 @@ describe('udfs cli', () => {
 
   it('runs the bundled consensus path from JSON input without API credentials', () => {
     const output = execFileSync(process.execPath, [
-      'dist/bin/udfs.js',
+      ...cliNodeArgs,
       'consensus',
       '--input',
       JSON.stringify({
@@ -117,10 +107,7 @@ describe('udfs cli', () => {
         },
       }),
       '--json',
-    ], {
-      cwd: new URL('..', import.meta.url),
-      encoding: 'utf8',
-    })
+    ], cliExecOptions)
     const result = JSON.parse(output)
     expect(result.session_id).toBe('sess_local_test')
     expect(result.first.status).toBe('needs_clarification')
@@ -187,7 +174,7 @@ describe('udfs cli', () => {
       if (!address || typeof address === 'string') throw new Error('Missing test server address')
       const baseUrl = `http://127.0.0.1:${address.port}/v1`
       const { stdout } = await execFileAsync(process.execPath, [
-        'dist/bin/udfs.js',
+        ...cliNodeArgs,
         'consensus',
         '--input',
         JSON.stringify({
