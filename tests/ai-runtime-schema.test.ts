@@ -10,12 +10,14 @@ import {
   aiProviderTable,
   apiKeyCredentialResource,
   apiKeyCredentialTable,
+  CredentialSecretAlgorithm,
   credentialResource,
   credentialTable,
   indexedFileResource,
   indexedFileTable,
   oauthCredentialResource,
   oauthCredentialTable,
+  ProviderAuthMode,
   solidResources,
   solidSchema,
   UDFS,
@@ -80,7 +82,17 @@ describe('AI runtime resources', () => {
 
   it('keeps xpod runtime fields in shared resources', () => {
     expect(columnsOf(credentialResource)).toMatchObject({
+      authMode: expect.anything(),
       apiKey: expect.anything(),
+      encryptedSecret: expect.anything(),
+      wrappedDataKey: expect.anything(),
+      encryptionAlgorithm: expect.anything(),
+      keyVersion: expect.anything(),
+      scopes: expect.anything(),
+      expiresAt: expect.anything(),
+      accountLabel: expect.anything(),
+      lastRefreshAt: expect.anything(),
+      reauthRequired: expect.anything(),
       oauthAccessToken: expect.anything(),
       oauthRefreshToken: expect.anything(),
       oauthExpiresAt: expect.anything(),
@@ -116,6 +128,18 @@ describe('AI runtime resources', () => {
     })
   })
 
+  it('exports credential auth mode and secret algorithm contracts', () => {
+    expect(ProviderAuthMode).toEqual({
+      oauth: 'oauth',
+      deviceCode: 'deviceCode',
+      console: 'console',
+      apiKey: 'apiKey',
+    })
+    expect(CredentialSecretAlgorithm).toEqual({
+      A256GCM: 'A256GCM',
+    })
+  })
+
   it('uses UDFS as the primary AI and credential storage contract', () => {
     expect(resourceConfigOf(credentialResource)).toMatchObject({ type: UDFS.Credential, namespace: UDFS })
     expect(resourceConfigOf(aiProviderResource)).toMatchObject({ type: UDFS.Provider, namespace: UDFS })
@@ -125,7 +149,18 @@ describe('AI runtime resources', () => {
     expect(resourceConfigOf(indexedFileResource)).toMatchObject({ type: UDFS.IndexedFile, namespace: UDFS })
     expect(resourceConfigOf(agentStatusResource)).toMatchObject({ type: UDFS.AgentStatus, namespace: UDFS })
 
+    expect(predicateOf(credentialResource, 'provider')).toBe(UDFS.provider)
+    expect(predicateOf(credentialResource, 'authMode')).toBe(UDFS.authMode)
     expect(predicateOf(credentialResource, 'apiKey')).toBe(UDFS.apiKey)
+    expect(predicateOf(credentialResource, 'encryptedSecret')).toBe(UDFS.encryptedSecret)
+    expect(predicateOf(credentialResource, 'wrappedDataKey')).toBe(UDFS.wrappedDataKey)
+    expect(predicateOf(credentialResource, 'encryptionAlgorithm')).toBe(UDFS.encryptionAlgorithm)
+    expect(predicateOf(credentialResource, 'keyVersion')).toBe(UDFS.keyVersion)
+    expect(predicateOf(credentialResource, 'scopes')).toBe(UDFS.scopes)
+    expect(predicateOf(credentialResource, 'expiresAt')).toBe(UDFS.expiresAt)
+    expect(predicateOf(credentialResource, 'accountLabel')).toBe(UDFS.accountLabel)
+    expect(predicateOf(credentialResource, 'lastRefreshAt')).toBe(UDFS.lastRefreshAt)
+    expect(predicateOf(credentialResource, 'reauthRequired')).toBe(UDFS.reauthRequired)
     expect(predicateOf(aiProviderResource, 'hasModel')).toBe(UDFS.hasModel)
     expect(predicateOf(aiModelResource, 'isProvidedBy')).toBe(UDFS.isProvidedBy)
     expect(predicateOf(aiConfigResource, 'embeddingModel')).toBe(UDFS.embeddingModel)

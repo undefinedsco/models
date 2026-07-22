@@ -96,9 +96,19 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
     await database.insert(credentialTable).values({
       id: credentialId,
       provider: providerIri,
+      authMode: 'oauth',
       service: 'ai',
       status: 'active',
       apiKey: 'secret-smoke',
+      encryptedSecret: 'ciphertext-smoke',
+      wrappedDataKey: 'wrapped-key-smoke',
+      encryptionAlgorithm: 'A256GCM',
+      keyVersion: 'v1',
+      scopes: ['chat:completion', 'models:read'],
+      expiresAt: now,
+      accountLabel: 'console@example.test',
+      lastRefreshAt: now,
+      reauthRequired: false,
       baseUrl: 'https://api.example.test/v1',
       label: 'Smoke credential',
       lastUsedAt: now,
@@ -106,6 +116,13 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
     }).execute()
     await expect(database.findByIri(credentialTable, credentialIri)).resolves.toMatchObject({
       id: `credentials.ttl#${credentialId}`,
+      authMode: 'oauth',
+      encryptedSecret: 'ciphertext-smoke',
+      wrappedDataKey: 'wrapped-key-smoke',
+      encryptionAlgorithm: 'A256GCM',
+      keyVersion: 'v1',
+      scopes: ['chat:completion', 'models:read'],
+      accountLabel: 'console@example.test',
       label: 'Smoke credential',
     })
     await expect(database.findById(credentialTable, credentialId)).resolves.toMatchObject({

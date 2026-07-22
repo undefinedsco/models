@@ -462,19 +462,23 @@ export { extensionSchema } from './extension'
 export {
   apiKeyCredentialResource,
   apiKeyCredentialTable,
+  CredentialSecretAlgorithm,
   credentialResource,
   credentialTable,
   oauthCredentialResource,
   oauthCredentialTable,
+  ProviderAuthMode,
   type ApiKeyCredentialRow,
   type ApiKeyCredentialInsert,
   type ApiKeyCredentialUpdate,
+  type CredentialSecretAlgorithmType,
   type CredentialRow,
   type CredentialInsert,
   type CredentialUpdate,
   type OAuthCredentialRow,
   type OAuthCredentialInsert,
   type OAuthCredentialUpdate,
+  type ProviderAuthModeType,
 } from "./credential.schema";
 
 export {
