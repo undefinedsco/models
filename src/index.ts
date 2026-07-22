@@ -521,6 +521,26 @@ export {
 } from './ai-runtime.schema'
 
 export {
+  aiGatewayRepository,
+  gatewayAccessKeyResource,
+  gatewayAccessKeyTable,
+  GatewayAccessKeyDeployment,
+  quotaSnapshotResource,
+  quotaSnapshotTable,
+  QuotaSnapshotStatus,
+  type FindFreshQuotaSnapshotInput,
+  type GatewayAccessKeyDeploymentType,
+  type GatewayAccessKeyRow,
+  type GatewayAccessKeyInsert,
+  type GatewayAccessKeyUpdate,
+  type QuotaSnapshotStatusType,
+  type QuotaSnapshotUpsert,
+  type QuotaSnapshotRow,
+  type QuotaSnapshotInsert,
+  type QuotaSnapshotUpdate,
+} from './ai-gateway.schema'
+
+export {
   aiConfigModelRef,
   aiConfigModelUri,
   aiConfigProviderRef,
@@ -577,12 +597,14 @@ export {
   createPodStorage,
   deliveryDescriptor,
   evidenceDescriptor,
+  gatewayAccessKeyDescriptor,
   ideaDescriptor,
   inputRequestDescriptor,
   issueDescriptor,
   messageDescriptor,
   officialPodModelDescriptors,
   podSchema,
+  quotaSnapshotDescriptor,
   reportDescriptor,
   runDescriptor,
   runStepDescriptor,

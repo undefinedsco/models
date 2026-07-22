@@ -3,6 +3,7 @@ import { Session } from '@inrupt/solid-client-authn-node'
 import { drizzle, eq, extractPodResourceTemplateValue, type SolidDatabase } from '@undefineds.co/drizzle-solid'
 import { aiModelTable } from '../src/ai-model.schema'
 import { aiProviderTable } from '../src/ai-provider.schema'
+import { gatewayAccessKeyResource, quotaSnapshotResource } from '../src/ai-gateway.schema'
 import { approvalResource } from '../src/approval.schema'
 import { credentialTable } from '../src/credential.schema'
 import { favoriteTable } from '../src/favorite/favorite.schema'
@@ -50,6 +51,8 @@ async function getDb(): Promise<SolidDatabase> {
     credentialTable,
     aiProviderTable,
     aiModelTable,
+    gatewayAccessKeyResource,
+    quotaSnapshotResource,
     settingsTable,
     favoriteTable,
     inboxNotificationTable,
@@ -162,6 +165,63 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       apiKey: 'legacy-secret-smoke',
     })
     await expectDeleted(database, credentialTable, legacyCredentialIri)
+
+    const accessKeyId = `gateway-key-${crypto.randomUUID()}`
+    const accessKeyResourceId = gatewayAccessKeyResource.buildId({ id: accessKeyId })
+    const accessKeyIri = database.resolveLocatorIri(gatewayAccessKeyResource, { id: accessKeyId })
+    await database.insert(gatewayAccessKeyResource).values({
+      id: accessKeyId,
+      owner: webId,
+      secretHash: 'sha256:gateway-smoke',
+      deployment: 'local',
+      scopes: ['gateway:invoke', 'quota:read'],
+      createdAt: now,
+      expiresAt: now,
+    }).execute()
+    await expect(database.findByIri(gatewayAccessKeyResource, accessKeyIri)).resolves.toMatchObject({
+      id: accessKeyResourceId,
+      owner: webId,
+      secretHash: 'sha256:gateway-smoke',
+      deployment: 'local',
+      scopes: ['gateway:invoke', 'quota:read'],
+    })
+    await expect(database.updateById(gatewayAccessKeyResource, accessKeyId, {
+      lastUsedAt: now,
+      revokedAt: now,
+    })).resolves.toMatchObject({
+      lastUsedAt: now,
+      revokedAt: now,
+    })
+    await expectDeleted(database, gatewayAccessKeyResource, accessKeyIri)
+
+    const quotaId = `quota-${crypto.randomUUID()}`
+    const quotaResourceId = quotaSnapshotResource.buildId({ id: quotaId })
+    const quotaIri = database.resolveLocatorIri(quotaSnapshotResource, { id: quotaId })
+    await database.insert(quotaSnapshotResource).values({
+      id: quotaId,
+      credential: credentialIri,
+      status: 'available',
+      balance: 42,
+      windows: JSON.stringify([{ unit: 'day', remaining: 42, resetsAt: now.toISOString() }]),
+      observedAt: now,
+      expiresAt: now,
+      source: 'provider',
+    }).execute()
+    await expect(database.findByIri(quotaSnapshotResource, quotaIri)).resolves.toMatchObject({
+      id: quotaResourceId,
+      credential: credentialIri,
+      status: 'available',
+      balance: 42,
+      source: 'provider',
+    })
+    await expect(database.updateById(quotaSnapshotResource, quotaId, {
+      status: 'error',
+      source: 'gateway-cache',
+    })).resolves.toMatchObject({
+      status: 'error',
+      source: 'gateway-cache',
+    })
+    await expectDeleted(database, quotaSnapshotResource, quotaIri)
 
     const modelId = `model-${crypto.randomUUID()}`
     const modelLocator = { id: modelId, isProvidedBy: providerIri }
