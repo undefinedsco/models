@@ -264,6 +264,11 @@ export const gatewayAccessKeyDescriptor: PodModelDescriptor = {
       secret: true,
       description: 'Hash of the Gateway secret. Raw access key material must not be stored here.',
     },
+    name: {
+      type: 'string',
+      predicate: UDFS.name,
+      description: 'User-visible label for distinguishing this Gateway access key.',
+    },
     deployment: {
       type: 'string',
       predicate: UDFS.deployment,
@@ -301,6 +306,7 @@ export const gatewayAccessKeyDescriptor: PodModelDescriptor = {
   writableFields: [
     'owner',
     'secretHash',
+    'name',
     'deployment',
     'scopes',
     'createdAt',

@@ -45,6 +45,7 @@ describe('AI Gateway shared resources', () => {
     expect(columnsOf(gatewayAccessKeyResource)).toMatchObject({
       owner: expect.anything(),
       secretHash: expect.anything(),
+      name: expect.anything(),
       deployment: expect.anything(),
       scopes: expect.anything(),
       createdAt: expect.anything(),
@@ -55,6 +56,7 @@ describe('AI Gateway shared resources', () => {
     expect(columnsOf(gatewayAccessKeyResource).ownerId).toBeUndefined()
     expect(predicateOf(gatewayAccessKeyResource, 'owner')).toBe(UDFS.owner)
     expect(predicateOf(gatewayAccessKeyResource, 'secretHash')).toBe(UDFS.secretHash)
+    expect(predicateOf(gatewayAccessKeyResource, 'name')).toBe(UDFS.name)
     expect(predicateOf(gatewayAccessKeyResource, 'deployment')).toBe(UDFS.deployment)
     expect(predicateOf(gatewayAccessKeyResource, 'scopes')).toBe(UDFS.scopes)
     expect(predicateOf(gatewayAccessKeyResource, 'revokedAt')).toBe(UDFS.revokedAt)
@@ -99,6 +101,7 @@ describe('AI Gateway shared resources', () => {
       id: 'ai/gateway/access-keys.ttl#key_1',
       owner: 'https://pod.example/profile/card#me',
       secretHash: 'sha256:abc',
+      name: 'Laptop Codex',
       deployment: 'cloud',
       scopes: ['gateway:invoke'],
       createdAt: now,
@@ -433,6 +436,7 @@ describe('AI Gateway shared resources', () => {
     })
     expect(gatewayAccessKeyDescriptor.fields.owner).toMatchObject({ type: 'uri', predicate: UDFS.owner })
     expect(gatewayAccessKeyDescriptor.fields.secretHash).toMatchObject({ type: 'string', predicate: UDFS.secretHash, secret: true })
+    expect(gatewayAccessKeyDescriptor.fields.name).toMatchObject({ type: 'string', predicate: UDFS.name })
     expect(gatewayAccessKeyDescriptor.fields.ownerId).toBeUndefined()
 
     expect(quotaSnapshotDescriptor).toMatchObject({

@@ -23,6 +23,7 @@ export const gatewayAccessKeyResource = podTable('gatewayAccessKey', {
   id: id('id').default('ai/gateway/access-keys.ttl#{key}'),
   owner: uri('owner').predicate(UDFS.owner),
   secretHash: string('secretHash').predicate(UDFS.secretHash),
+  name: string('name').predicate(UDFS.name),
   deployment: string('deployment').predicate(UDFS.deployment),
   scopes: text('scopes').array().predicate(UDFS.scopes),
   createdAt: timestamp('createdAt').predicate(UDFS.createdAt),
