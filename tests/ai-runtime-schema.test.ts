@@ -34,8 +34,16 @@ function resourceConfigOf(resource: unknown): { type?: string; namespace?: unkno
 }
 
 function predicateOf(resource: unknown, field: string): string {
-  const column = columnsOf(resource)[field] as { getPredicate?: (namespace?: unknown) => string }
-  return column.getPredicate?.(resourceConfigOf(resource).namespace) ?? ''
+  const column = columnsOf(resource)[field] as {
+    getPredicate?: (namespace?: unknown) => string
+    options?: { predicate?: unknown }
+  }
+  return column.getPredicate?.(resourceConfigOf(resource).namespace) ??
+    (typeof column.options?.predicate === 'string' ? column.options.predicate : '')
+}
+
+function expectColumns(resource: unknown, fields: string[]): void {
+  expect(Object.keys(columnsOf(resource))).toEqual(expect.arrayContaining(fields))
 }
 
 describe('AI runtime resources', () => {
@@ -81,51 +89,31 @@ describe('AI runtime resources', () => {
   })
 
   it('keeps xpod runtime fields in shared resources', () => {
-    expect(columnsOf(credentialResource)).toMatchObject({
-      authMode: expect.anything(),
-      apiKey: expect.anything(),
-      encryptedSecret: expect.anything(),
-      wrappedDataKey: expect.anything(),
-      encryptionAlgorithm: expect.anything(),
-      keyVersion: expect.anything(),
-      scopes: expect.anything(),
-      expiresAt: expect.anything(),
-      accountLabel: expect.anything(),
-      lastRefreshAt: expect.anything(),
-      reauthRequired: expect.anything(),
-      oauthAccessToken: expect.anything(),
-      oauthRefreshToken: expect.anything(),
-      oauthExpiresAt: expect.anything(),
-      projectId: expect.anything(),
-      organizationId: expect.anything(),
-      isDefault: expect.anything(),
-    })
+    expectColumns(credentialResource, [
+      'authMode',
+      'apiKey',
+      'encryptedSecret',
+      'wrappedDataKey',
+      'encryptionAlgorithm',
+      'keyVersion',
+      'scopes',
+      'expiresAt',
+      'accountLabel',
+      'lastRefreshAt',
+      'reauthRequired',
+      'oauthAccessToken',
+      'oauthRefreshToken',
+      'oauthExpiresAt',
+      'projectId',
+      'organizationId',
+      'isDefault',
+    ])
 
-    expect(columnsOf(aiProviderResource)).toMatchObject({
-      defaultModel: expect.anything(),
-      proxyUrl: expect.anything(),
-    })
-
-    expect(columnsOf(aiConfigResource)).toMatchObject({
-      embeddingModel: expect.anything(),
-      migrationStatus: expect.anything(),
-      migrationProgress: expect.anything(),
-    })
-
-    expect(columnsOf(vectorStoreResource)).toMatchObject({
-      container: expect.anything(),
-      chunkingStrategy: expect.anything(),
-    })
-
-    expect(columnsOf(indexedFileResource)).toMatchObject({
-      fileUrl: expect.anything(),
-      vectorId: expect.anything(),
-    })
-
-    expect(columnsOf(agentStatusResource)).toMatchObject({
-      agent: expect.anything(),
-      lastActivityAt: expect.anything(),
-    })
+    expectColumns(aiProviderResource, ['defaultModel', 'proxyUrl'])
+    expectColumns(aiConfigResource, ['embeddingModel', 'migrationStatus', 'migrationProgress'])
+    expectColumns(vectorStoreResource, ['container', 'chunkingStrategy'])
+    expectColumns(indexedFileResource, ['fileUrl', 'vectorId'])
+    expectColumns(agentStatusResource, ['agent', 'lastActivityAt'])
   })
 
   it('exports credential auth mode and secret algorithm contracts', () => {
