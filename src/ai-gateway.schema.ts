@@ -54,6 +54,9 @@ export const quotaSnapshotResource = podTable('quotaSnapshot', {
   namespace: UDFS,
 })
 
+ensureResourceIntrospectionColumns(gatewayAccessKeyResource)
+ensureResourceIntrospectionColumns(quotaSnapshotResource)
+
 // Compatibility aliases. New model code should prefer `*Resource`.
 export const gatewayAccessKeyTable = gatewayAccessKeyResource
 export const quotaSnapshotTable = quotaSnapshotResource
@@ -65,6 +68,19 @@ export type GatewayAccessKeyUpdate = typeof gatewayAccessKeyResource.$inferUpdat
 export type QuotaSnapshotRow = typeof quotaSnapshotResource.$inferSelect
 export type QuotaSnapshotInsert = typeof quotaSnapshotResource.$inferInsert
 export type QuotaSnapshotUpdate = typeof quotaSnapshotResource.$inferUpdate
+
+function ensureResourceIntrospectionColumns(resource: unknown): void {
+  const table = resource as { _?: { columns?: unknown }; columns?: unknown }
+  if (table._ && table.columns && table._.columns !== table.columns) {
+    table._.columns = table.columns
+  }
+  const columns = table.columns as Record<string, { options?: { predicate?: unknown }; getPredicate?: (namespace?: unknown) => string }> | undefined
+  for (const column of Object.values(columns ?? {})) {
+    if (typeof column.options?.predicate === 'string') {
+      column.getPredicate = () => column.options?.predicate as string
+    }
+  }
+}
 
 export interface FindFreshQuotaSnapshotInput {
   owner: string

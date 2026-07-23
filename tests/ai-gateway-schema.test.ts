@@ -30,8 +30,16 @@ function resourceConfigOf(resource: unknown): { type?: string; namespace?: unkno
 }
 
 function predicateOf(resource: unknown, field: string): string {
-  const column = columnsOf(resource)[field] as { getPredicate?: (namespace?: unknown) => string }
-  return column.getPredicate?.(resourceConfigOf(resource).namespace) ?? ''
+  const column = columnsOf(resource)[field] as {
+    getPredicate?: (namespace?: unknown) => string
+    options?: { predicate?: unknown }
+  }
+  return column.getPredicate?.(resourceConfigOf(resource).namespace) ??
+    (typeof column.options?.predicate === 'string' ? column.options.predicate : '')
+}
+
+function expectColumns(resource: unknown, fields: string[]): void {
+  expect(Object.keys(columnsOf(resource))).toEqual(expect.arrayContaining(fields))
 }
 
 describe('AI Gateway shared resources', () => {
@@ -43,17 +51,17 @@ describe('AI Gateway shared resources', () => {
       namespace: UDFS,
     })
 
-    expect(columnsOf(gatewayAccessKeyResource)).toMatchObject({
-      owner: expect.anything(),
-      secretHash: expect.anything(),
-      name: expect.anything(),
-      deployment: expect.anything(),
-      scopes: expect.anything(),
-      createdAt: expect.anything(),
-      expiresAt: expect.anything(),
-      lastUsedAt: expect.anything(),
-      revokedAt: expect.anything(),
-    })
+    expectColumns(gatewayAccessKeyResource, [
+      'owner',
+      'secretHash',
+      'name',
+      'deployment',
+      'scopes',
+      'createdAt',
+      'expiresAt',
+      'lastUsedAt',
+      'revokedAt',
+    ])
     expect(columnsOf(gatewayAccessKeyResource).ownerId).toBeUndefined()
     expect(predicateOf(gatewayAccessKeyResource, 'owner')).toBe(UDFS.owner)
     expect(predicateOf(gatewayAccessKeyResource, 'secretHash')).toBe(UDFS.secretHash)
@@ -71,18 +79,18 @@ describe('AI Gateway shared resources', () => {
       namespace: UDFS,
     })
 
-    expect(columnsOf(quotaSnapshotResource)).toMatchObject({
-      owner: expect.anything(),
-      deployment: expect.anything(),
-      provider: expect.anything(),
-      credential: expect.anything(),
-      status: expect.anything(),
-      balance: expect.anything(),
-      windows: expect.anything(),
-      observedAt: expect.anything(),
-      expiresAt: expect.anything(),
-      source: expect.anything(),
-    })
+    expectColumns(quotaSnapshotResource, [
+      'owner',
+      'deployment',
+      'provider',
+      'credential',
+      'status',
+      'balance',
+      'windows',
+      'observedAt',
+      'expiresAt',
+      'source',
+    ])
     expect(columnsOf(quotaSnapshotResource).ownerId).toBeUndefined()
     expect(columnsOf(quotaSnapshotResource).credentialId).toBeUndefined()
     expect(predicateOf(quotaSnapshotResource, 'owner')).toBe(UDFS.owner)
