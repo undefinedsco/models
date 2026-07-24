@@ -1,12 +1,38 @@
-import { boolean, id, integer, podTable, string, timestamp, uri } from "@undefineds.co/drizzle-solid"
+import { boolean, id, integer, podTable, string, text, timestamp, uri } from "@undefineds.co/drizzle-solid"
 import { UDFS } from "./namespaces"
+
+export const ProviderAuthMode = {
+  oauth: "oauth",
+  deviceCode: "deviceCode",
+  console: "console",
+  apiKey: "apiKey",
+} as const
+
+export type ProviderAuthModeType = typeof ProviderAuthMode[keyof typeof ProviderAuthMode]
+
+export const CredentialSecretAlgorithm = {
+  A256GCM: "A256GCM",
+} as const
+
+export type CredentialSecretAlgorithmType =
+  typeof CredentialSecretAlgorithm[keyof typeof CredentialSecretAlgorithm]
 
 export const credentialResource = podTable("credential", {
   id: id("id").default("credentials.ttl#{key}"),
   provider: uri("provider").predicate(UDFS.provider).link("aiProvider"),
+  authMode: string("authMode").predicate(UDFS.authMode).notNull().default(ProviderAuthMode.apiKey),
   service: string("service").predicate(UDFS.service).notNull().default("ai"),
   status: string("status").predicate(UDFS.status).notNull().default("active"),
   apiKey: string("apiKey").predicate(UDFS.apiKey),
+  encryptedSecret: string("encryptedSecret").predicate(UDFS.encryptedSecret),
+  wrappedDataKey: string("wrappedDataKey").predicate(UDFS.wrappedDataKey),
+  encryptionAlgorithm: string("encryptionAlgorithm").predicate(UDFS.encryptionAlgorithm),
+  keyVersion: string("keyVersion").predicate(UDFS.keyVersion),
+  scopes: text("scopes").array().predicate(UDFS.scopes),
+  expiresAt: timestamp("expiresAt").predicate(UDFS.expiresAt),
+  accountLabel: string("accountLabel").predicate(UDFS.accountLabel),
+  lastRefreshAt: timestamp("lastRefreshAt").predicate(UDFS.lastRefreshAt),
+  reauthRequired: boolean("reauthRequired").predicate(UDFS.reauthRequired).default(false),
   baseUrl: string("baseUrl").predicate(UDFS.baseUrl),
   proxyUrl: string("proxyUrl").predicate(UDFS.proxyUrl),
   label: string("label").predicate(UDFS.label),

@@ -9,6 +9,12 @@ import {
   vectorStoreResource,
   vectorStoreTable,
 } from './ai-runtime.schema'
+import {
+  gatewayAccessKeyResource,
+  gatewayAccessKeyTable,
+  quotaSnapshotResource,
+  quotaSnapshotTable,
+} from './ai-gateway.schema'
 import { approvalResource, approvalTable } from './approval.schema'
 import { auditResource, auditTable } from './audit.schema'
 import { aiModelResource, aiModelTable } from './ai-model.schema'
@@ -61,6 +67,8 @@ export const solidResources = {
   vectorStoreResource,
   indexedFileResource,
   agentStatusResource,
+  gatewayAccessKeyResource,
+  quotaSnapshotResource,
   favoriteResource,
   settingsResource,
   ideaResource,
@@ -100,6 +108,8 @@ export const solidSchema = {
   vectorStoreTable,
   indexedFileTable,
   agentStatusTable,
+  gatewayAccessKeyTable,
+  quotaSnapshotTable,
   favoriteTable,
   settingsTable,
   issueTable,

@@ -138,6 +138,59 @@ export const credentialDescriptor: PodModelDescriptor = {
       secret: true,
       description: 'Secret token or API key material.',
     },
+    authMode: {
+      type: 'string',
+      predicate: UDFS.authMode,
+      description: 'Authentication mode such as apiKey, oauth, deviceCode, or console.',
+    },
+    encryptedSecret: {
+      type: 'string',
+      predicate: UDFS.encryptedSecret,
+      secret: true,
+      description: 'Encrypted credential payload stored in the Pod.',
+    },
+    wrappedDataKey: {
+      type: 'string',
+      predicate: UDFS.wrappedDataKey,
+      secret: true,
+      description: 'Wrapped data-encryption key for encrypted credential payloads.',
+    },
+    encryptionAlgorithm: {
+      type: 'string',
+      predicate: UDFS.encryptionAlgorithm,
+      description: 'Credential encryption algorithm identifier.',
+    },
+    keyVersion: {
+      type: 'string',
+      predicate: UDFS.keyVersion,
+      description: 'Key-management version used to encrypt the credential.',
+    },
+    scopes: {
+      type: 'text',
+      predicate: UDFS.scopes,
+      array: true,
+      description: 'Credential scopes granted by the provider.',
+    },
+    expiresAt: {
+      type: 'timestamp',
+      predicate: UDFS.expiresAt,
+      description: 'Credential expiry timestamp.',
+    },
+    accountLabel: {
+      type: 'string',
+      predicate: UDFS.accountLabel,
+      description: 'Provider account label associated with the credential.',
+    },
+    lastRefreshAt: {
+      type: 'timestamp',
+      predicate: UDFS.lastRefreshAt,
+      description: 'Last successful credential refresh timestamp.',
+    },
+    reauthRequired: {
+      type: 'boolean',
+      predicate: UDFS.reauthRequired,
+      description: 'Whether this credential requires user reauthentication.',
+    },
     status: {
       type: 'string',
       predicate: UDFS.status,
@@ -145,7 +198,21 @@ export const credentialDescriptor: PodModelDescriptor = {
     },
   },
   uniqueBy: ['service', 'providerId', 'secretType'],
-  writableFields: ['label', 'apiKey', 'status'],
+  writableFields: [
+    'label',
+    'apiKey',
+    'authMode',
+    'encryptedSecret',
+    'wrappedDataKey',
+    'encryptionAlgorithm',
+    'keyVersion',
+    'scopes',
+    'expiresAt',
+    'accountLabel',
+    'lastRefreshAt',
+    'reauthRequired',
+    'status',
+  ],
   mergePolicy: 'upsert',
   examples: [
     {
@@ -163,6 +230,187 @@ export const credentialDescriptor: PodModelDescriptor = {
         providerId: 'openai',
         secretType: 'api-key',
       },
+    },
+  ],
+}
+
+export const gatewayAccessKeyDescriptor: PodModelDescriptor = {
+  uri: UDFS.GatewayAccessKey,
+  version: '1.0.0',
+  source: 'official',
+  trustLevel: 'high',
+  namespace: UDFS.NAMESPACE,
+  class: UDFS.GatewayAccessKey,
+  resourceKind: 'gateway-access-key',
+  description: 'Control-primary Pod AI Gateway access key. The key owner is a semantic WebID/URI relation, while the secret itself is represented only by a hash.',
+  storage: exactIdStorage(),
+  fields: {
+    id: {
+      type: 'string',
+      predicate: UDFS.term('id'),
+      required: true,
+      description: 'Base-relative resource id, for example ai/gateway/access-keys.ttl#key_1.',
+    },
+    owner: {
+      type: 'uri',
+      predicate: UDFS.owner,
+      required: true,
+      description: 'WebID or principal URI that owns this Gateway access key.',
+    },
+    secretHash: {
+      type: 'string',
+      predicate: UDFS.secretHash,
+      required: true,
+      secret: true,
+      description: 'Hash of the Gateway secret. Raw access key material must not be stored here.',
+    },
+    name: {
+      type: 'string',
+      predicate: UDFS.name,
+      description: 'User-visible label for distinguishing this Gateway access key.',
+    },
+    deployment: {
+      type: 'string',
+      predicate: UDFS.deployment,
+      required: true,
+      description: 'Gateway deployment target: local or cloud.',
+    },
+    scopes: {
+      type: 'text',
+      predicate: UDFS.scopes,
+      array: true,
+      description: 'Gateway scopes granted to this key.',
+    },
+    createdAt: {
+      type: 'timestamp',
+      predicate: UDFS.createdAt,
+      description: 'Creation timestamp.',
+    },
+    expiresAt: {
+      type: 'timestamp',
+      predicate: UDFS.expiresAt,
+      description: 'Key expiry timestamp.',
+    },
+    lastUsedAt: {
+      type: 'timestamp',
+      predicate: UDFS.lastUsedAt,
+      description: 'Last successful Gateway use timestamp.',
+    },
+    revokedAt: {
+      type: 'timestamp',
+      predicate: UDFS.revokedAt,
+      description: 'Revocation timestamp. Presence means the key is no longer valid.',
+    },
+  },
+  uniqueBy: ['id'],
+  writableFields: [
+    'owner',
+    'secretHash',
+    'name',
+    'deployment',
+    'scopes',
+    'createdAt',
+    'expiresAt',
+    'lastUsedAt',
+    'revokedAt',
+  ],
+  mergePolicy: 'upsert',
+  examples: [
+    {
+      request: 'Create a local Gateway access key for a user',
+      match: { id: 'ai/gateway/access-keys.ttl#key_1' },
+    },
+  ],
+}
+
+export const quotaSnapshotDescriptor: PodModelDescriptor = {
+  uri: UDFS.QuotaSnapshot,
+  version: '1.0.0',
+  source: 'official',
+  trustLevel: 'high',
+  namespace: UDFS.NAMESPACE,
+  class: UDFS.QuotaSnapshot,
+  resourceKind: 'quota-snapshot',
+  description: 'Observed Pod AI Gateway quota state for a provider credential. The credential field is a semantic URI relation, and normalized windows are stored as a serialized literal.',
+  storage: exactIdStorage(),
+  fields: {
+    id: {
+      type: 'string',
+      predicate: UDFS.term('id'),
+      required: true,
+      description: 'Base-relative resource id, for example ai/gateway/quota.ttl#quota_1.',
+    },
+    credential: {
+      type: 'uri',
+      predicate: UDFS.credential,
+      required: true,
+      description: 'Credential resource URI this quota snapshot describes.',
+    },
+    owner: {
+      type: 'uri',
+      predicate: UDFS.owner,
+      required: true,
+      description: 'WebID that owns the credential and quota snapshot.',
+    },
+    deployment: {
+      type: 'string',
+      predicate: UDFS.deployment,
+      required: true,
+      description: 'Gateway deployment scope: local or cloud.',
+    },
+    provider: {
+      type: 'string',
+      predicate: UDFS.provider,
+      required: true,
+      description: 'Normalized provider id for the quota snapshot.',
+    },
+    status: {
+      type: 'string',
+      predicate: UDFS.status,
+      required: true,
+      description: 'Quota availability status: available, unsupported, or error.',
+    },
+    balance: {
+      type: 'number',
+      predicate: UDFS.balance,
+      description: 'Normalized remaining quota balance when the provider exposes one.',
+    },
+    windows: {
+      type: 'text',
+      predicate: UDFS.windows,
+      description: 'Serialized normalized quota windows literal, for example JSON produced by Gateway normalization.',
+    },
+    observedAt: {
+      type: 'timestamp',
+      predicate: UDFS.observedAt,
+      description: 'Observation timestamp.',
+    },
+    expiresAt: {
+      type: 'timestamp',
+      predicate: UDFS.expiresAt,
+      description: 'Snapshot freshness expiry timestamp.',
+    },
+    source: {
+      type: 'string',
+      predicate: UDFS.source,
+      description: 'Observation source such as provider, gateway-cache, or manual.',
+    },
+  },
+  uniqueBy: ['id'],
+  writableFields: [
+    'credential',
+    'status',
+    'balance',
+    'windows',
+    'observedAt',
+    'expiresAt',
+    'source',
+  ],
+  mergePolicy: 'upsert',
+  examples: [
+    {
+      request: 'Record a fresh quota snapshot for a provider credential',
+      match: { id: 'ai/gateway/quota.ttl#quota_1' },
     },
   ],
 }
@@ -1189,6 +1437,8 @@ export const sessionDescriptor: PodModelDescriptor = {
 
 export const officialPodModelDescriptors = [
   credentialDescriptor,
+  gatewayAccessKeyDescriptor,
+  quotaSnapshotDescriptor,
   contactDescriptor,
   chatDescriptor,
   threadDescriptor,

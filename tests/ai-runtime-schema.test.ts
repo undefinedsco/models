@@ -10,12 +10,14 @@ import {
   aiProviderTable,
   apiKeyCredentialResource,
   apiKeyCredentialTable,
+  CredentialSecretAlgorithm,
   credentialResource,
   credentialTable,
   indexedFileResource,
   indexedFileTable,
   oauthCredentialResource,
   oauthCredentialTable,
+  ProviderAuthMode,
   solidResources,
   solidSchema,
   UDFS,
@@ -32,8 +34,16 @@ function resourceConfigOf(resource: unknown): { type?: string; namespace?: unkno
 }
 
 function predicateOf(resource: unknown, field: string): string {
-  const column = columnsOf(resource)[field] as { getPredicate?: (namespace?: unknown) => string }
-  return column.getPredicate?.(resourceConfigOf(resource).namespace) ?? ''
+  const column = columnsOf(resource)[field] as {
+    getPredicate?: (namespace?: unknown) => string
+    options?: { predicate?: unknown }
+  }
+  return column.getPredicate?.(resourceConfigOf(resource).namespace) ??
+    (typeof column.options?.predicate === 'string' ? column.options.predicate : '')
+}
+
+function expectColumns(resource: unknown, fields: string[]): void {
+  expect(Object.keys(columnsOf(resource))).toEqual(expect.arrayContaining(fields))
 }
 
 describe('AI runtime resources', () => {
@@ -79,40 +89,42 @@ describe('AI runtime resources', () => {
   })
 
   it('keeps xpod runtime fields in shared resources', () => {
-    expect(columnsOf(credentialResource)).toMatchObject({
-      apiKey: expect.anything(),
-      oauthAccessToken: expect.anything(),
-      oauthRefreshToken: expect.anything(),
-      oauthExpiresAt: expect.anything(),
-      projectId: expect.anything(),
-      organizationId: expect.anything(),
-      isDefault: expect.anything(),
-    })
+    expectColumns(credentialResource, [
+      'authMode',
+      'apiKey',
+      'encryptedSecret',
+      'wrappedDataKey',
+      'encryptionAlgorithm',
+      'keyVersion',
+      'scopes',
+      'expiresAt',
+      'accountLabel',
+      'lastRefreshAt',
+      'reauthRequired',
+      'oauthAccessToken',
+      'oauthRefreshToken',
+      'oauthExpiresAt',
+      'projectId',
+      'organizationId',
+      'isDefault',
+    ])
 
-    expect(columnsOf(aiProviderResource)).toMatchObject({
-      defaultModel: expect.anything(),
-      proxyUrl: expect.anything(),
-    })
+    expectColumns(aiProviderResource, ['defaultModel', 'proxyUrl'])
+    expectColumns(aiConfigResource, ['embeddingModel', 'migrationStatus', 'migrationProgress'])
+    expectColumns(vectorStoreResource, ['container', 'chunkingStrategy'])
+    expectColumns(indexedFileResource, ['fileUrl', 'vectorId'])
+    expectColumns(agentStatusResource, ['agent', 'lastActivityAt'])
+  })
 
-    expect(columnsOf(aiConfigResource)).toMatchObject({
-      embeddingModel: expect.anything(),
-      migrationStatus: expect.anything(),
-      migrationProgress: expect.anything(),
+  it('exports credential auth mode and secret algorithm contracts', () => {
+    expect(ProviderAuthMode).toEqual({
+      oauth: 'oauth',
+      deviceCode: 'deviceCode',
+      console: 'console',
+      apiKey: 'apiKey',
     })
-
-    expect(columnsOf(vectorStoreResource)).toMatchObject({
-      container: expect.anything(),
-      chunkingStrategy: expect.anything(),
-    })
-
-    expect(columnsOf(indexedFileResource)).toMatchObject({
-      fileUrl: expect.anything(),
-      vectorId: expect.anything(),
-    })
-
-    expect(columnsOf(agentStatusResource)).toMatchObject({
-      agent: expect.anything(),
-      lastActivityAt: expect.anything(),
+    expect(CredentialSecretAlgorithm).toEqual({
+      A256GCM: 'A256GCM',
     })
   })
 
@@ -125,7 +137,18 @@ describe('AI runtime resources', () => {
     expect(resourceConfigOf(indexedFileResource)).toMatchObject({ type: UDFS.IndexedFile, namespace: UDFS })
     expect(resourceConfigOf(agentStatusResource)).toMatchObject({ type: UDFS.AgentStatus, namespace: UDFS })
 
+    expect(predicateOf(credentialResource, 'provider')).toBe(UDFS.provider)
+    expect(predicateOf(credentialResource, 'authMode')).toBe(UDFS.authMode)
     expect(predicateOf(credentialResource, 'apiKey')).toBe(UDFS.apiKey)
+    expect(predicateOf(credentialResource, 'encryptedSecret')).toBe(UDFS.encryptedSecret)
+    expect(predicateOf(credentialResource, 'wrappedDataKey')).toBe(UDFS.wrappedDataKey)
+    expect(predicateOf(credentialResource, 'encryptionAlgorithm')).toBe(UDFS.encryptionAlgorithm)
+    expect(predicateOf(credentialResource, 'keyVersion')).toBe(UDFS.keyVersion)
+    expect(predicateOf(credentialResource, 'scopes')).toBe(UDFS.scopes)
+    expect(predicateOf(credentialResource, 'expiresAt')).toBe(UDFS.expiresAt)
+    expect(predicateOf(credentialResource, 'accountLabel')).toBe(UDFS.accountLabel)
+    expect(predicateOf(credentialResource, 'lastRefreshAt')).toBe(UDFS.lastRefreshAt)
+    expect(predicateOf(credentialResource, 'reauthRequired')).toBe(UDFS.reauthRequired)
     expect(predicateOf(aiProviderResource, 'hasModel')).toBe(UDFS.hasModel)
     expect(predicateOf(aiModelResource, 'isProvidedBy')).toBe(UDFS.isProvidedBy)
     expect(predicateOf(aiConfigResource, 'embeddingModel')).toBe(UDFS.embeddingModel)
