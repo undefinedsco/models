@@ -26,18 +26,36 @@ export const ContactClass = {
 } as const
 
 export type ContactClassValue = typeof ContactClass[keyof typeof ContactClass]
+export type ContactRdfTypeInput = string | readonly string[] | null | undefined
 
 type ContactClassifier = {
-  rdfType?: string | null
+  rdfType?: ContactRdfTypeInput
   contactType?: string | null
 }
 
+export function normalizeContactRdfTypes(
+  rdfType: ContactRdfTypeInput,
+  fallback: ContactClassValue = ContactClass.PERSON,
+): string[] {
+  const values = Array.isArray(rdfType)
+    ? rdfType
+    : rdfType
+      ? [rdfType]
+      : [fallback]
+  return Array.from(new Set(values))
+}
+
+function hasContactClass(contact: ContactClassifier | null | undefined, contactClass: ContactClassValue): boolean {
+  const rdfTypes = normalizeContactRdfTypes(contact?.rdfType)
+  return rdfTypes.includes(contactClass)
+}
+
 export function isGroupContact(contact: ContactClassifier | null | undefined): boolean {
-  return contact?.rdfType === ContactClass.GROUP || contact?.contactType === 'group'
+  return hasContactClass(contact, ContactClass.GROUP) || contact?.contactType === 'group'
 }
 
 export function isAgentContact(contact: ContactClassifier | null | undefined): boolean {
-  return contact?.rdfType === ContactClass.AGENT || contact?.contactType === ContactType.AGENT
+  return hasContactClass(contact, ContactClass.AGENT) || contact?.contactType === ContactType.AGENT
 }
 
 export function normalizeContactGender(
@@ -66,7 +84,7 @@ export const contactResource = podTable(
     about: uri('about').predicate(SCHEMA.about).notNull(),
 
     // Semantic classifier for the represented resource.
-    rdfType: uri('rdfType').predicate(RDF.type).notNull().default(ContactClass.PERSON),
+    rdfType: uri('rdfType').array().predicate(RDF.type).notNull().default([ContactClass.PERSON]),
 
     // Runtime/source hint for fetch/handler selection.
     // Group semantics are modeled via rdfType, not contactType.

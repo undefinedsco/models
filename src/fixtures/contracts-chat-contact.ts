@@ -12,7 +12,7 @@ import { ContactClass } from '../contact.schema'
 export const fixtureContactSolid: ContactInsert = {
   id: 'contact-solid-1',
   name: 'Alice',
-  rdfType: ContactClass.PERSON,
+  rdfType: [ContactClass.PERSON],
   contactType: 'solid',
   about: 'https://pod.example/profile/card#me',
   isPublic: false,
@@ -21,7 +21,7 @@ export const fixtureContactSolid: ContactInsert = {
 export const fixtureContactAgentWorkspace: ContactInsert = {
   id: 'contact-agent-ws-1',
   name: 'Secretary@linx',
-  rdfType: ContactClass.AGENT,
+  rdfType: [ContactClass.AGENT],
   contactType: 'agent',
   about: 'https://pod.example/agents/__secretary__/',
   isPublic: false,

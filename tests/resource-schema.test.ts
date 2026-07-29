@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import {
+  ContactClass,
   agentResource,
   agentTable,
   automationRuleResource,
@@ -55,6 +56,9 @@ import {
   threadTable,
   taskResource,
   taskTable,
+  isAgentContact,
+  isGroupContact,
+  normalizeContactRdfTypes,
 } from '../src'
 
 function listSourceFiles(dir: string): string[] {
@@ -66,6 +70,22 @@ function listSourceFiles(dir: string): string[] {
 }
 
 describe('shared Solid resources', () => {
+  it('models contact rdf:type as a multi-valued RDF predicate', () => {
+    expect(contactResource.rdfType.options.isArray).toBe(true)
+    expect(isAgentContact({
+      rdfType: ['http://www.w3.org/2006/vcard/ns#Individual', ContactClass.AGENT],
+    })).toBe(true)
+    expect(isGroupContact({
+      rdfType: ['http://www.w3.org/2006/vcard/ns#Individual', ContactClass.GROUP],
+    })).toBe(true)
+    expect(isAgentContact({ rdfType: ContactClass.AGENT })).toBe(true)
+    expect(normalizeContactRdfTypes(ContactClass.AGENT)).toEqual([ContactClass.AGENT])
+    expect(normalizeContactRdfTypes([
+      ContactClass.AGENT,
+      ContactClass.AGENT,
+    ])).toEqual([ContactClass.AGENT])
+  })
+
   it('keeps legacy Table aliases only for compatibility', () => {
     expect(solidProfileResource).toBe(solidProfileTable)
     expect(contactResource).toBe(contactTable)
