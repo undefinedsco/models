@@ -7,6 +7,7 @@ import {
   buildAIConfigMutationPlan,
   buildAIConfigProviderStateMap,
   createAIConfigCredentialId,
+  getDefaultAIConfigCredentialId,
   getAIConfigProviderFamilyIds,
   getAIConfigProviderMetadata,
   normalizeAIConfigModelId,
@@ -26,6 +27,10 @@ describe('ai-config shared core', () => {
     expect(first).toMatch(/^cred_[a-z0-9_-]+$/u)
     expect(second).toMatch(/^cred_[a-z0-9_-]+$/u)
     expect(second).not.toBe(first)
+  })
+
+  it('keeps the legacy deterministic default credential id stable', () => {
+    expect(getDefaultAIConfigCredentialId('codex')).toBe('openai-default')
   })
 
   it('normalizes provider aliases to canonical ids', () => {

@@ -650,6 +650,7 @@ export {
   buildAIConfigMutationPlan,
   buildAIConfigProviderStateMap,
   getAIConfigDefaultBaseUrl,
+  getDefaultAIConfigCredentialId,
   getAIConfigProviderCatalog,
   getAIConfigProviderFamilyIds,
   getAIConfigProviderIdsForBackend,

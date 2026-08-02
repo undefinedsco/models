@@ -407,6 +407,10 @@ export function getAIConfigDefaultBaseUrl(providerId: string): string | undefine
   return getAIConfigProviderMetadata(providerId).defaultBaseUrl
 }
 
+export function getDefaultAIConfigCredentialId(providerId: string): string {
+  return `${normalizeAIConfigProviderId(providerId)}-default`
+}
+
 export function createAIConfigCredentialId(): string {
   const random = typeof globalThis.crypto?.randomUUID === 'function'
     ? globalThis.crypto.randomUUID().replace(/-/g, '').slice(0, 16)
