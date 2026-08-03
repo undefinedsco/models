@@ -11,6 +11,7 @@ import {
   apiKeyCredentialResource,
   apiKeyCredentialTable,
   CredentialSecretAlgorithm,
+  CredentialStorageMode,
   credentialResource,
   credentialTable,
   indexedFileResource,
@@ -127,6 +128,10 @@ describe('AI runtime resources', () => {
     })
     expect(CredentialSecretAlgorithm).toEqual({
       A256GCM: 'A256GCM',
+    })
+    expect(CredentialStorageMode).toEqual({
+      plaintextV1: 'plaintext-v1',
+      secretCellV1: 'secret-cell-v1',
     })
   })
 
