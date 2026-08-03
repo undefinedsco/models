@@ -47,6 +47,9 @@ function shouldCopyPackagePath(root, path) {
 }
 
 function createPublishablePackage(packageJson, packageVersion) {
+  const exports = structuredClone(packageJson.exports ?? {})
+  assertPublishExportsMatch(packageJson.exports ?? {}, exports)
+
   return {
     ...packageJson,
     version: packageVersion,
@@ -63,51 +66,20 @@ function createPublishablePackage(packageJson, packageVersion) {
       'README.md',
       'package.json',
     ],
-    exports: {
-      '.': {
-        types: './dist/index.d.ts',
-        default: './dist/index.js',
-      },
-      './ai-config': {
-        types: './dist/ai-config/index.d.ts',
-        default: './dist/ai-config/index.js',
-      },
-      './client': {
-        types: './dist/client/index.d.ts',
-        default: './dist/client/index.js',
-      },
-      './discovery': {
-        types: './dist/discovery/index.d.ts',
-        default: './dist/discovery/index.js',
-      },
-      './namespaces': {
-        types: './dist/namespaces.d.ts',
-        default: './dist/namespaces.js',
-      },
-      './profile': {
-        types: './dist/profile.d.ts',
-        default: './dist/profile.js',
-      },
-      './profile.repository': {
-        types: './dist/profile.repository.d.ts',
-        default: './dist/profile.repository.js',
-      },
-      './profile.schema': {
-        types: './dist/profile.schema.d.ts',
-        default: './dist/profile.schema.js',
-      },
-      './vocab': {
-        types: './dist/vocab/index.d.ts',
-        default: './dist/vocab/index.js',
-      },
-      './vocab/sidecar': {
-        types: './dist/vocab/sidecar.vocab.d.ts',
-        default: './dist/vocab/sidecar.vocab.js',
-      },
-    },
+    exports,
     publishConfig: {
       access: 'public',
     },
+  }
+}
+
+function assertPublishExportsMatch(sourceExports, publishExports) {
+  const sourceKeys = Object.keys(sourceExports).sort()
+  const publishKeys = Object.keys(publishExports).sort()
+  if (JSON.stringify(sourceKeys) !== JSON.stringify(publishKeys)) {
+    throw new Error(
+      `Release exports drifted from package.json: source=${sourceKeys.join(',')} publish=${publishKeys.join(',')}`,
+    )
   }
 }
 
