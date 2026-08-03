@@ -17,6 +17,14 @@ export const CredentialSecretAlgorithm = {
 export type CredentialSecretAlgorithmType =
   typeof CredentialSecretAlgorithm[keyof typeof CredentialSecretAlgorithm]
 
+export const CredentialStorageMode = {
+  plaintextV1: "plaintext-v1",
+  secretCellV1: "secret-cell-v1",
+} as const
+
+export type CredentialStorageModeType =
+  typeof CredentialStorageMode[keyof typeof CredentialStorageMode]
+
 export const credentialResource = podTable("credential", {
   id: id("id").default("credentials.ttl#{key}"),
   provider: uri("provider").predicate(UDFS.provider).link("aiProvider"),
@@ -24,6 +32,8 @@ export const credentialResource = podTable("credential", {
   service: string("service").predicate(UDFS.service).notNull().default("ai"),
   status: string("status").predicate(UDFS.status).notNull().default("active"),
   apiKey: string("apiKey").predicate(UDFS.apiKey),
+  storageMode: string("storageMode").predicate(UDFS.storageMode),
+  secretPayload: string("secretPayload").predicate(UDFS.secretPayload),
   encryptedSecret: string("encryptedSecret").predicate(UDFS.encryptedSecret),
   wrappedDataKey: string("wrappedDataKey").predicate(UDFS.wrappedDataKey),
   encryptionAlgorithm: string("encryptionAlgorithm").predicate(UDFS.encryptionAlgorithm),

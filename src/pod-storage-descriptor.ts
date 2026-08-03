@@ -143,6 +143,17 @@ export const credentialDescriptor: PodModelDescriptor = {
       predicate: UDFS.authMode,
       description: 'Authentication mode such as apiKey, oauth, deviceCode, or console.',
     },
+    storageMode: {
+      type: 'string',
+      predicate: UDFS.storageMode,
+      description: 'Credential storage format, for example plaintext-v1 or secret-cell-v1.',
+    },
+    secretPayload: {
+      type: 'string',
+      predicate: UDFS.secretPayload,
+      secret: true,
+      description: 'Storage-mode-specific credential payload. plaintext-v1 stores a JSON payload here.',
+    },
     encryptedSecret: {
       type: 'string',
       predicate: UDFS.encryptedSecret,
@@ -202,6 +213,8 @@ export const credentialDescriptor: PodModelDescriptor = {
     'label',
     'apiKey',
     'authMode',
+    'storageMode',
+    'secretPayload',
     'encryptedSecret',
     'wrappedDataKey',
     'encryptionAlgorithm',

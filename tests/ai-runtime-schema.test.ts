@@ -92,6 +92,8 @@ describe('AI runtime resources', () => {
     expectColumns(credentialResource, [
       'authMode',
       'apiKey',
+      'storageMode',
+      'secretPayload',
       'encryptedSecret',
       'wrappedDataKey',
       'encryptionAlgorithm',
@@ -140,6 +142,8 @@ describe('AI runtime resources', () => {
     expect(predicateOf(credentialResource, 'provider')).toBe(UDFS.provider)
     expect(predicateOf(credentialResource, 'authMode')).toBe(UDFS.authMode)
     expect(predicateOf(credentialResource, 'apiKey')).toBe(UDFS.apiKey)
+    expect(predicateOf(credentialResource, 'storageMode')).toBe(UDFS.storageMode)
+    expect(predicateOf(credentialResource, 'secretPayload')).toBe(UDFS.secretPayload)
     expect(predicateOf(credentialResource, 'encryptedSecret')).toBe(UDFS.encryptedSecret)
     expect(predicateOf(credentialResource, 'wrappedDataKey')).toBe(UDFS.wrappedDataKey)
     expect(predicateOf(credentialResource, 'encryptionAlgorithm')).toBe(UDFS.encryptionAlgorithm)

@@ -234,6 +234,8 @@ export const UDFS = createNamespace('udfs', 'https://undefineds.co/ns#', {
   failCount: 'failCount',
   rateLimitResetAt: 'rateLimitResetAt',
   authMode: 'authMode',
+  storageMode: 'storageMode',
+  secretPayload: 'secretPayload',
   encryptedSecret: 'encryptedSecret',
   wrappedDataKey: 'wrappedDataKey',
   encryptionAlgorithm: 'encryptionAlgorithm',

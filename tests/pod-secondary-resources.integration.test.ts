@@ -94,6 +94,11 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       proxyUrl: 'https://proxy.provider.example/v1',
     }).execute()
 
+    const plaintextPayload = JSON.stringify({
+      kind: 'api-key',
+      value: 'secret-smoke',
+      createdAt: now.toISOString(),
+    })
     const credentialId = `credential-${crypto.randomUUID()}`
     const credentialIri = database.resolveLocatorIri(credentialTable, { id: credentialId })
     await database.insert(credentialTable).values({
@@ -102,11 +107,8 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       authMode: 'oauth',
       service: 'ai',
       status: 'active',
-      apiKey: 'secret-smoke',
-      encryptedSecret: 'ciphertext-smoke',
-      wrappedDataKey: 'wrapped-key-smoke',
-      encryptionAlgorithm: 'A256GCM',
-      keyVersion: 'v1',
+      storageMode: 'plaintext-v1',
+      secretPayload: plaintextPayload,
       scopes: ['chat:completion', 'models:read'],
       expiresAt: now,
       accountLabel: 'console@example.test',
@@ -121,10 +123,8 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
     expect(credential).toMatchObject({
       id: `credentials.ttl#${credentialId}`,
       authMode: 'oauth',
-      encryptedSecret: 'ciphertext-smoke',
-      wrappedDataKey: 'wrapped-key-smoke',
-      encryptionAlgorithm: 'A256GCM',
-      keyVersion: 'v1',
+      storageMode: 'plaintext-v1',
+      secretPayload: plaintextPayload,
       scopes: ['chat:completion', 'models:read'],
       accountLabel: 'console@example.test',
       label: 'Smoke credential',
@@ -135,6 +135,8 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
     await expect(database.findById(credentialTable, credentialId)).resolves.toMatchObject({
       id: `credentials.ttl#${credentialId}`,
       label: 'Smoke credential',
+      storageMode: 'plaintext-v1',
+      secretPayload: plaintextPayload,
     })
     expect(extractPodResourceTemplateValue(credentialTable, credentialIri)).toBe(credentialId)
     await expect(database.updateByIri(credentialTable, credentialIri, {
@@ -142,6 +144,31 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       failCount: 1,
     })).resolves.toMatchObject({ label: 'Smoke credential updated', failCount: 1 })
     await expectDeleted(database, credentialTable, credentialIri)
+
+    const encryptedCredentialId = `encrypted-credential-${crypto.randomUUID()}`
+    const encryptedCredentialIri = database.resolveLocatorIri(credentialTable, { id: encryptedCredentialId })
+    await database.insert(credentialTable).values({
+      id: encryptedCredentialId,
+      provider: providerIri,
+      authMode: 'oauth',
+      service: 'ai',
+      status: 'active',
+      encryptedSecret: 'ciphertext-smoke',
+      wrappedDataKey: 'wrapped-key-smoke',
+      encryptionAlgorithm: 'A256GCM',
+      keyVersion: 'v1',
+      label: 'Legacy encrypted credential',
+    }).execute()
+    await expect(database.findByIri(credentialTable, encryptedCredentialIri)).resolves.toMatchObject({
+      id: `credentials.ttl#${encryptedCredentialId}`,
+      authMode: 'oauth',
+      encryptedSecret: 'ciphertext-smoke',
+      wrappedDataKey: 'wrapped-key-smoke',
+      encryptionAlgorithm: 'A256GCM',
+      keyVersion: 'v1',
+      label: 'Legacy encrypted credential',
+    })
+    await expectDeleted(database, credentialTable, encryptedCredentialIri)
 
     const legacyCredentialId = `legacy-credential-${crypto.randomUUID()}`
     const legacyCredentialIri = database.resolveLocatorIri(credentialTable, { id: legacyCredentialId })

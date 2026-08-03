@@ -27,6 +27,34 @@ describe('pod storage descriptors', () => {
     expect(credentialDescriptor.storage.resourceIdPattern).toBe('#{id}')
     expect(credentialDescriptor.uniqueBy).toEqual(['service', 'providerId', 'secretType'])
     expect(credentialDescriptor.fields.apiKey.secret).toBe(true)
+    expect(credentialDescriptor.fields.storageMode).toMatchObject({
+      type: 'string',
+      predicate: UDFS.storageMode,
+    })
+    expect(credentialDescriptor.fields.storageMode.secret).toBeUndefined()
+    expect(credentialDescriptor.fields.secretPayload).toMatchObject({
+      type: 'string',
+      predicate: UDFS.secretPayload,
+      secret: true,
+    })
+    expect(credentialDescriptor.fields.encryptedSecret).toMatchObject({
+      type: 'string',
+      predicate: UDFS.encryptedSecret,
+      secret: true,
+    })
+    expect(credentialDescriptor.fields.wrappedDataKey).toMatchObject({
+      type: 'string',
+      predicate: UDFS.wrappedDataKey,
+      secret: true,
+    })
+    expect(credentialDescriptor.fields.encryptionAlgorithm).toMatchObject({
+      type: 'string',
+      predicate: UDFS.encryptionAlgorithm,
+    })
+    expect(credentialDescriptor.fields.keyVersion).toMatchObject({
+      type: 'string',
+      predicate: UDFS.keyVersion,
+    })
   })
 
   it('lists local descriptors without natural-language matching', () => {
@@ -206,5 +234,7 @@ describe('pod storage descriptors', () => {
   it('uses UDFS predicates as the primary credential contract', () => {
     expect(credentialDescriptor.uri).toBe(UDFS.Credential)
     expect(credentialDescriptor.fields.apiKey.predicate).toBe(UDFS.apiKey)
+    expect(credentialDescriptor.fields.storageMode.predicate).toBe(UDFS.storageMode)
+    expect(credentialDescriptor.fields.secretPayload.predicate).toBe(UDFS.secretPayload)
   })
 })

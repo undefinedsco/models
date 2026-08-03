@@ -568,6 +568,8 @@ describe('AI Gateway shared resources', () => {
   it('registers descriptors for credential, gateway access key, and quota snapshot discovery', () => {
     expect(credentialDescriptor.fields).toMatchObject({
       authMode: { predicate: UDFS.authMode },
+      storageMode: { predicate: UDFS.storageMode },
+      secretPayload: { predicate: UDFS.secretPayload, secret: true },
       encryptedSecret: { predicate: UDFS.encryptedSecret, secret: true },
       scopes: { predicate: UDFS.scopes, array: true },
       expiresAt: { predicate: UDFS.expiresAt },
