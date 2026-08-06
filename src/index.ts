@@ -514,6 +514,17 @@ export {
 } from "./ai-model.schema";
 
 export {
+  AI_MODEL_CAPABILITIES,
+  AI_MODEL_MODALITIES,
+  filterAIModelCapabilities,
+  filterAIModelModalities,
+  isAIModelCapability,
+  isAIModelModality,
+  type AIModelCapability,
+  type AIModelModality,
+} from "./ai-model-vocab";
+
+export {
   agentStatusResource,
   agentStatusTable,
   aiConfigResource,

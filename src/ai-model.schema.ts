@@ -1,4 +1,4 @@
-import { id, integer, podTable, string, timestamp, uri } from "@undefineds.co/drizzle-solid"
+import { id, integer, podTable, real, string, text, timestamp, uri } from "@undefineds.co/drizzle-solid"
 import { aiProviderResource } from "./ai-provider.schema"
 import { UDFS } from "./namespaces"
 
@@ -7,6 +7,13 @@ export const aiModelResource = podTable("aiModel", {
   displayName: string("displayName").predicate(UDFS.displayName),
   modelType: string("modelType").predicate(UDFS.modelType).default("chat"),
   isProvidedBy: uri("isProvidedBy").predicate(UDFS.isProvidedBy).link(aiProviderResource),
+  inputModalities: text("inputModalities").array().predicate(UDFS.inputModality),
+  outputModalities: text("outputModalities").array().predicate(UDFS.outputModality),
+  capabilities: text("capabilities").array().predicate(UDFS.capability),
+  contextLength: integer("contextLength").predicate(UDFS.contextLength),
+  maxOutputTokens: integer("maxOutputTokens").predicate(UDFS.maxOutputTokens),
+  pricingInput: real("pricingInput").predicate(UDFS.pricingInput),
+  pricingOutput: real("pricingOutput").predicate(UDFS.pricingOutput),
   dimension: integer("dimension").predicate(UDFS.dimension),
   status: string("status").predicate(UDFS.status).default("active"),
   createdAt: timestamp("createdAt").predicate(UDFS.createdAt).notNull().defaultNow(),
