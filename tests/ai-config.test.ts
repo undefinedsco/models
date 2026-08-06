@@ -343,7 +343,7 @@ describe('ai-config shared core', () => {
     expect(plan.modelDeleteIds).toEqual([])
   })
 
-  it('keeps parser models in the shared AI provider/model/credential config', () => {
+  it('keeps reader models in the shared AI provider/model/credential config', () => {
     const plan = buildAIConfigMutationPlan({
       providerId: 'paddleocr',
       currentProviderRows: [],
@@ -358,7 +358,7 @@ describe('ai-config shared core', () => {
             name: 'PP-OCRv6',
             enabled: true,
             capabilities: ['document-parse', 'ocr'],
-            modelType: 'parser',
+            modelType: 'reader',
           },
         ],
       },
@@ -381,13 +381,13 @@ describe('ai-config shared core', () => {
     expect(plan.modelUpserts[0]).toMatchObject({
       id: 'pp-ocrv6',
       displayName: 'PP-OCRv6',
-      modelType: 'parser',
+      modelType: 'reader',
       isProvidedBy: aiConfigProviderRef('paddleocr'),
       status: 'active',
     })
   })
 
-  it('returns parser model type from AI config state reads', () => {
+  it('returns reader model type from AI config state reads', () => {
     const states = buildAIConfigProviderStateMap({
       fallbackToCatalogModels: false,
       providerRows: [
@@ -409,7 +409,7 @@ describe('ai-config shared core', () => {
         {
           id: 'paddleocr.ttl#pp-ocrv6',
           displayName: 'PP-OCRv6',
-          modelType: 'parser',
+          modelType: 'reader',
           isProvidedBy: '/settings/providers/paddleocr.ttl',
           status: 'active',
         },
@@ -426,11 +426,25 @@ describe('ai-config shared core', () => {
           id: 'pp-ocrv6',
           name: 'PP-OCRv6',
           enabled: true,
-          modelType: 'parser',
+          modelType: 'reader',
           capabilities: [],
           isCustom: true,
         },
       ],
+    })
+  })
+
+  it('uses reader as the PaddleOCR catalog fallback model type', () => {
+    const states = buildAIConfigProviderStateMap({
+      fallbackToCatalogModels: true,
+      providerRows: [],
+      credentialRows: [],
+      modelRows: [],
+    })
+
+    expect(states.paddleocr.models[0]).toMatchObject({
+      id: 'PP-OCRv6',
+      modelType: 'reader',
     })
   })
 

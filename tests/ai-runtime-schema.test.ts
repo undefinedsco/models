@@ -30,8 +30,12 @@ function columnsOf(resource: unknown): Record<string, unknown> {
   return ((resource as any)?._?.columns ?? (resource as any)?.columns) as Record<string, unknown>
 }
 
-function resourceConfigOf(resource: unknown): { type?: string; namespace?: unknown } {
-  return ((resource as any)?._?.config ?? (resource as any)?.config) as { type?: string; namespace?: unknown }
+function resourceConfigOf(resource: unknown): { type?: string; namespace?: unknown; sparqlEndpoint?: string } {
+  return ((resource as any)?._?.config ?? (resource as any)?.config) as {
+    type?: string
+    namespace?: unknown
+    sparqlEndpoint?: string
+  }
 }
 
 function predicateOf(resource: unknown, field: string): string {
@@ -165,5 +169,15 @@ describe('AI runtime resources', () => {
     expect(predicateOf(indexedFileResource, 'fileUrl')).toBe(UDFS.fileUrl)
     expect(predicateOf(agentStatusResource, 'agent')).toBe(UDFS.agent)
     expect(predicateOf(agentStatusResource, 'currentTask')).toBe(UDFS.task)
+  })
+
+  it('declares collection query endpoints for settings-backed resources', () => {
+    expect((credentialResource as any).getSparqlEndpoint()).toBe('/settings/-/sparql')
+    expect((aiProviderResource as any).getSparqlEndpoint()).toBe('/settings/providers/-/sparql')
+    expect((aiModelResource as any).getSparqlEndpoint()).toBe('/settings/providers/-/sparql')
+    expect((aiConfigResource as any).getSparqlEndpoint()).toBe('/settings/ai/-/sparql')
+    expect((vectorStoreResource as any).getSparqlEndpoint()).toBe('/settings/ai/-/sparql')
+    expect((indexedFileResource as any).getSparqlEndpoint()).toBe('/settings/ai/-/sparql')
+    expect((agentStatusResource as any).getSparqlEndpoint()).toBe('/settings/ai/-/sparql')
   })
 })

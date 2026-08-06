@@ -12,6 +12,7 @@ export const aiProviderResource = podTable("aiProvider", {
   rotationPolicy: string("rotationPolicy").predicate(UDFS.rotationPolicy),
 }, {
   base: "/settings/providers/",
+  sparqlEndpoint: "/settings/providers/-/sparql",
   type: UDFS.Provider,
   namespace: UDFS,
 })

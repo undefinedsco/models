@@ -57,6 +57,7 @@ export const credentialResource = podTable("credential", {
   organizationId: string("organizationId").predicate(UDFS.organizationId),
 }, {
   base: "/settings/",
+  sparqlEndpoint: "/settings/-/sparql",
   type: UDFS.Credential,
   namespace: UDFS,
 })

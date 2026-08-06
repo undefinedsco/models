@@ -13,6 +13,7 @@ export const aiConfigResource = podTable('aiConfig', {
   updatedAt: timestamp('updatedAt').predicate(UDFS.updatedAt),
 }, {
   base: '/settings/ai/',
+  sparqlEndpoint: '/settings/ai/-/sparql',
   type: UDFS.AIConfig,
   namespace: UDFS,
 })
@@ -27,6 +28,7 @@ export const vectorStoreResource = podTable('vectorStore', {
   lastActiveAt: timestamp('lastActiveAt').predicate(UDFS.lastActiveAt),
 }, {
   base: '/settings/ai/',
+  sparqlEndpoint: '/settings/ai/-/sparql',
   type: UDFS.VectorStore,
   namespace: UDFS,
 })
@@ -42,6 +44,7 @@ export const indexedFileResource = podTable('indexedFile', {
   indexedAt: timestamp('indexedAt').predicate(UDFS.indexedAt),
 }, {
   base: '/settings/ai/',
+  sparqlEndpoint: '/settings/ai/-/sparql',
   type: UDFS.IndexedFile,
   namespace: UDFS,
 })
@@ -56,6 +59,7 @@ export const agentStatusResource = podTable('agentStatus', {
   errorMessage: string('errorMessage').predicate(UDFS.errorMessage),
 }, {
   base: '/settings/ai/',
+  sparqlEndpoint: '/settings/ai/-/sparql',
   type: UDFS.AgentStatus,
   namespace: UDFS,
 })

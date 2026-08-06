@@ -171,6 +171,8 @@ const AI_CONFIG_PROVIDER_CATALOG: readonly AIConfigProviderCatalogEntry[] = [
     displayName: 'PaddleOCR',
     aliases: ['paddle'],
     defaultBaseUrl: 'https://paddleocr.aistudio-app.com/api/v2/ocr/jobs',
+    defaultModels: ['PP-OCRv6'],
+    defaultModelType: 'reader',
   },
 ]
 

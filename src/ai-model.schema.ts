@@ -13,6 +13,7 @@ export const aiModelResource = podTable("aiModel", {
   updatedAt: timestamp("updatedAt").predicate(UDFS.updatedAt).notNull().defaultNow(),
 }, {
   base: "/settings/providers/",
+  sparqlEndpoint: "/settings/providers/-/sparql",
   type: UDFS.Model,
   namespace: UDFS,
 })
