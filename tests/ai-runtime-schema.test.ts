@@ -182,6 +182,15 @@ describe('AI runtime resources', () => {
     })
   })
 
+  it('keeps legacy API-key credentials queryable when authMode is absent', () => {
+    const authMode = columnsOf(credentialResource).authMode as {
+      options?: { defaultValue?: unknown; required?: boolean }
+    }
+
+    expect(authMode.options?.required).not.toBe(true)
+    expect(authMode.options?.defaultValue).toBe(ProviderAuthMode.apiKey)
+  })
+
   it('uses UDFS as the primary AI and credential storage contract', () => {
     expect(resourceConfigOf(credentialResource)).toMatchObject({ type: UDFS.Credential, namespace: UDFS })
     expect(resourceConfigOf(aiProviderResource)).toMatchObject({ type: UDFS.Provider, namespace: UDFS })
