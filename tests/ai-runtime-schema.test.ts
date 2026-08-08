@@ -124,6 +124,10 @@ describe('AI runtime resources', () => {
       'embeddingModel',
       'indexerModel',
       'rerankerModel',
+      'ocrEnabled',
+      'automaticOcr',
+      'tableRecognition',
+      'processingMode',
       'ftsEnabled',
       'vectorEnabled',
       'progressiveIndexingEnabled',
@@ -192,6 +196,8 @@ describe('AI runtime resources', () => {
     expect(predicateOf(aiConfigResource, 'embeddingModel')).toBe(UDFS.embeddingModel)
     expect(predicateOf(aiConfigResource, 'ocrModel')).toBe(UDFS.ocrModel)
     expect(predicateOf(aiConfigResource, 'indexerModel')).toBe(UDFS.indexerModel)
+    expect(predicateOf(aiConfigResource, 'ocrEnabled')).toBe(UDFS.ocrEnabled)
+    expect(predicateOf(aiConfigResource, 'processingMode')).toBe(UDFS.processingMode)
     expect(predicateOf(aiConfigResource, 'ftsEnabled')).toBe(UDFS.ftsEnabled)
     expect(predicateOf(aiConfigResource, 'vectorEnabled')).toBe(UDFS.vectorEnabled)
     expect(predicateOf(aiConfigResource, 'textBackend')).toBe(UDFS.textBackend)
