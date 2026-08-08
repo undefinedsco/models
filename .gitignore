@@ -4,3 +4,4 @@ dist
 data
 logs
 preview
+.DS_Store
