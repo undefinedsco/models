@@ -1,4 +1,4 @@
-import { id, integer, podTable, string, timestamp, uri } from '@undefineds.co/drizzle-solid'
+import { boolean, id, integer, podTable, string, timestamp, uri } from '@undefineds.co/drizzle-solid'
 import { agentResource } from './agent.schema'
 import { aiModelResource } from './ai-model.schema'
 import { UDFS } from './namespaces'
@@ -6,7 +6,18 @@ import { taskResource } from './task.schema'
 
 export const aiConfigResource = podTable('aiConfig', {
   id: id('id').default('config.ttl#{key}'),
+  chatModel: uri('chatModel').predicate(UDFS.chatModel).link(aiModelResource),
+  ocrModel: uri('ocrModel').predicate(UDFS.ocrModel).link(aiModelResource),
+  readerModel: uri('readerModel').predicate(UDFS.readerModel).link(aiModelResource),
   embeddingModel: uri('embeddingModel').predicate(UDFS.embeddingModel).link(aiModelResource),
+  indexerModel: uri('indexerModel').predicate(UDFS.indexerModel).link(aiModelResource),
+  rerankerModel: uri('rerankerModel').predicate(UDFS.rerankerModel).link(aiModelResource),
+  ftsEnabled: boolean('ftsEnabled').predicate(UDFS.ftsEnabled).default(true),
+  vectorEnabled: boolean('vectorEnabled').predicate(UDFS.vectorEnabled).default(false),
+  progressiveIndexingEnabled: boolean('progressiveIndexingEnabled').predicate(UDFS.progressiveIndexingEnabled).default(true),
+  automaticIndexing: boolean('automaticIndexing').predicate(UDFS.automaticIndexing).default(true),
+  textBackend: string('textBackend').predicate(UDFS.textBackend).default('auto'),
+  vectorBackend: string('vectorBackend').predicate(UDFS.vectorBackend).default('auto'),
   previousModel: uri('previousModel').predicate(UDFS.previousModel).link(aiModelResource),
   migrationStatus: string('migrationStatus').predicate(UDFS.migrationStatus),
   migrationProgress: integer('migrationProgress').predicate(UDFS.migrationProgress),

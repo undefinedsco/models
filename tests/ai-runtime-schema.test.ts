@@ -117,7 +117,22 @@ describe('AI runtime resources', () => {
     ])
 
     expectColumns(aiProviderResource, ['defaultModel', 'proxyUrl'])
-    expectColumns(aiConfigResource, ['embeddingModel', 'migrationStatus', 'migrationProgress'])
+    expectColumns(aiConfigResource, [
+      'chatModel',
+      'ocrModel',
+      'readerModel',
+      'embeddingModel',
+      'indexerModel',
+      'rerankerModel',
+      'ftsEnabled',
+      'vectorEnabled',
+      'progressiveIndexingEnabled',
+      'automaticIndexing',
+      'textBackend',
+      'vectorBackend',
+      'migrationStatus',
+      'migrationProgress',
+    ])
     expectColumns(vectorStoreResource, ['container', 'chunkingStrategy'])
     expectColumns(indexedFileResource, ['fileUrl', 'vectorId'])
     expectColumns(agentStatusResource, ['agent', 'lastActivityAt'])
@@ -175,6 +190,12 @@ describe('AI runtime resources', () => {
     expect(predicateOf(aiModelResource, 'pricingInput')).toBe(UDFS.pricingInput)
     expect(predicateOf(aiModelResource, 'pricingOutput')).toBe(UDFS.pricingOutput)
     expect(predicateOf(aiConfigResource, 'embeddingModel')).toBe(UDFS.embeddingModel)
+    expect(predicateOf(aiConfigResource, 'ocrModel')).toBe(UDFS.ocrModel)
+    expect(predicateOf(aiConfigResource, 'indexerModel')).toBe(UDFS.indexerModel)
+    expect(predicateOf(aiConfigResource, 'ftsEnabled')).toBe(UDFS.ftsEnabled)
+    expect(predicateOf(aiConfigResource, 'vectorEnabled')).toBe(UDFS.vectorEnabled)
+    expect(predicateOf(aiConfigResource, 'textBackend')).toBe(UDFS.textBackend)
+    expect(predicateOf(aiConfigResource, 'vectorBackend')).toBe(UDFS.vectorBackend)
     expect(predicateOf(vectorStoreResource, 'chunkingStrategy')).toBe(UDFS.chunkingStrategy)
     expect(predicateOf(indexedFileResource, 'fileUrl')).toBe(UDFS.fileUrl)
     expect(predicateOf(agentStatusResource, 'agent')).toBe(UDFS.agent)
