@@ -30,6 +30,8 @@ export interface AIConfigProviderState {
   credentialLabel?: string
   credentialIsDefault?: boolean
   models: AIConfigModel[]
+  /** All provider models selected by the user; legacy callers may use selectedModelId. */
+  selectedModelIds?: string[]
   selectedModelId?: string
 }
 
@@ -218,8 +220,9 @@ function collectKnownProviderIds(catalog: readonly AIConfigProviderCatalogEntry[
   return ids
 }
 
-function preferredSelectedModelId(models: AIConfigModel[]): string | undefined {
-  return models.find((model) => model.enabled)?.id ?? models[0]?.id
+function preferredSelectedModelIds(models: AIConfigModel[]): string[] {
+  const preferredId = models.find((model) => model.enabled)?.id ?? models[0]?.id
+  return preferredId ? [preferredId] : []
 }
 
 function existingDate(value: unknown): Date | undefined {
@@ -276,6 +279,21 @@ function parseBackendList(value: unknown): string[] {
 
 function uniqueStrings(values: string[]): string[] {
   return Array.from(new Set(values.filter(Boolean)))
+}
+
+function collectAIConfigModelRefs(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.flatMap((entry) => collectAIConfigModelRefs(entry))
+  }
+  return typeof value === 'string' && value.trim() ? [value] : []
+}
+
+function normalizeAIConfigModelStorageIds(value: unknown, providerId: string): string[] {
+  return uniqueStrings(
+    collectAIConfigModelRefs(value)
+      .map((raw) => normalizeAIConfigModelStorageId(raw, providerId))
+      .filter(Boolean),
+  )
 }
 
 function aiConfigProviderSupportsBackend(
@@ -661,10 +679,11 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
           modelType: metadata.defaultModelType ?? 'chat',
         }))
 
-    const selectedModelId = normalizeAIConfigModelStorageId(
-      typeof providerRow?.hasModel === 'string' ? providerRow.hasModel : '',
-      providerId,
-    ) || preferredSelectedModelId(models)
+    const selectedModelIds = normalizeAIConfigModelStorageIds(providerRow?.hasModel, providerId)
+    const resolvedSelectedModelIds = selectedModelIds.length > 0
+      ? selectedModelIds
+      : preferredSelectedModelIds(models)
+    const selectedModelId = resolvedSelectedModelIds[0]
 
     states[providerId] = {
       id: providerId,
@@ -675,6 +694,7 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
       credentialLabel: credentialSelection?.credentialLabel,
       credentialIsDefault: credentialSelection?.isDefault,
       models,
+      selectedModelIds: resolvedSelectedModelIds.length > 0 ? resolvedSelectedModelIds : undefined,
       selectedModelId: selectedModelId || undefined,
     }
   }
@@ -722,9 +742,11 @@ export function buildAIConfigMutationPlan(input: {
   const modelDeleteIds: string[] = []
 
   if (hasProviderUpdate) {
-    const selectedModelId = input.updates.models
-      ? preferredSelectedModelId(input.updates.models)
-      : normalizeAIConfigModelStorageId(typeof existingProvider?.hasModel === 'string' ? existingProvider.hasModel : '', providerId)
+    const selectedModelIds = input.updates.models !== undefined
+      ? uniqueStrings(input.updates.models.filter((model) => model.enabled).map((model) => model.id))
+          .map((modelId) => normalizeAIConfigModelStorageId(modelId, providerId))
+          .filter(Boolean)
+      : normalizeAIConfigModelStorageIds(existingProvider?.hasModel, providerId)
 
     providerPayload = {
       id: providerId,
@@ -733,7 +755,9 @@ export function buildAIConfigMutationPlan(input: {
         (typeof existingProvider?.baseUrl === 'string' ? existingProvider.baseUrl : undefined) ??
         metadata.defaultBaseUrl,
       proxyUrl: typeof existingProvider?.proxyUrl === 'string' ? existingProvider.proxyUrl : undefined,
-      hasModel: selectedModelId ? aiConfigModelRef(providerId, selectedModelId) : undefined,
+      hasModel: selectedModelIds.length > 0
+        ? selectedModelIds.map((modelId) => aiConfigModelRef(providerId, modelId))
+        : undefined,
       supportsBackend:
         input.updates.supportsBackend ??
         (typeof existingProvider?.supportsBackend === 'string' ? existingProvider.supportsBackend : undefined),

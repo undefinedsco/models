@@ -117,6 +117,8 @@ describe('AI runtime resources', () => {
     ])
 
     expectColumns(aiProviderResource, ['defaultModel', 'proxyUrl'])
+    expect((columnsOf(aiProviderResource).hasModel as any).dataType).toBe('array')
+    expect((columnsOf(aiProviderResource).hasModel as any).options?.isArray).toBe(true)
     expectColumns(aiConfigResource, [
       'chatModel',
       'ocrModel',
