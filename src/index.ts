@@ -154,6 +154,7 @@ export {
 } from './conversation-share.schema'
 export {
   conversationShareRepository,
+  removeConversationShare,
   type ConversationShareWhere,
 } from './conversation-share.repository'
 

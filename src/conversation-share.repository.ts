@@ -1,5 +1,5 @@
 import { eq } from '@undefineds.co/drizzle-solid'
-import { definePodRepository } from './repository'
+import { definePodRepository, type SolidDatabase } from './repository'
 import {
   conversationShareResource,
   type ConversationShareInsert,
@@ -25,3 +25,11 @@ export const conversationShareRepository = definePodRepository<
     ? eq(conversationShareResource.thread, filters.thread)
     : undefined,
 })
+
+export async function removeConversationShare(
+  db: SolidDatabase,
+  id: string,
+): Promise<{ id: string }> {
+  await db.deleteById(conversationShareResource, id)
+  return { id }
+}

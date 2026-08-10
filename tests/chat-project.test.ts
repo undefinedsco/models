@@ -6,6 +6,8 @@ import {
   chatProjectMemoryRepository,
   chatProjectMemoryResourceId,
   conversationShareRepository,
+  conversationShareResource,
+  removeConversationShare,
   readChatProjectContext,
   writeChatProjectContext,
 } from '../src'
@@ -55,7 +57,10 @@ describe('chat project shared Pod model', () => {
   })
 
   it('reconciles edited and removed memories through repositories', async () => {
-    vi.spyOn(chatProjectContextRepository, 'detail').mockResolvedValue(null)
+    const findById = vi.fn(async () => null)
+    const updateById = vi.fn()
+    const deleteById = vi.fn(async () => true)
+    const exactDb = { findById, updateById, deleteById } as unknown as SolidDatabase
     const createContext = vi.spyOn(chatProjectContextRepository, 'create').mockResolvedValue({} as never)
     vi.spyOn(chatProjectContextRepository, 'list').mockResolvedValue([])
     vi.spyOn(chatProjectMemoryRepository, 'list')
@@ -68,9 +73,8 @@ describe('chat project shared Pod model', () => {
       }])
       .mockResolvedValueOnce([])
     const createMemory = vi.spyOn(chatProjectMemoryRepository, 'create').mockResolvedValue({} as never)
-    const removeMemory = vi.spyOn(chatProjectMemoryRepository, 'remove').mockResolvedValue({ id: 'old.ttl' })
 
-    await writeChatProjectContext(db, {
+    await writeChatProjectContext(exactDb, {
       workspace: 'https://pod.example/workspaces/linx/',
       instructions: 'Use project files.',
       memoryEnabled: true,
@@ -78,11 +82,21 @@ describe('chat project shared Pod model', () => {
       updatedAt: new Date(0).toISOString(),
     })
 
-    expect(createContext).toHaveBeenCalledWith(db, expect.objectContaining({
+    expect(findById).toHaveBeenCalledWith(expect.any(Object), chatProjectContextResourceId('https://pod.example/workspaces/linx/'))
+    expect(createContext).toHaveBeenCalledWith(exactDb, expect.objectContaining({
       id: chatProjectContextResourceId('https://pod.example/workspaces/linx/'),
       workspace: 'https://pod.example/workspaces/linx/',
     }))
-    expect(createMemory).toHaveBeenCalledWith(db, expect.objectContaining({ id: 'new.ttl', text: 'New memory' }))
-    expect(removeMemory).toHaveBeenCalledWith(db, 'old.ttl')
+    expect(createMemory).toHaveBeenCalledWith(exactDb, expect.objectContaining({ id: 'new.ttl', text: 'New memory' }))
+    expect(deleteById).toHaveBeenCalledWith(expect.any(Object), 'old.ttl')
+    expect(updateById).not.toHaveBeenCalled()
+  })
+
+  it('removes share metadata through an exact base-relative id operation', async () => {
+    const deleteById = vi.fn(async () => true)
+    const exactDb = { deleteById } as unknown as SolidDatabase
+
+    await expect(removeConversationShare(exactDb, 'share-1.ttl')).resolves.toEqual({ id: 'share-1.ttl' })
+    expect(deleteById).toHaveBeenCalledWith(conversationShareResource, 'share-1.ttl')
   })
 })

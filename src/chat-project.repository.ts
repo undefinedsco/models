@@ -108,9 +108,12 @@ export async function writeChatProjectContext(
 ): Promise<ChatProjectContextSnapshot> {
   const now = new Date()
   const contextId = chatProjectContextResourceId(snapshot.workspace)
-  const existingContext = await chatProjectContextRepository.detail(db, contextId)
+  // Repository list rows expose base-relative ids. Use the database's exact-id
+  // APIs for reconciliation; IRI-only operations intentionally reject these
+  // values when no absolute base IRI was supplied.
+  const existingContext = await db.findById(chatProjectContextResource, contextId)
   if (existingContext) {
-    await chatProjectContextRepository.update?.(db, contextId, {
+    await db.updateById(chatProjectContextResource, contextId, {
       instructions: snapshot.instructions,
       memoryEnabled: snapshot.memoryEnabled,
       updatedAt: now,
@@ -133,7 +136,7 @@ export async function writeChatProjectContext(
     const id = chatProjectMemoryResourceId(memory.id)
     retainedIds.add(id)
     if (existingById.has(id)) {
-      await chatProjectMemoryRepository.update?.(db, id, {
+      await db.updateById(chatProjectMemoryResource, id, {
         text: memory.text,
         sourceMessage: memory.sourceMessage,
         updatedAt: now,
@@ -151,7 +154,7 @@ export async function writeChatProjectContext(
   }
   await Promise.all(existingMemories
     .filter((memory) => !retainedIds.has(memory.id))
-    .map((memory) => chatProjectMemoryRepository.remove?.(db, memory.id)))
+    .map((memory) => db.deleteById(chatProjectMemoryResource, memory.id)))
 
   return readChatProjectContext(db, snapshot.workspace)
 }
