@@ -124,6 +124,40 @@ export {
 export { messageRepository, type MessageListWhere } from './message.repository'
 
 export {
+  chatProjectContextResource,
+  chatProjectMemoryResource,
+  chatProjectContextResourceId,
+  chatProjectMemoryResourceId,
+  type ChatProjectContextRow,
+  type ChatProjectContextInsert,
+  type ChatProjectContextUpdate,
+  type ChatProjectMemoryRow,
+  type ChatProjectMemoryInsert,
+  type ChatProjectMemoryUpdate,
+} from './chat-project.schema'
+export {
+  chatProjectContextRepository,
+  chatProjectMemoryRepository,
+  emptyChatProjectContext,
+  readChatProjectContext,
+  writeChatProjectContext,
+  type ChatProjectContextSnapshot,
+  type ChatProjectMemoryEntry,
+  type ChatProjectWhere,
+} from './chat-project.repository'
+export {
+  conversationShareResource,
+  conversationShareResourceId,
+  type ConversationShareRow,
+  type ConversationShareInsert,
+  type ConversationShareUpdate,
+} from './conversation-share.schema'
+export {
+  conversationShareRepository,
+  type ConversationShareWhere,
+} from './conversation-share.repository'
+
+export {
   TaskStatus,
   taskResource,
   taskTable,
@@ -695,6 +729,9 @@ export {
   captureCandidateDescriptor,
   captureEventDescriptor,
   chatDescriptor,
+  chatProjectContextDescriptor,
+  chatProjectMemoryDescriptor,
+  conversationShareDescriptor,
   contactDescriptor,
   credentialDescriptor,
   createPodModelDescriptorRegistry,

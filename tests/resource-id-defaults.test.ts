@@ -9,6 +9,10 @@ import {
   captureCandidateResource,
   captureEventResource,
   chatResource,
+  chatProjectContextResource,
+  chatProjectContextResourceId,
+  chatProjectMemoryResource,
+  conversationShareResource,
   contactResource,
   credentialResource,
   deliveryResource,
@@ -170,6 +174,12 @@ describe('command resource id defaults', () => {
       createdAt: new Date('2026-05-18T01:02:03.000Z'),
     })).toBe('2026/05/18/session_1.ttl')
     expect(settingsResource.buildId({ id: 'ui.theme' })).toBe('ui.theme.ttl')
+    expect(chatProjectContextResource.buildId({
+      id: chatProjectContextResourceId('https://pod.example/workspaces/linx/'),
+      workspace: 'https://pod.example/workspaces/linx/',
+    })).toMatch(/\.ttl$/u)
+    expect(chatProjectMemoryResource.buildId({ id: 'memory/1' })).toBe('memory%2F1.ttl')
+    expect(conversationShareResource.buildId({ id: 'share/1' })).toBe('share%2F1.ttl')
   })
 
   it('accepts seconds and milliseconds numeric timestamps', () => {
