@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  AIConfigRuntimeCapability,
+  aiConfigSupportsRuntimeCapability,
   aiConfigModelRef,
   aiConfigProviderRef,
   aiConfigRepository,
@@ -8,6 +10,7 @@ import {
   buildAIConfigProviderStateMap,
   createAIConfigCredentialId,
   getDefaultAIConfigCredentialId,
+  getAIConfigProviderCapabilities,
   getAIConfigProviderFamilyIds,
   getAIConfigProviderMetadata,
   normalizeAIConfigModelId,
@@ -47,6 +50,31 @@ describe('ai-config shared core', () => {
     expect(normalizeAIConfigResourceId('credentials.ttl#openai-default')).toBe('openai-default')
     expect(normalizeAIConfigResourceId('/settings/providers/openai.ttl')).toBe('openai')
     expect(normalizeAIConfigResourceId('settings/providers/openai.ttl')).toBe('openai')
+  })
+
+  it('uses explicit runtime capabilities and a conservative legacy fallback', () => {
+    expect(getAIConfigProviderCapabilities('undefineds')).toEqual([
+      AIConfigRuntimeCapability.chatCompletions,
+      AIConfigRuntimeCapability.responses,
+      AIConfigRuntimeCapability.responsesWebSearch,
+      AIConfigRuntimeCapability.imageInput,
+      AIConfigRuntimeCapability.imageGeneration,
+      AIConfigRuntimeCapability.imageEditing,
+      AIConfigRuntimeCapability.toolCalls,
+    ])
+    expect(getAIConfigProviderCapabilities('legacy-custom')).toEqual([
+      AIConfigRuntimeCapability.chatCompletions,
+    ])
+    expect(getAIConfigProviderCapabilities('legacy-custom', [])).toEqual([])
+    expect(aiConfigSupportsRuntimeCapability(
+      'legacy-custom',
+      AIConfigRuntimeCapability.responsesWebSearch,
+    )).toBe(false)
+    expect(aiConfigSupportsRuntimeCapability(
+      'custom-openai',
+      AIConfigRuntimeCapability.responsesWebSearch,
+      ['chat_completions', 'responses', 'responses_web_search'],
+    )).toBe(true)
   })
 
   it('normalizes Qwen aliases to the DashScope embedding provider catalog entry', () => {
@@ -560,6 +588,52 @@ describe('ai-config shared core', () => {
     })
 
     expect(plan.providerPayload?.hasModel).toBeUndefined()
+  })
+
+  it('round-trips explicit provider and model runtime capabilities', () => {
+    const plan = buildAIConfigMutationPlan({
+      providerId: 'custom-openai',
+      currentProviderRows: [],
+      currentCredentialRows: [],
+      currentModelRows: [],
+      updates: {
+        capabilities: ['chat_completions', 'responses', 'responses_web_search'],
+        models: [{
+          id: 'model-1',
+          name: 'Model 1',
+          enabled: true,
+          capabilities: ['image_input', 'tool_calls'],
+        }],
+      },
+    })
+
+    expect(plan.providerPayload?.capabilities).toEqual([
+      'chat_completions',
+      'responses',
+      'responses_web_search',
+    ])
+    expect(plan.modelUpserts[0]).toMatchObject({
+      rdfType: [UDFS.ChatModel],
+      capabilities: [UDFS.ChatCapability],
+      runtimeCapabilities: ['image_input', 'tool_calls'],
+    })
+
+    const states = buildAIConfigProviderStateMap({
+      fallbackToCatalogModels: false,
+      providerRows: [{ id: 'custom-openai', capabilities: plan.providerPayload?.capabilities }],
+      credentialRows: [],
+      modelRows: [{
+        ...plan.modelUpserts[0],
+        id: 'model-1',
+        isProvidedBy: '/settings/providers/custom-openai.ttl',
+      }],
+    })
+    expect(states['custom-openai']?.capabilities).toEqual([
+      'chat_completions',
+      'responses',
+      'responses_web_search',
+    ])
+    expect(states['custom-openai']?.models[0]?.capabilities).toEqual(['image_input', 'tool_calls'])
   })
 
   it('returns reader model type from AI config state reads', () => {

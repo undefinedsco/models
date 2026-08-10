@@ -14,6 +14,8 @@ export const aiModelSchema = solidSchema({
   isProvidedBy: uri('isProvidedBy').predicate(UDFS.isProvidedBy).link(aiProviderResource),
   inputModalities: text('inputModalities').array().predicate(UDFS.inputModality),
   outputModalities: text('outputModalities').array().predicate(UDFS.outputModality),
+  /** Adapter/runtime endpoint support; kept separate from semantic model capabilities. */
+  runtimeCapabilities: string('runtimeCapabilities').array().predicate(UDFS.capabilities),
   capabilities: uri('capabilities').array().predicate(UDFS.hasCapability),
   pricingInput: real('pricingInput').predicate(UDFS.pricingInput),
   pricingOutput: real('pricingOutput').predicate(UDFS.pricingOutput),

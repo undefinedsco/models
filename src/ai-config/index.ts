@@ -17,6 +17,30 @@ export interface AIConfigProviderCatalogEntry {
   defaultBaseUrl?: string
   defaultModels?: string[]
   defaultModelType?: string
+  capabilities?: string[]
+}
+
+export const AIConfigRuntimeCapability = {
+  chatCompletions: 'chat_completions',
+  responses: 'responses',
+  responsesWebSearch: 'responses_web_search',
+  imageInput: 'image_input',
+  imageGeneration: 'image_generation',
+  imageEditing: 'image_editing',
+  toolCalls: 'tool_calls',
+} as const
+
+export type AIConfigRuntimeCapabilityType = typeof AIConfigRuntimeCapability[keyof typeof AIConfigRuntimeCapability]
+
+const AI_CONFIG_RUNTIME_CAPABILITY_SET: ReadonlySet<string> = new Set(
+  Object.values(AIConfigRuntimeCapability),
+)
+
+export function filterAIConfigRuntimeCapabilities(value: unknown): AIConfigRuntimeCapabilityType[] {
+  if (!Array.isArray(value)) return []
+  return [...new Set(value.filter((entry): entry is AIConfigRuntimeCapabilityType => (
+    typeof entry === 'string' && AI_CONFIG_RUNTIME_CAPABILITY_SET.has(entry)
+  )))]
 }
 
 export interface AIConfigModel {
@@ -40,6 +64,7 @@ export interface AIConfigProviderState {
   /** All provider models selected by the user; legacy callers may use selectedModelId. */
   selectedModelIds?: string[]
   selectedModelId?: string
+  capabilities: string[]
 }
 
 export interface AIConfigUpdate {
@@ -52,6 +77,7 @@ export interface AIConfigUpdate {
   credentialLabel?: string
   credentialBaseUrl?: string
   models?: AIConfigModel[]
+  capabilities?: string[]
 }
 
 export interface BuildAIConfigProviderStateMapOptions {
@@ -322,6 +348,40 @@ export function getAIConfigProviderMetadata(providerId: string): AIConfigProvide
     id: canonicalId,
     displayName: titleizeProviderId(canonicalId),
   }
+}
+
+export function getAIConfigProviderCapabilities(
+  providerId: string,
+  explicitCapabilities?: unknown,
+): string[] {
+  if (Array.isArray(explicitCapabilities)) {
+    return uniqueStrings(explicitCapabilities
+      .filter((value): value is string => typeof value === 'string')
+      .map((value) => value.trim().toLowerCase()))
+  }
+  if (normalizeAIConfigProviderId(providerId) === UNDEFINEDS_AI_PROVIDER_ID) {
+    return [
+      AIConfigRuntimeCapability.chatCompletions,
+      AIConfigRuntimeCapability.responses,
+      AIConfigRuntimeCapability.responsesWebSearch,
+      AIConfigRuntimeCapability.imageInput,
+      AIConfigRuntimeCapability.imageGeneration,
+      AIConfigRuntimeCapability.imageEditing,
+      AIConfigRuntimeCapability.toolCalls,
+    ]
+  }
+  const metadata = getAIConfigProviderMetadata(providerId)
+  return metadata.capabilities?.length
+    ? [...metadata.capabilities]
+    : [AIConfigRuntimeCapability.chatCompletions]
+}
+
+export function aiConfigSupportsRuntimeCapability(
+  providerId: string,
+  capability: AIConfigRuntimeCapabilityType,
+  explicitCapabilities?: unknown,
+): boolean {
+  return getAIConfigProviderCapabilities(providerId, explicitCapabilities).includes(capability)
 }
 
 export function normalizeAIConfigResourceId(raw?: string | null): string {
@@ -654,13 +714,18 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
     if (!modelId) continue
 
     const list = modelMap.get(providerId) ?? []
+    const runtimeCapabilities = filterAIConfigRuntimeCapabilities([
+      ...(Array.isArray(row.runtimeCapabilities) ? row.runtimeCapabilities : []),
+      ...(Array.isArray(row.capabilities) ? row.capabilities : []),
+    ])
+    const semanticCapabilities = filterAIModelCapabilityUris(row.capabilities)
+      .map(toAIModelCapabilityName)
+      .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
     list.push({
       id: modelId,
       name: typeof row.displayName === 'string' && row.displayName.trim() ? row.displayName : modelId,
       enabled: (typeof row.status === 'string' ? row.status : 'active') !== 'inactive',
-      capabilities: filterAIModelCapabilityUris(row.capabilities)
-        .map(toAIModelCapabilityName)
-        .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry)),
+      capabilities: runtimeCapabilities.length > 0 ? runtimeCapabilities : semanticCapabilities,
       modelType: row.rdfType
         ? toAIModelClassName(row.rdfType)
         : normalizeAIConfigModelType(row.modelType),
@@ -711,6 +776,7 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
       models,
       selectedModelIds: resolvedSelectedModelIds.length > 0 ? resolvedSelectedModelIds : undefined,
       selectedModelId: selectedModelId || undefined,
+      capabilities: getAIConfigProviderCapabilities(providerId, providerRow?.capabilities),
     }
   }
 
@@ -742,6 +808,7 @@ export function buildAIConfigMutationPlan(input: {
     input.updates.baseUrl !== undefined ||
     input.updates.supportsBackend !== undefined ||
     input.updates.rotationPolicy !== undefined ||
+    input.updates.capabilities !== undefined ||
     input.updates.models !== undefined
   const hasCredentialUpdate =
     input.updates.enabled !== undefined ||
@@ -779,6 +846,11 @@ export function buildAIConfigMutationPlan(input: {
       rotationPolicy:
         input.updates.rotationPolicy ??
         (typeof existingProvider?.rotationPolicy === 'string' ? existingProvider.rotationPolicy : undefined),
+      capabilities:
+        input.updates.capabilities ??
+        (Array.isArray(existingProvider?.capabilities)
+          ? existingProvider.capabilities.filter((value): value is string => typeof value === 'string')
+          : undefined),
     }
   }
 
@@ -841,6 +913,7 @@ export function buildAIConfigMutationPlan(input: {
         displayName: model.name || modelId,
         rdfType: [modelClass],
         capabilities,
+        runtimeCapabilities: filterAIConfigRuntimeCapabilities(model.capabilities),
         isProvidedBy: aiConfigProviderRef(providerId),
         status: model.enabled ? 'active' : 'inactive',
         createdAt: existingDate(existing?.createdAt) ?? now,
