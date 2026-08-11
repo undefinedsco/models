@@ -13,7 +13,7 @@ import { UDFS, DCTerms, SCHEMA } from "../namespaces";
  */
 export const settingsResource = podTable("settings", {
   id: id("id").default((key: string | undefined, row?: Record<string, unknown>) => {
-    const settingKey = key ?? (typeof row?.key === "string" ? row.key : undefined);
+    const settingKey = typeof row?.key === "string" ? row.key : key;
     if (!settingKey) return "";
     return `${encodeURIComponent(settingKey)}.ttl`;
   }),

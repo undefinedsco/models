@@ -42,7 +42,12 @@ async function getDb(): Promise<SolidDatabase> {
     oidcIssuer: activeEnv.oidcIssuer!,
     tokenType: 'DPoP',
   })
-  db = drizzle(session, { logger: false, disableInteropDiscovery: true, schema: solidSchema })
+  db = drizzle(session, {
+    logger: false,
+    disableInteropDiscovery: true,
+    resourcePreparation: 'best-effort',
+    schema: solidSchema,
+  })
   await db.init([aiProviderTable])
   return db
 }
@@ -67,11 +72,12 @@ describe('Solid Pod AIProvider CRUD', () => {
   it('creates and reads an AI provider', { timeout: 60000 }, async () => {
     const database = await getDb()
     const providerId = `test-provider-${Date.now()}`
+    const providerResourceId = aiProviderTable.buildId({ id: providerId })
 
     const [created] = await database
       .insert(aiProviderTable)
       .values({
-        id: providerId,
+        id: providerResourceId,
         baseUrl: 'https://api.test.com/v1',
         proxyUrl: 'https://proxy.test.com/v1',
         hasModel: [
@@ -84,10 +90,10 @@ describe('Solid Pod AIProvider CRUD', () => {
     const subject = (created as any)?.['@id'] || (created as any)?.source
     if (subject) createdIds.push(subject)
 
-    const record = await database.findById(aiProviderTable, providerId)
+    const record = await database.findById(aiProviderTable, providerResourceId)
 
     expect(record?.id).toBe(`${providerId}.ttl`)
-    expect(extractPodResourceTemplateValue(aiProviderTable, record?.id)).toBe(providerId)
+    expect(extractPodResourceTemplateValue(aiProviderTable, record?.id, 'key')).toBe(providerId)
     expect(record?.baseUrl).toBe('https://api.test.com/v1')
     expect(record?.proxyUrl).toBe('https://proxy.test.com/v1')
     expect(record?.hasModel).toEqual([
@@ -99,11 +105,12 @@ describe('Solid Pod AIProvider CRUD', () => {
   it('updates and deletes an AI provider', { timeout: 60000 }, async () => {
     const database = await getDb()
     const providerId = `update-provider-${Date.now()}`
+    const providerResourceId = aiProviderTable.buildId({ id: providerId })
 
     const [created] = await database
       .insert(aiProviderTable)
       .values({
-        id: providerId,
+        id: providerResourceId,
         baseUrl: 'https://api.original.com/v1',
         proxyUrl: 'https://proxy.original.com/v1',
       })
@@ -112,13 +119,13 @@ describe('Solid Pod AIProvider CRUD', () => {
     const subject = (created as any)?.['@id'] || (created as any)?.source
     if (subject) createdIds.push(subject)
 
-    const updated = await database.updateById(aiProviderTable, providerId, {
+    const updated = await database.updateById(aiProviderTable, providerResourceId, {
       baseUrl: 'https://api.updated.com/v1',
     })
 
     expect(updated?.baseUrl).toBe('https://api.updated.com/v1')
 
-    await expect(database.deleteById(aiProviderTable, providerId)).resolves.toBe(true)
-    await expect(database.findById(aiProviderTable, providerId)).resolves.toBeNull()
+    await expect(database.deleteById(aiProviderTable, providerResourceId)).resolves.toBe(true)
+    await expect(database.findById(aiProviderTable, providerResourceId)).resolves.toBeNull()
   })
 })

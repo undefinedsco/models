@@ -1,4 +1,4 @@
-import type { AIModelInsert, AIModelRow } from '../ai-model.schema'
+import { aiModelResource, type AIModelInsert, type AIModelRow } from '../ai-model.schema'
 import {
   AI_MODEL_CLASS_DEFAULT_CAPABILITY,
   filterAIModelCapabilityUris,
@@ -92,6 +92,8 @@ export interface AIConfigCredentialSelection {
   providerId: string
   credential: Partial<CredentialRow> & Record<string, unknown>
   credentialId?: string
+  /** Exact base-relative Pod resource id used for mutations. */
+  credentialResourceId?: string
   credentialLabel?: string
   apiKey: string
   baseUrl?: string
@@ -329,6 +331,53 @@ function normalizeAIConfigModelStorageIds(value: unknown, providerId: string): s
   )
 }
 
+function storedResourceId(raw: unknown, buildCanonicalId: (localId: string) => string): string {
+  if (typeof raw !== 'string' || !raw.trim()) return ''
+  const value = raw.trim()
+  const localId = normalizeAIConfigResourceId(value)
+  if (!localId) return ''
+  if (ABSOLUTE_IRI.test(value)) return buildCanonicalId(localId)
+  if (value.includes('#') || /\.ttl$/iu.test(value) || value.endsWith('/')) {
+    return value.replace(/^\/+settings\/(?:providers\/)?/u, '')
+  }
+  return value
+}
+
+function inputResourceId(raw: string, buildCanonicalId: (localId: string) => string): string {
+  const stored = storedResourceId(raw, buildCanonicalId)
+  if (!stored) return ''
+  return stored === raw.trim() && !stored.includes('#') && !/\.ttl$/iu.test(stored) && !stored.endsWith('/')
+    ? buildCanonicalId(stored)
+    : stored
+}
+
+function providerStorageId(
+  row: Partial<AIProviderRow> & Record<string, unknown> | undefined,
+  providerId: string,
+): string {
+  const existing = storedResourceId(row?.id ?? row?.['@id'], (id) => aiProviderResource.buildId({ id }))
+  return existing || aiProviderResource.buildId({ id: providerId })
+}
+
+function credentialStorageId(
+  row: Partial<CredentialRow> & Record<string, unknown> | undefined,
+): string {
+  return storedResourceId(row?.id ?? row?.['@id'], (id) => credentialResource.buildId({ id }))
+}
+
+function modelStorageId(
+  row: Partial<AIModelRow> & Record<string, unknown> | undefined,
+  providerId: string,
+  modelId: string,
+): string {
+  const providerRef = aiConfigProviderRef(providerId)
+  const existing = storedResourceId(row?.id ?? row?.['@id'], (id) => aiModelResource.buildId({
+    id,
+    isProvidedBy: providerRef,
+  }))
+  return existing || aiModelResource.buildId({ id: modelId, isProvidedBy: providerRef })
+}
+
 function aiConfigProviderSupportsBackend(
   row: Partial<AIProviderRow> & Record<string, unknown>,
   backend: string,
@@ -543,6 +592,7 @@ export function selectAIConfigCredential(
     credentialId: normalizeAIConfigResourceId(
       normalizeOptionalText(credential.id) ?? normalizeOptionalText(credential['@id']),
     ),
+    credentialResourceId: credentialStorageId(credential),
     credentialLabel: normalizeOptionalText(credential.label),
     apiKey,
     baseUrl:
@@ -636,8 +686,8 @@ function collectAIConfigProviderIdsForBackend(
 function aiConfigProviderIdCandidates(providerId: string): string[] {
   const normalized = normalizeAIConfigResourceId(providerId) || providerId
   return uniqueStrings([
+    aiProviderResource.buildId({ id: normalized }),
     normalized,
-    `${normalized}.ttl`,
   ])
 }
 
@@ -664,11 +714,12 @@ export const aiConfigRepository = {
 
   async markCredentialUsed(
     db: AIConfigRepositoryDb,
-    selection: Pick<AIConfigCredentialSelection, 'credentialId'> | undefined,
+    selection: Pick<AIConfigCredentialSelection, 'credentialId' | 'credentialResourceId'> | undefined,
     usedAt = new Date(),
   ): Promise<void> {
-    if (!selection?.credentialId) return
-    await db.updateById(credentialResource, selection.credentialId, { lastUsedAt: usedAt })
+    const resourceId = selection?.credentialResourceId ?? selection?.credentialId
+    if (!resourceId) return
+    await db.updateById(credentialResource, resourceId, { lastUsedAt: usedAt })
   },
 }
 
@@ -831,7 +882,7 @@ export function buildAIConfigMutationPlan(input: {
       : normalizeAIConfigModelStorageIds(existingProvider?.hasModel, providerId)
 
     providerPayload = {
-      id: providerId,
+      id: providerStorageId(existingProvider, providerId),
       baseUrl:
         input.updates.baseUrl ??
         (typeof existingProvider?.baseUrl === 'string' ? existingProvider.baseUrl : undefined) ??
@@ -857,9 +908,11 @@ export function buildAIConfigMutationPlan(input: {
   if (hasCredentialUpdate) {
     credentialPayload = {
       id:
-        normalizeAIConfigResourceId(input.updates.credentialId) ||
-        normalizeAIConfigResourceId(typeof existingCredential?.id === 'string' ? existingCredential.id : '') ||
-        createAIConfigCredentialId(),
+        (input.updates.credentialId
+          ? inputResourceId(input.updates.credentialId, (id) => credentialResource.buildId({ id }))
+          : '') ||
+        credentialStorageId(existingCredential) ||
+        credentialResource.buildId({ id: getDefaultAIConfigCredentialId(providerId) }),
       provider: aiConfigProviderRef(providerId),
       service: typeof existingCredential?.service === 'string' && existingCredential.service ? existingCredential.service : 'ai',
       status:
@@ -909,7 +962,7 @@ export function buildAIConfigMutationPlan(input: {
         ...filterAIModelCapabilityUris(model.capabilities),
       ])]
       modelUpserts.push({
-        id: modelId,
+        id: modelStorageId(existing, providerId, modelId),
         displayName: model.name || modelId,
         rdfType: [modelClass],
         capabilities,
@@ -923,7 +976,7 @@ export function buildAIConfigMutationPlan(input: {
 
     for (const modelId of existingById.keys()) {
       if (!nextIds.has(modelId)) {
-        modelDeleteIds.push(modelId)
+        modelDeleteIds.push(modelStorageId(existingById.get(modelId), providerId, modelId))
       }
     }
   }
@@ -951,9 +1004,7 @@ export function buildAIConfigDisconnectPlan(input: {
       continue
     }
 
-    const id = normalizeAIConfigResourceId(
-      normalizeOptionalText(row.id) ?? normalizeOptionalText(row['@id']),
-    )
+    const id = credentialStorageId(row)
     if (!id || seen.has(id)) {
       continue
     }
