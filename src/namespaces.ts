@@ -234,7 +234,6 @@ export const UDFS = createNamespace('udfs', 'https://undefineds.co/ns#', {
   homepage: 'homepage',
   dimension: 'dimension',
   supportsBackend: 'supportsBackend',
-  capabilities: 'capabilities',
   rotationPolicy: 'rotationPolicy',
   metadata: 'metadata',
   root: 'root',
