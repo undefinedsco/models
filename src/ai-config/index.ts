@@ -1,4 +1,11 @@
 import type { AIModelInsert, AIModelRow } from '../ai-model.schema'
+import {
+  AI_MODEL_CLASS_DEFAULT_CAPABILITY,
+  filterAIModelCapabilityUris,
+  toAIModelCapabilityName,
+  toAIModelClassName,
+  toAIModelClassUri,
+} from '../ai-model-vocab'
 import { aiProviderResource, type AIProviderInsert, type AIProviderRow } from '../ai-provider.schema'
 import { credentialResource } from '../credential.schema'
 import type { CredentialInsert, CredentialRow } from '../credential.schema'
@@ -174,7 +181,7 @@ const AI_CONFIG_PROVIDER_CATALOG: readonly AIConfigProviderCatalogEntry[] = [
     aliases: ['paddle'],
     defaultBaseUrl: 'https://paddleocr.aistudio-app.com/api/v2/ocr/jobs',
     defaultModels: ['PP-OCRv6'],
-    defaultModelType: 'reader',
+    defaultModelType: 'document_understanding',
   },
 ]
 
@@ -647,8 +654,12 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
       id: modelId,
       name: typeof row.displayName === 'string' && row.displayName.trim() ? row.displayName : modelId,
       enabled: (typeof row.status === 'string' ? row.status : 'active') !== 'inactive',
-      capabilities: [],
-      modelType: normalizeAIConfigModelType(row.modelType),
+      capabilities: filterAIModelCapabilityUris(row.capabilities)
+        .map(toAIModelCapabilityName)
+        .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry)),
+      modelType: row.rdfType
+        ? toAIModelClassName(row.rdfType)
+        : normalizeAIConfigModelType(row.modelType),
       isCustom: !(resolveCatalogEntry(providerId, catalog)?.defaultModels ?? []).includes(modelId),
     })
     modelMap.set(providerId, list)
@@ -813,10 +824,19 @@ export function buildAIConfigMutationPlan(input: {
       nextIds.add(modelId)
       const existing = existingById.get(modelId)
       const now = new Date()
+      const modelClass = toAIModelClassUri(model.modelType)
+      if (!modelClass) {
+        throw new Error(`Unsupported AI model class: ${String(model.modelType)}`)
+      }
+      const capabilities = [...new Set([
+        AI_MODEL_CLASS_DEFAULT_CAPABILITY[modelClass],
+        ...filterAIModelCapabilityUris(model.capabilities),
+      ])]
       modelUpserts.push({
         id: modelId,
         displayName: model.name || modelId,
-        modelType: normalizeAIConfigModelType(model.modelType),
+        rdfType: [modelClass],
+        capabilities,
         isProvidedBy: aiConfigProviderRef(providerId),
         status: model.enabled ? 'active' : 'inactive',
         createdAt: existingDate(existing?.createdAt) ?? now,

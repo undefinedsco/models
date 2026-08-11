@@ -16,6 +16,7 @@ import {
   selectAIConfigCredential,
   selectAIConfigCredentialForBackend,
 } from '../src/ai-config'
+import { UDFS } from '../src/namespaces'
 
 describe('ai-config shared core', () => {
   it('creates opaque credential ids and keeps human meaning in fields', () => {
@@ -197,6 +198,26 @@ describe('ai-config shared core', () => {
     expect(legacyStates.openai).toMatchObject({
       selectedModelId: 'gpt-4o',
       selectedModelIds: ['gpt-4o'],
+    })
+  })
+
+  it('projects RDF subclasses and capability URIs for legacy AI Connections DTOs', () => {
+    const states = buildAIConfigProviderStateMap({
+      fallbackToCatalogModels: false,
+      providerRows: [],
+      credentialRows: [],
+      modelRows: [{
+        id: 'openai.ttl#gpt-4o',
+        displayName: 'GPT-4o',
+        isProvidedBy: '/settings/providers/openai.ttl',
+        rdfType: [UDFS.AIModel, UDFS.ChatModel],
+        capabilities: [UDFS.ChatCapability, UDFS.VisionCapability, UDFS.OCRCapability],
+      }],
+    })
+
+    expect(states.openai?.models[0]).toMatchObject({
+      modelType: 'chat',
+      capabilities: ['chat', 'vision', 'ocr'],
     })
   })
 
@@ -385,6 +406,8 @@ describe('ai-config shared core', () => {
     expect(plan.modelUpserts[0]).toMatchObject({
       id: 'claude-sonnet-4',
       displayName: 'Claude Sonnet 4',
+      rdfType: [UDFS.ChatModel],
+      capabilities: [UDFS.ChatCapability],
       isProvidedBy: aiConfigProviderRef('anthropic'),
       status: 'active',
     })
@@ -406,7 +429,7 @@ describe('ai-config shared core', () => {
             name: 'PP-OCRv6',
             enabled: true,
             capabilities: ['document-parse', 'ocr'],
-            modelType: 'reader',
+            modelType: 'document_understanding',
           },
         ],
       },
@@ -429,10 +452,33 @@ describe('ai-config shared core', () => {
     expect(plan.modelUpserts[0]).toMatchObject({
       id: 'pp-ocrv6',
       displayName: 'PP-OCRv6',
-      modelType: 'reader',
+      rdfType: [UDFS.DocumentUnderstandingModel],
+      capabilities: [UDFS.DocumentUnderstandingCapability, UDFS.OCRCapability],
       isProvidedBy: aiConfigProviderRef('paddleocr'),
       status: 'active',
     })
+  })
+
+  it('rejects explicit unknown model class names at mutation boundaries', () => {
+    for (const modelType of ['reader', 'document', 'ocr', 'typo']) {
+      expect(() => buildAIConfigMutationPlan({
+        providerId: 'paddleocr',
+        currentProviderRows: [],
+        currentCredentialRows: [],
+        currentModelRows: [],
+        updates: {
+          models: [
+            {
+              id: `model-${modelType}`,
+              name: modelType,
+              enabled: true,
+              capabilities: [],
+              modelType,
+            },
+          ],
+        },
+      })).toThrow(`Unsupported AI model class: ${modelType}`)
+    }
   })
 
   it('persists every enabled model as a provider URI link', () => {
@@ -533,7 +579,7 @@ describe('ai-config shared core', () => {
         {
           id: 'paddleocr.ttl#pp-ocrv6',
           displayName: 'PP-OCRv6',
-          modelType: 'reader',
+          modelType: 'document_understanding',
           isProvidedBy: '/settings/providers/paddleocr.ttl',
           status: 'active',
         },
@@ -550,7 +596,7 @@ describe('ai-config shared core', () => {
           id: 'pp-ocrv6',
           name: 'PP-OCRv6',
           enabled: true,
-          modelType: 'reader',
+          modelType: 'document_understanding',
           capabilities: [],
           isCustom: true,
         },
@@ -558,7 +604,7 @@ describe('ai-config shared core', () => {
     })
   })
 
-  it('uses reader as the PaddleOCR catalog fallback model type', () => {
+  it('uses document understanding as the PaddleOCR catalog fallback model type', () => {
     const states = buildAIConfigProviderStateMap({
       fallbackToCatalogModels: true,
       providerRows: [],
@@ -568,7 +614,7 @@ describe('ai-config shared core', () => {
 
     expect(states.paddleocr.models[0]).toMatchObject({
       id: 'PP-OCRv6',
-      modelType: 'reader',
+      modelType: 'document_understanding',
     })
   })
 

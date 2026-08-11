@@ -6,6 +6,8 @@ import {
   aiConfigTable,
   aiModelResource,
   aiModelTable,
+  chatModelResource,
+  embeddingModelResource,
   aiProviderResource,
   aiProviderTable,
   apiKeyCredentialResource,
@@ -25,6 +27,7 @@ import {
   vectorStoreResource,
   vectorStoreTable,
 } from '../src'
+import { READER_MATERIALIZATION_NOTE_KIND } from '../src/reader-materialization'
 
 function columnsOf(resource: unknown): Record<string, unknown> {
   return ((resource as any)?._?.columns ?? (resource as any)?.columns) as Record<string, unknown>
@@ -71,6 +74,8 @@ describe('AI runtime resources', () => {
     expect((solidResources as any).credentialResource).toBe(credentialResource)
     expect((solidResources as any).aiProviderResource).toBe(aiProviderResource)
     expect((solidResources as any).aiModelResource).toBe(aiModelResource)
+    expect((solidResources as any).chatModelResource).toBe(chatModelResource)
+    expect((solidResources as any).embeddingModelResource).toBe(embeddingModelResource)
     expect((solidResources as any).aiConfigResource).toBe(aiConfigResource)
     expect((solidResources as any).vectorStoreResource).toBe(vectorStoreResource)
     expect((solidResources as any).indexedFileResource).toBe(indexedFileResource)
@@ -93,7 +98,7 @@ describe('AI runtime resources', () => {
     expect((solidSchema as any).agentStatusTable).toBe(agentStatusTable)
   })
 
-  it('keeps xpod runtime fields in shared resources', () => {
+  it('keeps only cross-product intent in the shared AIConfig resource', () => {
     expectColumns(credentialResource, [
       'authMode',
       'apiKey',
@@ -128,17 +133,28 @@ describe('AI runtime resources', () => {
       'rerankerModel',
       'ocrEnabled',
       'automaticOcr',
+      'imageRecognition',
+      'pdfRecognition',
       'tableRecognition',
       'processingMode',
+      'readerPolicy',
+      'readerPriority',
+      'maxFileSizeMb',
+      'maxPages',
+    ])
+    expect(Object.keys(columnsOf(aiConfigResource))).not.toContain('ocrFallbackOrder')
+    expect(Object.keys(columnsOf(aiConfigResource))).not.toContain('failureFallback')
+    expect(Object.keys(columnsOf(aiConfigResource))).not.toEqual(expect.arrayContaining([
       'ftsEnabled',
       'vectorEnabled',
       'progressiveIndexingEnabled',
       'automaticIndexing',
       'textBackend',
       'vectorBackend',
+      'previousModel',
       'migrationStatus',
       'migrationProgress',
-    ])
+    ]))
     expectColumns(vectorStoreResource, ['container', 'chunkingStrategy'])
     expectColumns(indexedFileResource, ['fileUrl', 'vectorId'])
     expectColumns(agentStatusResource, ['agent', 'lastActivityAt'])
@@ -163,7 +179,7 @@ describe('AI runtime resources', () => {
   it('uses UDFS as the primary AI and credential storage contract', () => {
     expect(resourceConfigOf(credentialResource)).toMatchObject({ type: UDFS.Credential, namespace: UDFS })
     expect(resourceConfigOf(aiProviderResource)).toMatchObject({ type: UDFS.Provider, namespace: UDFS })
-    expect(resourceConfigOf(aiModelResource)).toMatchObject({ type: UDFS.Model, namespace: UDFS })
+    expect(resourceConfigOf(aiModelResource)).toMatchObject({ type: UDFS.AIModel, namespace: UDFS })
     expect(resourceConfigOf(aiConfigResource)).toMatchObject({ type: UDFS.AIConfig, namespace: UDFS })
     expect(resourceConfigOf(vectorStoreResource)).toMatchObject({ type: UDFS.VectorStore, namespace: UDFS })
     expect(resourceConfigOf(indexedFileResource)).toMatchObject({ type: UDFS.IndexedFile, namespace: UDFS })
@@ -190,9 +206,10 @@ describe('AI runtime resources', () => {
     expect(predicateOf(aiModelResource, 'isProvidedBy')).toBe(UDFS.isProvidedBy)
     expect(predicateOf(aiModelResource, 'inputModalities')).toBe(UDFS.inputModality)
     expect(predicateOf(aiModelResource, 'outputModalities')).toBe(UDFS.outputModality)
-    expect(predicateOf(aiModelResource, 'capabilities')).toBe(UDFS.capability)
-    expect(predicateOf(aiModelResource, 'contextLength')).toBe(UDFS.contextLength)
-    expect(predicateOf(aiModelResource, 'maxOutputTokens')).toBe(UDFS.maxOutputTokens)
+    expect(predicateOf(aiModelResource, 'capabilities')).toBe(UDFS.hasCapability)
+    expect(predicateOf(chatModelResource, 'contextLength')).toBe(UDFS.contextLength)
+    expect(predicateOf(chatModelResource, 'maxOutputTokens')).toBe(UDFS.maxOutputTokens)
+    expect(predicateOf(embeddingModelResource, 'dimension')).toBe(UDFS.dimension)
     expect(predicateOf(aiModelResource, 'pricingInput')).toBe(UDFS.pricingInput)
     expect(predicateOf(aiModelResource, 'pricingOutput')).toBe(UDFS.pricingOutput)
     expect(predicateOf(aiConfigResource, 'embeddingModel')).toBe(UDFS.embeddingModel)
@@ -200,14 +217,14 @@ describe('AI runtime resources', () => {
     expect(predicateOf(aiConfigResource, 'indexerModel')).toBe(UDFS.indexerModel)
     expect(predicateOf(aiConfigResource, 'ocrEnabled')).toBe(UDFS.ocrEnabled)
     expect(predicateOf(aiConfigResource, 'processingMode')).toBe(UDFS.processingMode)
-    expect(predicateOf(aiConfigResource, 'ftsEnabled')).toBe(UDFS.ftsEnabled)
-    expect(predicateOf(aiConfigResource, 'vectorEnabled')).toBe(UDFS.vectorEnabled)
-    expect(predicateOf(aiConfigResource, 'textBackend')).toBe(UDFS.textBackend)
-    expect(predicateOf(aiConfigResource, 'vectorBackend')).toBe(UDFS.vectorBackend)
     expect(predicateOf(vectorStoreResource, 'chunkingStrategy')).toBe(UDFS.chunkingStrategy)
     expect(predicateOf(indexedFileResource, 'fileUrl')).toBe(UDFS.fileUrl)
     expect(predicateOf(agentStatusResource, 'agent')).toBe(UDFS.agent)
     expect(predicateOf(agentStatusResource, 'currentTask')).toBe(UDFS.task)
+  })
+
+  it('exports the shared Reader materialization Note vocabulary', () => {
+    expect(READER_MATERIALIZATION_NOTE_KIND).toBe('reader-materialization')
   })
 
   it('declares collection query endpoints for settings-backed resources', () => {
