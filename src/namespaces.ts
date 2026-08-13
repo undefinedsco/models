@@ -88,6 +88,7 @@ export const SIOC = createNamespace('sioc', 'http://rdfs.org/sioc/ns#', {
   has_parent: 'has_parent',
   numReplies: 'num_replies',
   has_member: 'has_member',
+  about: 'about',
 })
 
 export const MEETING = createNamespace('mee', 'http://www.w3.org/ns/pim/meeting#', {
@@ -352,7 +353,9 @@ export const UDFS = createNamespace('udfs', 'https://undefineds.co/ns#', {
   tags: 'tags',
   source: 'source',
   sourceKind: 'sourceKind',
+  sourceKey: 'sourceKey',
   sourceHash: 'sourceHash',
+  fingerprint: 'fingerprint',
   compiledAt: 'compiledAt',
   compiledFrom: 'compiledFrom',
   related: 'related',

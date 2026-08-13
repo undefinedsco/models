@@ -21,13 +21,19 @@ import {
   oauthCredentialResource,
   oauthCredentialTable,
   ProviderAuthMode,
+  RDF,
+  ReaderMaterializationVocab,
+  SIOC,
   solidResources,
   solidSchema,
   UDFS,
   vectorStoreResource,
   vectorStoreTable,
 } from '../src'
-import { READER_MATERIALIZATION_NOTE_KIND } from '../src/reader-materialization'
+import {
+  READER_MATERIALIZATION_NOTE_KIND,
+  READER_MATERIALIZATION_STATUSES,
+} from '../src/reader-materialization'
 
 function columnsOf(resource: unknown): Record<string, unknown> {
   return ((resource as any)?._?.columns ?? (resource as any)?.columns) as Record<string, unknown>
@@ -221,6 +227,30 @@ describe('AI runtime resources', () => {
     expect(predicateOf(indexedFileResource, 'fileUrl')).toBe(UDFS.fileUrl)
     expect(predicateOf(agentStatusResource, 'agent')).toBe(UDFS.agent)
     expect(predicateOf(agentStatusResource, 'currentTask')).toBe(UDFS.task)
+  })
+
+  it('exports one durable Reader Note vocabulary without reconciliation states', () => {
+    expect(READER_MATERIALIZATION_STATUSES).toEqual(['complete', 'stale'])
+    expect(ReaderMaterializationVocab).toEqual({
+      type: RDF.type,
+      noteType: UDFS.Note,
+      about: SIOC.about,
+      noteKind: UDFS.noteKind,
+      sourceKey: UDFS.sourceKey,
+      fingerprint: UDFS.fingerprint,
+      readerEngine: UDFS.readerEngine,
+      readerVersion: UDFS.readerVersion,
+      generatedWithModel: UDFS.generatedWithModel,
+      sourceHash: UDFS.sourceHash,
+      readerOptionsHash: UDFS.readerOptionsHash,
+      representationHash: UDFS.representationHash,
+      representationMediaType: UDFS.representationMediaType,
+      coverageUnit: UDFS.coverageUnit,
+      coveredRange: UDFS.coveredRange,
+      readUnits: UDFS.readUnits,
+      totalUnits: UDFS.totalUnits,
+      status: UDFS.status,
+    })
   })
 
   it('exports the shared Reader materialization Note vocabulary', () => {
