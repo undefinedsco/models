@@ -97,8 +97,8 @@ describe('Solid Pod AIProvider CRUD', () => {
     expect(record?.baseUrl).toBe('https://api.test.com/v1')
     expect(record?.proxyUrl).toBe('https://proxy.test.com/v1')
     expect(record?.hasModel).toEqual([
-      `/settings/providers/${providerId}.ttl#test-model`,
-      `/settings/providers/${providerId}.ttl#test-model-mini`,
+      new URL(`/settings/providers/${providerId}.ttl#test-model`, env.webId!).href,
+      new URL(`/settings/providers/${providerId}.ttl#test-model-mini`, env.webId!).href,
     ])
   })
 
