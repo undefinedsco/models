@@ -17,7 +17,18 @@ import {
 } from './ai-gateway.schema'
 import { approvalResource, approvalTable } from './approval.schema'
 import { auditResource, auditTable } from './audit.schema'
-import { aiModelResource, aiModelTable } from './ai-model.schema'
+import {
+  aiModelResource,
+  aiModelTable,
+  chatModelResource,
+  documentUnderstandingModelResource,
+  embeddingModelResource,
+  imageGenerationModelResource,
+  rerankingModelResource,
+  speechRecognitionModelResource,
+  speechSynthesisModelResource,
+  videoGenerationModelResource,
+} from './ai-model.schema'
 import { aiProviderResource, aiProviderTable } from './ai-provider.schema'
 import { chatResource, chatTable } from './chat.schema'
 import { contactResource, contactTable } from './contact.schema'
@@ -63,6 +74,14 @@ export const solidResources = {
   credentialResource,
   aiProviderResource,
   aiModelResource,
+  chatModelResource,
+  embeddingModelResource,
+  documentUnderstandingModelResource,
+  rerankingModelResource,
+  imageGenerationModelResource,
+  speechRecognitionModelResource,
+  speechSynthesisModelResource,
+  videoGenerationModelResource,
   aiConfigResource,
   vectorStoreResource,
   indexedFileResource,

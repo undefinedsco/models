@@ -9,7 +9,7 @@ export const aiProviderResource = podTable("aiProvider", {
   homepage: string("homepage").predicate(UDFS.homepage),
   apiKeyUrl: string("apiKeyUrl").predicate(UDFS.apiKeyUrl),
   connectMode: string("connectMode").predicate(UDFS.connectMode),
-  hasModel: uri("hasModel").predicate(UDFS.hasModel).link("aiModel"),
+  hasModel: uri("hasModel").predicate(UDFS.hasModel).array().link("aiModel"),
   defaultModel: uri("defaultModel").predicate(UDFS.defaultModel).link("aiModel"),
   supportsBackend: string("supportsBackend").predicate(UDFS.supportsBackend),
   rotationPolicy: string("rotationPolicy").predicate(UDFS.rotationPolicy),

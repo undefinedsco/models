@@ -16,6 +16,7 @@ import {
   selectAIConfigCredential,
   selectAIConfigCredentialForBackend,
 } from '../src/ai-config'
+import { UDFS } from '../src/namespaces'
 
 describe('ai-config shared core', () => {
   it('creates opaque credential ids and keeps human meaning in fields', () => {
@@ -139,6 +140,7 @@ describe('ai-config shared core', () => {
       baseUrl: 'https://api.anthropic.com/v1',
       credentialId: 'anthropic-default',
       selectedModelId: 'claude-sonnet-4',
+      selectedModelIds: ['claude-sonnet-4'],
     })
     expect(states.anthropic?.models).toEqual([
       {
@@ -150,6 +152,73 @@ describe('ai-config shared core', () => {
         isCustom: true,
       },
     ])
+  })
+
+  it('reads multiple provider model links while keeping scalar RDF compatibility', () => {
+    const states = buildAIConfigProviderStateMap({
+      fallbackToCatalogModels: false,
+      providerRows: [
+        {
+          id: 'openai',
+          hasModel: [
+            '/settings/providers/openai.ttl#gpt-4o',
+            '/settings/providers/openai.ttl#gpt-4o-mini',
+          ],
+        },
+      ],
+      credentialRows: [],
+      modelRows: [
+        {
+          id: 'openai.ttl#gpt-4o',
+          displayName: 'GPT-4o',
+          isProvidedBy: '/settings/providers/openai.ttl',
+          status: 'active',
+        },
+        {
+          id: 'openai.ttl#gpt-4o-mini',
+          displayName: 'GPT-4o mini',
+          isProvidedBy: '/settings/providers/openai.ttl',
+          status: 'active',
+        },
+      ],
+    })
+
+    expect(states.openai).toMatchObject({
+      selectedModelId: 'gpt-4o',
+      selectedModelIds: ['gpt-4o', 'gpt-4o-mini'],
+    })
+
+    const legacyStates = buildAIConfigProviderStateMap({
+      fallbackToCatalogModels: false,
+      providerRows: [{ id: 'openai', hasModel: '/settings/providers/openai.ttl#gpt-4o' }],
+      credentialRows: [],
+      modelRows: [],
+    })
+
+    expect(legacyStates.openai).toMatchObject({
+      selectedModelId: 'gpt-4o',
+      selectedModelIds: ['gpt-4o'],
+    })
+  })
+
+  it('projects RDF subclasses and capability URIs for legacy AI Connections DTOs', () => {
+    const states = buildAIConfigProviderStateMap({
+      fallbackToCatalogModels: false,
+      providerRows: [],
+      credentialRows: [],
+      modelRows: [{
+        id: 'openai.ttl#gpt-4o',
+        displayName: 'GPT-4o',
+        isProvidedBy: '/settings/providers/openai.ttl',
+        rdfType: [UDFS.AIModel, UDFS.ChatModel],
+        capabilities: [UDFS.ChatCapability, UDFS.VisionCapability, UDFS.OCRCapability],
+      }],
+    })
+
+    expect(states.openai?.models[0]).toMatchObject({
+      modelType: 'chat',
+      capabilities: ['chat', 'vision', 'ocr'],
+    })
   })
 
   it('selects the default credential before round-robin candidates', () => {
@@ -323,7 +392,7 @@ describe('ai-config shared core', () => {
     expect(plan.providerPayload).toMatchObject({
       id: 'anthropic',
       baseUrl: 'https://api.anthropic.com/v1',
-      hasModel: aiConfigModelRef('anthropic', 'claude-sonnet-4'),
+      hasModel: [aiConfigModelRef('anthropic', 'claude-sonnet-4')],
     })
     expect(plan.credentialPayload).toMatchObject({
       id: expect.stringMatching(/^cred_[a-z0-9_-]+$/u),
@@ -337,6 +406,8 @@ describe('ai-config shared core', () => {
     expect(plan.modelUpserts[0]).toMatchObject({
       id: 'claude-sonnet-4',
       displayName: 'Claude Sonnet 4',
+      rdfType: [UDFS.ChatModel],
+      capabilities: [UDFS.ChatCapability],
       isProvidedBy: aiConfigProviderRef('anthropic'),
       status: 'active',
     })
@@ -358,7 +429,7 @@ describe('ai-config shared core', () => {
             name: 'PP-OCRv6',
             enabled: true,
             capabilities: ['document-parse', 'ocr'],
-            modelType: 'reader',
+            modelType: 'document_understanding',
           },
         ],
       },
@@ -368,7 +439,7 @@ describe('ai-config shared core', () => {
     expect(plan.providerPayload).toMatchObject({
       id: 'paddleocr',
       baseUrl: 'https://paddleocr.aistudio-app.com/api/v2/ocr/jobs',
-      hasModel: aiConfigModelRef('paddleocr', 'pp-ocrv6'),
+      hasModel: [aiConfigModelRef('paddleocr', 'pp-ocrv6')],
     })
     expect(plan.credentialPayload).toMatchObject({
       id: expect.stringMatching(/^cred_[a-z0-9_-]+$/u),
@@ -381,10 +452,109 @@ describe('ai-config shared core', () => {
     expect(plan.modelUpserts[0]).toMatchObject({
       id: 'pp-ocrv6',
       displayName: 'PP-OCRv6',
-      modelType: 'reader',
+      rdfType: [UDFS.DocumentUnderstandingModel],
+      capabilities: [UDFS.DocumentUnderstandingCapability, UDFS.OCRCapability],
       isProvidedBy: aiConfigProviderRef('paddleocr'),
       status: 'active',
     })
+  })
+
+  it('rejects explicit unknown model class names at mutation boundaries', () => {
+    for (const modelType of ['reader', 'document', 'ocr', 'typo']) {
+      expect(() => buildAIConfigMutationPlan({
+        providerId: 'paddleocr',
+        currentProviderRows: [],
+        currentCredentialRows: [],
+        currentModelRows: [],
+        updates: {
+          models: [
+            {
+              id: `model-${modelType}`,
+              name: modelType,
+              enabled: true,
+              capabilities: [],
+              modelType,
+            },
+          ],
+        },
+      })).toThrow(`Unsupported AI model class: ${modelType}`)
+    }
+  })
+
+  it('persists every enabled model as a provider URI link', () => {
+    const plan = buildAIConfigMutationPlan({
+      providerId: 'openai',
+      currentProviderRows: [],
+      currentCredentialRows: [],
+      currentModelRows: [],
+      updates: {
+        models: [
+          {
+            id: 'gpt-4o',
+            name: 'GPT-4o',
+            enabled: true,
+            capabilities: [],
+          },
+          {
+            id: 'gpt-4o-mini',
+            name: 'GPT-4o mini',
+            enabled: true,
+            capabilities: [],
+          },
+          {
+            id: 'gpt-3.5-turbo',
+            name: 'GPT-3.5 Turbo',
+            enabled: false,
+            capabilities: [],
+          },
+        ],
+      },
+    })
+
+    expect(plan.providerPayload?.hasModel).toEqual([
+      aiConfigModelRef('openai', 'gpt-4o'),
+      aiConfigModelRef('openai', 'gpt-4o-mini'),
+    ])
+  })
+
+  it('normalizes a legacy scalar provider link when no model update is requested', () => {
+    const plan = buildAIConfigMutationPlan({
+      providerId: 'openai',
+      currentProviderRows: [
+        {
+          id: 'openai',
+          hasModel: '/settings/providers/openai.ttl#gpt-4o',
+        },
+      ],
+      currentCredentialRows: [],
+      currentModelRows: [],
+      updates: { enabled: true },
+    })
+
+    expect(plan.providerPayload?.hasModel).toEqual([
+      aiConfigModelRef('openai', 'gpt-4o'),
+    ])
+  })
+
+  it('clears provider model links when all picked models are disabled', () => {
+    const plan = buildAIConfigMutationPlan({
+      providerId: 'openai',
+      currentProviderRows: [],
+      currentCredentialRows: [],
+      currentModelRows: [],
+      updates: {
+        models: [
+          {
+            id: 'gpt-4o',
+            name: 'GPT-4o',
+            enabled: false,
+            capabilities: [],
+          },
+        ],
+      },
+    })
+
+    expect(plan.providerPayload?.hasModel).toBeUndefined()
   })
 
   it('returns reader model type from AI config state reads', () => {
@@ -409,7 +579,7 @@ describe('ai-config shared core', () => {
         {
           id: 'paddleocr.ttl#pp-ocrv6',
           displayName: 'PP-OCRv6',
-          modelType: 'reader',
+          modelType: 'document_understanding',
           isProvidedBy: '/settings/providers/paddleocr.ttl',
           status: 'active',
         },
@@ -426,7 +596,7 @@ describe('ai-config shared core', () => {
           id: 'pp-ocrv6',
           name: 'PP-OCRv6',
           enabled: true,
-          modelType: 'reader',
+          modelType: 'document_understanding',
           capabilities: [],
           isCustom: true,
         },
@@ -434,7 +604,7 @@ describe('ai-config shared core', () => {
     })
   })
 
-  it('uses reader as the PaddleOCR catalog fallback model type', () => {
+  it('uses document understanding as the PaddleOCR catalog fallback model type', () => {
     const states = buildAIConfigProviderStateMap({
       fallbackToCatalogModels: true,
       providerRows: [],
@@ -444,7 +614,7 @@ describe('ai-config shared core', () => {
 
     expect(states.paddleocr.models[0]).toMatchObject({
       id: 'PP-OCRv6',
-      modelType: 'reader',
+      modelType: 'document_understanding',
     })
   })
 
@@ -509,7 +679,7 @@ describe('ai-config shared core', () => {
     expect(plan.providerPayload).toMatchObject({
       id: 'stepfun',
       baseUrl: 'https://api.stepfun.com/v1',
-      hasModel: aiConfigModelRef('stepfun', 'step-3.7-flash'),
+      hasModel: [aiConfigModelRef('stepfun', 'step-3.7-flash')],
     })
     expect(plan.credentialPayload).toMatchObject({
       id: expect.stringMatching(/^cred_[a-z0-9_-]+$/u),

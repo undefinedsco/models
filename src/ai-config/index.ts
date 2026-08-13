@@ -1,4 +1,11 @@
 import type { AIModelInsert, AIModelRow } from '../ai-model.schema'
+import {
+  AI_MODEL_CLASS_DEFAULT_CAPABILITY,
+  filterAIModelCapabilityUris,
+  toAIModelCapabilityName,
+  toAIModelClassName,
+  toAIModelClassUri,
+} from '../ai-model-vocab'
 import { aiProviderResource, type AIProviderInsert, type AIProviderRow } from '../ai-provider.schema'
 import { credentialResource } from '../credential.schema'
 import type { CredentialInsert, CredentialRow } from '../credential.schema'
@@ -30,6 +37,8 @@ export interface AIConfigProviderState {
   credentialLabel?: string
   credentialIsDefault?: boolean
   models: AIConfigModel[]
+  /** All provider models selected by the user; legacy callers may use selectedModelId. */
+  selectedModelIds?: string[]
   selectedModelId?: string
 }
 
@@ -172,7 +181,7 @@ const AI_CONFIG_PROVIDER_CATALOG: readonly AIConfigProviderCatalogEntry[] = [
     aliases: ['paddle'],
     defaultBaseUrl: 'https://paddleocr.aistudio-app.com/api/v2/ocr/jobs',
     defaultModels: ['PP-OCRv6'],
-    defaultModelType: 'reader',
+    defaultModelType: 'document_understanding',
   },
 ]
 
@@ -218,8 +227,9 @@ function collectKnownProviderIds(catalog: readonly AIConfigProviderCatalogEntry[
   return ids
 }
 
-function preferredSelectedModelId(models: AIConfigModel[]): string | undefined {
-  return models.find((model) => model.enabled)?.id ?? models[0]?.id
+function preferredSelectedModelIds(models: AIConfigModel[]): string[] {
+  const preferredId = models.find((model) => model.enabled)?.id ?? models[0]?.id
+  return preferredId ? [preferredId] : []
 }
 
 function existingDate(value: unknown): Date | undefined {
@@ -276,6 +286,21 @@ function parseBackendList(value: unknown): string[] {
 
 function uniqueStrings(values: string[]): string[] {
   return Array.from(new Set(values.filter(Boolean)))
+}
+
+function collectAIConfigModelRefs(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.flatMap((entry) => collectAIConfigModelRefs(entry))
+  }
+  return typeof value === 'string' && value.trim() ? [value] : []
+}
+
+function normalizeAIConfigModelStorageIds(value: unknown, providerId: string): string[] {
+  return uniqueStrings(
+    collectAIConfigModelRefs(value)
+      .map((raw) => normalizeAIConfigModelStorageId(raw, providerId))
+      .filter(Boolean),
+  )
 }
 
 function aiConfigProviderSupportsBackend(
@@ -629,8 +654,12 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
       id: modelId,
       name: typeof row.displayName === 'string' && row.displayName.trim() ? row.displayName : modelId,
       enabled: (typeof row.status === 'string' ? row.status : 'active') !== 'inactive',
-      capabilities: [],
-      modelType: normalizeAIConfigModelType(row.modelType),
+      capabilities: filterAIModelCapabilityUris(row.capabilities)
+        .map(toAIModelCapabilityName)
+        .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry)),
+      modelType: row.rdfType
+        ? toAIModelClassName(row.rdfType)
+        : normalizeAIConfigModelType(row.modelType),
       isCustom: !(resolveCatalogEntry(providerId, catalog)?.defaultModels ?? []).includes(modelId),
     })
     modelMap.set(providerId, list)
@@ -661,10 +690,11 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
           modelType: metadata.defaultModelType ?? 'chat',
         }))
 
-    const selectedModelId = normalizeAIConfigModelStorageId(
-      typeof providerRow?.hasModel === 'string' ? providerRow.hasModel : '',
-      providerId,
-    ) || preferredSelectedModelId(models)
+    const selectedModelIds = normalizeAIConfigModelStorageIds(providerRow?.hasModel, providerId)
+    const resolvedSelectedModelIds = selectedModelIds.length > 0
+      ? selectedModelIds
+      : preferredSelectedModelIds(models)
+    const selectedModelId = resolvedSelectedModelIds[0]
 
     states[providerId] = {
       id: providerId,
@@ -675,6 +705,7 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
       credentialLabel: credentialSelection?.credentialLabel,
       credentialIsDefault: credentialSelection?.isDefault,
       models,
+      selectedModelIds: resolvedSelectedModelIds.length > 0 ? resolvedSelectedModelIds : undefined,
       selectedModelId: selectedModelId || undefined,
     }
   }
@@ -722,9 +753,11 @@ export function buildAIConfigMutationPlan(input: {
   const modelDeleteIds: string[] = []
 
   if (hasProviderUpdate) {
-    const selectedModelId = input.updates.models
-      ? preferredSelectedModelId(input.updates.models)
-      : normalizeAIConfigModelStorageId(typeof existingProvider?.hasModel === 'string' ? existingProvider.hasModel : '', providerId)
+    const selectedModelIds = input.updates.models !== undefined
+      ? uniqueStrings(input.updates.models.filter((model) => model.enabled).map((model) => model.id))
+          .map((modelId) => normalizeAIConfigModelStorageId(modelId, providerId))
+          .filter(Boolean)
+      : normalizeAIConfigModelStorageIds(existingProvider?.hasModel, providerId)
 
     providerPayload = {
       id: providerId,
@@ -733,7 +766,9 @@ export function buildAIConfigMutationPlan(input: {
         (typeof existingProvider?.baseUrl === 'string' ? existingProvider.baseUrl : undefined) ??
         metadata.defaultBaseUrl,
       proxyUrl: typeof existingProvider?.proxyUrl === 'string' ? existingProvider.proxyUrl : undefined,
-      hasModel: selectedModelId ? aiConfigModelRef(providerId, selectedModelId) : undefined,
+      hasModel: selectedModelIds.length > 0
+        ? selectedModelIds.map((modelId) => aiConfigModelRef(providerId, modelId))
+        : undefined,
       supportsBackend:
         input.updates.supportsBackend ??
         (typeof existingProvider?.supportsBackend === 'string' ? existingProvider.supportsBackend : undefined),
@@ -789,10 +824,19 @@ export function buildAIConfigMutationPlan(input: {
       nextIds.add(modelId)
       const existing = existingById.get(modelId)
       const now = new Date()
+      const modelClass = toAIModelClassUri(model.modelType)
+      if (!modelClass) {
+        throw new Error(`Unsupported AI model class: ${String(model.modelType)}`)
+      }
+      const capabilities = [...new Set([
+        AI_MODEL_CLASS_DEFAULT_CAPABILITY[modelClass],
+        ...filterAIModelCapabilityUris(model.capabilities),
+      ])]
       modelUpserts.push({
         id: modelId,
         displayName: model.name || modelId,
-        modelType: normalizeAIConfigModelType(model.modelType),
+        rdfType: [modelClass],
+        capabilities,
         isProvidedBy: aiConfigProviderRef(providerId),
         status: model.enabled ? 'active' : 'inactive',
         createdAt: existingDate(existing?.createdAt) ?? now,

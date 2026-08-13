@@ -74,7 +74,10 @@ describe('Solid Pod AIProvider CRUD', () => {
         id: providerId,
         baseUrl: 'https://api.test.com/v1',
         proxyUrl: 'https://proxy.test.com/v1',
-        hasModel: `/settings/providers/${providerId}.ttl#test-model`,
+        hasModel: [
+          `/settings/providers/${providerId}.ttl#test-model`,
+          `/settings/providers/${providerId}.ttl#test-model-mini`,
+        ],
       })
       .execute()
 
@@ -87,7 +90,10 @@ describe('Solid Pod AIProvider CRUD', () => {
     expect(extractPodResourceTemplateValue(aiProviderTable, record?.id)).toBe(providerId)
     expect(record?.baseUrl).toBe('https://api.test.com/v1')
     expect(record?.proxyUrl).toBe('https://proxy.test.com/v1')
-    expect(record?.hasModel).toContain('#test-model')
+    expect(record?.hasModel).toEqual([
+      `/settings/providers/${providerId}.ttl#test-model`,
+      `/settings/providers/${providerId}.ttl#test-model-mini`,
+    ])
   })
 
   it('updates and deletes an AI provider', { timeout: 60000 }, async () => {

@@ -1,4 +1,4 @@
-import { id, integer, podTable, string, timestamp, uri } from '@undefineds.co/drizzle-solid'
+import { boolean, id, integer, podTable, string, timestamp, uri } from '@undefineds.co/drizzle-solid'
 import { agentResource } from './agent.schema'
 import { aiModelResource } from './ai-model.schema'
 import { UDFS } from './namespaces'
@@ -6,10 +6,22 @@ import { taskResource } from './task.schema'
 
 export const aiConfigResource = podTable('aiConfig', {
   id: id('id').default('config.ttl#{key}'),
+  chatModel: uri('chatModel').predicate(UDFS.chatModel).link(aiModelResource),
+  ocrModel: uri('ocrModel').predicate(UDFS.ocrModel).link(aiModelResource),
+  readerModel: uri('readerModel').predicate(UDFS.readerModel).link(aiModelResource),
   embeddingModel: uri('embeddingModel').predicate(UDFS.embeddingModel).link(aiModelResource),
-  previousModel: uri('previousModel').predicate(UDFS.previousModel).link(aiModelResource),
-  migrationStatus: string('migrationStatus').predicate(UDFS.migrationStatus),
-  migrationProgress: integer('migrationProgress').predicate(UDFS.migrationProgress),
+  indexerModel: uri('indexerModel').predicate(UDFS.indexerModel).link(aiModelResource),
+  rerankerModel: uri('rerankerModel').predicate(UDFS.rerankerModel).link(aiModelResource),
+  ocrEnabled: boolean('ocrEnabled').predicate(UDFS.ocrEnabled).default(true),
+  automaticOcr: boolean('automaticOcr').predicate(UDFS.automaticOcr).default(true),
+  imageRecognition: boolean('imageRecognition').predicate(UDFS.imageRecognition).default(true),
+  pdfRecognition: boolean('pdfRecognition').predicate(UDFS.pdfRecognition).default(true),
+  tableRecognition: boolean('tableRecognition').predicate(UDFS.tableRecognition).default(false),
+  processingMode: string('processingMode').predicate(UDFS.processingMode).default('auto'),
+  readerPolicy: string('readerPolicy').predicate(UDFS.readerPolicy).default('auto'),
+  readerPriority: string('readerPriority').predicate(UDFS.readerPriority).default('structure-first'),
+  maxFileSizeMb: integer('maxFileSizeMb').predicate(UDFS.maxFileSizeMb).default(64),
+  maxPages: integer('maxPages').predicate(UDFS.maxPages).default(500),
   updatedAt: timestamp('updatedAt').predicate(UDFS.updatedAt),
 }, {
   base: '/settings/ai/',
