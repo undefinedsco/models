@@ -112,10 +112,27 @@ provider, and which credential should be used for a provider call?
 The resources are:
 
 ```text
-aiProviderResource   /settings/providers/{providerId}.ttl
-aiModelResource      /settings/providers/{providerId}.ttl#{modelId}
-credentialResource   /settings/credentials.ttl#{credentialId}
+aiProviderResource   settings/providers/{providerId}.ttl
+aiModelResource      settings/providers/{providerId}.ttl#{modelId}
+credentialResource   settings/credentials.ttl#{credentialId}
 ```
+
+These are the resolved Pod paths. Drizzle `link(...)` fields do not receive
+those full paths directly; they receive the target table id and let
+drizzle-solid resolve it against the linked resource base. For AI config
+relations, new writers should use:
+
+```text
+aiConfigProviderRef("openai") -> openai.ttl
+aiConfigModelRef("openai", "gpt-4o") -> openai.ttl#gpt-4o
+```
+
+Passing `settings/providers/openai.ttl` into a link field is wrong because the
+AI provider/model link target already has `/settings/providers/` as its base and
+would resolve to `settings/providers/settings/providers/openai.ttl`. Passing a
+slash-rooted `/settings/providers/openai.ttl` is also wrong for nested Pods
+because URL resolution targets the origin root instead of the current Pod.
+Readers continue to normalize legacy absolute and slash-rooted references.
 
 The separation is:
 
@@ -219,9 +236,9 @@ Representative paths:
 /.data/chat/{chatId}/{yyyy}/{MM}/{dd}/messages.ttl#{messageId}
 /agents/{agentId}/
 /.data/sessions/{yyyy}/{MM}/{dd}/{sessionId}.ttl
-/settings/providers/{providerId}.ttl
-/settings/providers/{providerId}.ttl#{modelId}
-/settings/credentials.ttl#{credentialId}
+settings/providers/{providerId}.ttl
+settings/providers/{providerId}.ttl#{modelId}
+settings/credentials.ttl#{credentialId}
 ```
 
 Schema fields that are RDF relations should store resource URIs, not hidden

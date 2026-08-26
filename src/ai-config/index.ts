@@ -497,6 +497,13 @@ function normalizeAIConfigModelStorageId(raw: string | null | undefined, provide
   return aiConfigResourceRefToModelId(raw, providerId)
 }
 
+function buildAIConfigModelStorageId(providerId: string, modelId: string): string {
+  return aiModelResource.buildId({
+    id: modelId,
+    isProvidedBy: aiConfigProviderRef(providerId),
+  })
+}
+
 export function sameAIConfigProviderFamily(left?: string | null, right?: string | null): boolean {
   const normalizedLeft = normalizeAIConfigProviderId(left)
   const normalizedRight = normalizeAIConfigProviderId(right)
@@ -529,7 +536,7 @@ export function createAIConfigCredentialId(): string {
 
 export function aiConfigProviderRef(providerId: string): string {
   const provider = normalizeAIConfigProviderId(providerId)
-  return provider ? `/settings/providers/${provider}.ttl` : provider
+  return provider ? aiProviderResource.buildId({ id: provider }) : provider
 }
 
 export function aiConfigModelRef(providerId: string, modelId?: string): string {
@@ -539,7 +546,7 @@ export function aiConfigModelRef(providerId: string, modelId?: string): string {
 
   const provider = normalizeAIConfigProviderId(providerId)
   const model = normalizeAIConfigModelStorageId(modelId, provider)
-  return provider && model ? `/settings/providers/${provider}.ttl#${model}` : model
+  return provider && model ? buildAIConfigModelStorageId(provider, model) : model
 }
 
 export function selectAIConfigCredential(
