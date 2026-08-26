@@ -134,7 +134,19 @@ describe('ai-config shared core', () => {
     expect(normalizeAIConfigModelId('anthropic.ttl#claude-sonnet-4', 'anthropic')).toBe('claude-sonnet-4')
     expect(normalizeAIConfigModelId('openrouter/openai/gpt-4o-mini', 'openrouter')).toBe('openai/gpt-4o-mini')
     expect(normalizeAIConfigModelId('https://pod.example/settings/providers/anthropic.ttl#claude-sonnet-4', 'anthropic')).toBe('claude-sonnet-4')
-    expect(aiConfigModelRef('anthropic', 'claude-sonnet-4')).toBe('/settings/providers/anthropic.ttl#claude-sonnet-4')
+    expect(aiConfigModelRef('anthropic', 'claude-sonnet-4')).toBe('settings/providers/anthropic.ttl#claude-sonnet-4')
+  })
+
+  it('builds AI config refs as nested-Pod-safe base-relative resource ids', () => {
+    const nestedPod = 'https://cloud.example/alice/pod/'
+    const providerRef = aiConfigProviderRef('anthropic')
+    const modelRef = aiConfigModelRef('anthropic', 'claude-sonnet-4')
+
+    expect(providerRef).toBe('settings/providers/anthropic.ttl')
+    expect(modelRef).toBe('settings/providers/anthropic.ttl#claude-sonnet-4')
+    expect(new URL(providerRef, nestedPod).href).toBe('https://cloud.example/alice/pod/settings/providers/anthropic.ttl')
+    expect(new URL(modelRef, nestedPod).href).toBe('https://cloud.example/alice/pod/settings/providers/anthropic.ttl#claude-sonnet-4')
+    expect(new URL('/settings/providers/anthropic.ttl', nestedPod).href).toBe('https://cloud.example/settings/providers/anthropic.ttl')
   })
 
   it('builds provider state from provider-scoped AI config resources', () => {
