@@ -141,6 +141,8 @@ export {
   emptyChatProjectContext,
   readChatProjectContext,
   writeChatProjectContext,
+  reconcileChatProjectContext,
+  type ReconcileChatProjectContextInput,
   type ChatProjectContextSnapshot,
   type ChatProjectMemoryEntry,
   type ChatProjectWhere,
@@ -155,6 +157,7 @@ export {
 export {
   conversationShareRepository,
   removeConversationShare,
+  markConversationShareRevoked,
   type ConversationShareWhere,
 } from './conversation-share.repository'
 
