@@ -256,6 +256,35 @@ External/API ids use a fixed promotion rule:
 - Existing promoted examples are `Run.externalRunId`, `Message.toolCallId`,
   `Message.coordinationId`, and `Contact.externalPlatform/externalId`.
 
+## Chat project editing and share revocation
+
+From `0.2.54`, use `reconcileChatProjectContext(db, { previous, next })` when
+saving an editor draft. Keep `previous` as the snapshot read before editing
+and pass a separate `next` snapshot with the same workspace:
+
+```ts
+import { readChatProjectContext, reconcileChatProjectContext, markConversationShareRevoked } from '@undefineds.co/models'
+
+const previous = await readChatProjectContext(db, workspaceUri)
+const next = { ...previous, instructions: 'Keep answers concise.' }
+const saved = await reconcileChatProjectContext(db, { previous, next })
+
+// After the application has successfully revoked public access:
+await markConversationShareRevoked(db, share.id)
+```
+
+Reconciliation writes changed settings and new or edited memories, removes
+only memories deleted from the editor's baseline, then returns a fresh
+snapshot. It leaves unchanged memories and memories added by another client
+untouched. The writes are not an atomic transaction or a conflict-resolution
+protocol; concurrent edits to the same memory still require coordination.
+`writeChatProjectContext` remains available for full-snapshot replacement.
+
+`markConversationShareRevoked(db, id, revokedAt?)` stores the revocation date
+(current time by default) without deleting share metadata. It does not revoke
+public access itself; that network operation belongs to the application.
+`removeConversationShare` still deletes metadata instead.
+
 ## Design Rules
 
 - Prefer standard RDF vocabularies such as VCARD, FOAF, SIOC, DCTerms,
