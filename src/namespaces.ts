@@ -367,6 +367,7 @@ export const UDFS = createNamespace('udfs', 'https://undefineds.co/ns#', {
   expiresAt: 'expiresAt',
   riskCeiling: 'riskCeiling',
   revokedAt: 'revokedAt',
+  disabledAt: 'disabledAt',
   archivedAt: 'archivedAt',
   deletedAt: 'deletedAt',
   pinnedAt: 'pinnedAt',
@@ -386,6 +387,12 @@ export const UDFS = createNamespace('udfs', 'https://undefineds.co/ns#', {
   runner: 'runner',
   prompt: 'prompt',
   externalRunId: 'externalRunId',
+  // CSS/OIDC credentials issued to a client: the external client identifier and
+  // where that credential is in effect (client application id and device id).
+  clientCredentialId: 'clientCredentialId',
+  appliedTo: 'appliedTo',
+  appliedOn: 'appliedOn',
+  appliedAt: 'appliedAt',
   leaseOwner: 'leaseOwner',
   leaseExpiresAt: 'leaseExpiresAt',
   heartbeatAt: 'heartbeatAt',

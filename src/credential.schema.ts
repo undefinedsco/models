@@ -1,5 +1,5 @@
 import { boolean, id, integer, podTable, string, text, timestamp, uri } from "@undefineds.co/drizzle-solid"
-import { UDFS } from "./namespaces"
+import { DCTerms, UDFS } from "./namespaces"
 
 export const ProviderAuthMode = {
   oauth: "oauth",
@@ -47,7 +47,18 @@ export const credentialResource = podTable("credential", {
   proxyUrl: string("proxyUrl").predicate(UDFS.proxyUrl),
   label: string("label").predicate(UDFS.label),
   isDefault: boolean("isDefault").predicate(UDFS.isDefault).default(false),
+  createdAt: timestamp("createdAt").predicate(DCTerms.created).notNull().defaultNow(),
   lastUsedAt: timestamp("lastUsedAt").predicate(UDFS.lastUsedAt),
+  // A credential Xpod itself issued to a client (the gateway `sk-` key) names the
+  // CSS/OIDC client it belongs to. That is an external runtime identifier - the
+  // `client_id` inside the wrapper and the CSS label behind it - not an RDF link.
+  clientCredentialId: string("clientCredentialId").predicate(UDFS.clientCredentialId),
+  // Where an issued credential is in effect. `appliedTo` is a client application
+  // id from the client-configuration adapter's closed set, `appliedOn` the device
+  // id that wrote the configuration; both are runtime identifiers, not links.
+  appliedTo: string("appliedTo").predicate(UDFS.appliedTo),
+  appliedOn: string("appliedOn").predicate(UDFS.appliedOn),
+  appliedAt: timestamp("appliedAt").predicate(UDFS.appliedAt),
   failCount: integer("failCount").predicate(UDFS.failCount).default(0),
   rateLimitResetAt: timestamp("rateLimitResetAt").predicate(UDFS.rateLimitResetAt),
   oauthRefreshToken: string("oauthRefreshToken").predicate(UDFS.oauthRefreshToken),

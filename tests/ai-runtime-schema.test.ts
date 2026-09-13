@@ -14,6 +14,7 @@ import {
   apiKeyCredentialTable,
   CredentialSecretAlgorithm,
   CredentialStorageMode,
+  DCTerms,
   credentialResource,
   credentialTable,
   indexedFileResource,
@@ -119,6 +120,11 @@ describe('AI runtime resources', () => {
       'projectId',
       'organizationId',
       'isDefault',
+      'createdAt',
+      'clientCredentialId',
+      'appliedTo',
+      'appliedOn',
+      'appliedAt',
     ])
 
     expectColumns(aiProviderResource, ['defaultModel', 'proxyUrl'])
@@ -185,6 +191,7 @@ describe('AI runtime resources', () => {
     expect(resourceConfigOf(indexedFileResource)).toMatchObject({ type: UDFS.IndexedFile, namespace: UDFS })
     expect(resourceConfigOf(agentStatusResource)).toMatchObject({ type: UDFS.AgentStatus, namespace: UDFS })
 
+    expect(predicateOf(credentialResource, 'metadata')).toBe(UDFS.metadata)
     expect(predicateOf(credentialResource, 'provider')).toBe(UDFS.provider)
     expect(predicateOf(credentialResource, 'authMode')).toBe(UDFS.authMode)
     expect(predicateOf(credentialResource, 'apiKey')).toBe(UDFS.apiKey)
@@ -199,6 +206,11 @@ describe('AI runtime resources', () => {
     expect(predicateOf(credentialResource, 'accountLabel')).toBe(UDFS.accountLabel)
     expect(predicateOf(credentialResource, 'lastRefreshAt')).toBe(UDFS.lastRefreshAt)
     expect(predicateOf(credentialResource, 'reauthRequired')).toBe(UDFS.reauthRequired)
+    expect(predicateOf(credentialResource, 'createdAt')).toBe(DCTerms.created)
+    expect(predicateOf(credentialResource, 'clientCredentialId')).toBe(UDFS.clientCredentialId)
+    expect(predicateOf(credentialResource, 'appliedTo')).toBe(UDFS.appliedTo)
+    expect(predicateOf(credentialResource, 'appliedOn')).toBe(UDFS.appliedOn)
+    expect(predicateOf(credentialResource, 'appliedAt')).toBe(UDFS.appliedAt)
     expect(predicateOf(aiProviderResource, 'hasModel')).toBe(UDFS.hasModel)
     expect(predicateOf(aiProviderResource, 'apiKeyUrl')).toBe(UDFS.apiKeyUrl)
     expect(predicateOf(aiProviderResource, 'connectMode')).toBe(UDFS.connectMode)
