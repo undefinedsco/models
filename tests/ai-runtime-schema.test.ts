@@ -22,13 +22,19 @@ import {
   oauthCredentialResource,
   oauthCredentialTable,
   ProviderAuthMode,
+  RDF,
+  ReaderMaterializationVocab,
+  SIOC,
   solidResources,
   solidSchema,
   UDFS,
   vectorStoreResource,
   vectorStoreTable,
 } from '../src'
-import { READER_MATERIALIZATION_NOTE_KIND } from '../src/reader-materialization'
+import {
+  READER_MATERIALIZATION_NOTE_KIND,
+  READER_MATERIALIZATION_STATUSES,
+} from '../src/reader-materialization'
 
 function columnsOf(resource: unknown): Record<string, unknown> {
   return ((resource as any)?._?.columns ?? (resource as any)?.columns) as Record<string, unknown>
@@ -182,6 +188,15 @@ describe('AI runtime resources', () => {
     })
   })
 
+  it('keeps legacy API-key credentials queryable when authMode is absent', () => {
+    const authMode = columnsOf(credentialResource).authMode as {
+      options?: { defaultValue?: unknown; required?: boolean }
+    }
+
+    expect(authMode.options?.required).not.toBe(true)
+    expect(authMode.options?.defaultValue).toBe(ProviderAuthMode.apiKey)
+  })
+
   it('uses UDFS as the primary AI and credential storage contract', () => {
     expect(resourceConfigOf(credentialResource)).toMatchObject({ type: UDFS.Credential, namespace: UDFS })
     expect(resourceConfigOf(aiProviderResource)).toMatchObject({ type: UDFS.Provider, namespace: UDFS })
@@ -191,7 +206,6 @@ describe('AI runtime resources', () => {
     expect(resourceConfigOf(indexedFileResource)).toMatchObject({ type: UDFS.IndexedFile, namespace: UDFS })
     expect(resourceConfigOf(agentStatusResource)).toMatchObject({ type: UDFS.AgentStatus, namespace: UDFS })
 
-    expect(predicateOf(credentialResource, 'metadata')).toBe(UDFS.metadata)
     expect(predicateOf(credentialResource, 'provider')).toBe(UDFS.provider)
     expect(predicateOf(credentialResource, 'authMode')).toBe(UDFS.authMode)
     expect(predicateOf(credentialResource, 'apiKey')).toBe(UDFS.apiKey)
@@ -214,9 +228,11 @@ describe('AI runtime resources', () => {
     expect(predicateOf(aiProviderResource, 'hasModel')).toBe(UDFS.hasModel)
     expect(predicateOf(aiProviderResource, 'apiKeyUrl')).toBe(UDFS.apiKeyUrl)
     expect(predicateOf(aiProviderResource, 'connectMode')).toBe(UDFS.connectMode)
+    expect(predicateOf(aiProviderResource, 'capabilities')).toBe(UDFS.capability)
     expect(predicateOf(aiProviderResource, 'homepage')).toBe(UDFS.homepage)
     expect(predicateOf(aiModelResource, 'isProvidedBy')).toBe(UDFS.isProvidedBy)
     expect(predicateOf(aiModelResource, 'inputModalities')).toBe(UDFS.inputModality)
+    expect(predicateOf(aiModelResource, 'runtimeCapabilities')).toBe(UDFS.capability)
     expect(predicateOf(aiModelResource, 'outputModalities')).toBe(UDFS.outputModality)
     expect(predicateOf(aiModelResource, 'capabilities')).toBe(UDFS.hasCapability)
     expect(predicateOf(chatModelResource, 'contextLength')).toBe(UDFS.contextLength)
@@ -233,6 +249,30 @@ describe('AI runtime resources', () => {
     expect(predicateOf(indexedFileResource, 'fileUrl')).toBe(UDFS.fileUrl)
     expect(predicateOf(agentStatusResource, 'agent')).toBe(UDFS.agent)
     expect(predicateOf(agentStatusResource, 'currentTask')).toBe(UDFS.task)
+  })
+
+  it('exports one durable Reader Note vocabulary without reconciliation states', () => {
+    expect(READER_MATERIALIZATION_STATUSES).toEqual(['complete', 'stale'])
+    expect(ReaderMaterializationVocab).toEqual({
+      type: RDF.type,
+      noteType: UDFS.Note,
+      about: SIOC.about,
+      noteKind: UDFS.noteKind,
+      sourceKey: UDFS.sourceKey,
+      fingerprint: UDFS.fingerprint,
+      readerEngine: UDFS.readerEngine,
+      readerVersion: UDFS.readerVersion,
+      generatedWithModel: UDFS.generatedWithModel,
+      sourceHash: UDFS.sourceHash,
+      readerOptionsHash: UDFS.readerOptionsHash,
+      representationHash: UDFS.representationHash,
+      representationMediaType: UDFS.representationMediaType,
+      coverageUnit: UDFS.coverageUnit,
+      coveredRange: UDFS.coveredRange,
+      readUnits: UDFS.readUnits,
+      totalUnits: UDFS.totalUnits,
+      status: UDFS.status,
+    })
   })
 
   it('exports the shared Reader materialization Note vocabulary', () => {

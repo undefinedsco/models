@@ -5,10 +5,8 @@ export const READER_CHUNK_POLICY_VERSION = 'markdown-mdast-v1' as const
 export const READER_NOTE_FRAGMENT = '#reader' as const
 
 export const READER_MATERIALIZATION_STATUSES = [
-  'pending',
   'complete',
   'stale',
-  'failed',
 ] as const
 
 export type ReaderMaterializationStatus =
@@ -27,5 +25,4 @@ export interface ReaderMaterializationProvenance {
   readUnits: number
   totalUnits?: number
   status: ReaderMaterializationStatus
-  failureCategory?: string
 }

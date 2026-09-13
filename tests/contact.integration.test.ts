@@ -48,7 +48,12 @@ async function getDb(): Promise<SolidDatabase> {
     oidcIssuer: activeEnv.oidcIssuer!,
     tokenType: 'DPoP',
   })
-  db = drizzle(session, { logger: false, disableInteropDiscovery: true, schema: solidSchema })
+  db = drizzle(session, {
+    logger: false,
+    disableInteropDiscovery: true,
+    resourcePreparation: 'best-effort',
+    schema: solidSchema,
+  })
   await db.init([contactTable, agentTable])
   return db
 }
@@ -86,6 +91,7 @@ describe('Solid Pod Contact CRUD', () => {
   it('creates and reads a solid contact', { timeout: 60000 }, async () => {
     const database = await getDb()
     const contactId = crypto.randomUUID()
+    const contactResourceId = contactTable.buildId({ id: contactId })
     const testName = `solid-test-${Date.now()}`
     const now = new Date()
 
@@ -93,7 +99,7 @@ describe('Solid Pod Contact CRUD', () => {
     const [created] = await database
       .insert(contactTable)
       .values({
-        id: contactId,
+        id: contactResourceId,
         name: testName,
         alias: 'Solid Test Alias',
         contactType: 'solid',
@@ -133,6 +139,7 @@ describe('Solid Pod Contact CRUD', () => {
   it('creates and reads an external (wechat) contact', { timeout: 60000 }, async () => {
     const database = await getDb()
     const contactId = crypto.randomUUID()
+    const contactResourceId = contactTable.buildId({ id: contactId })
     const testExternalId = `wxid_test_${Date.now()}`
     const now = new Date()
 
@@ -141,7 +148,7 @@ describe('Solid Pod Contact CRUD', () => {
     const [created] = await database
       .insert(contactTable)
       .values({
-        id: contactId,
+        id: contactResourceId,
         name: 'WeChat Test Friend',
         alias: '微信测试好友',
         contactType: 'external',
@@ -180,6 +187,7 @@ describe('Solid Pod Contact CRUD', () => {
     const database = await getDb()
     const agentId = crypto.randomUUID()
     const contactId = crypto.randomUUID()
+    const contactResourceId = contactTable.buildId({ id: contactId })
     const testAgentName = `agent-test-${Date.now()}`
     const now = new Date()
 
@@ -204,17 +212,11 @@ describe('Solid Pod Contact CRUD', () => {
     if (agentSubject) createdAgentIds.push(agentSubject)
 
     // READ AGENT
-    const agentRows = await database
-      .select()
-      .from(agentTable)
-      .where(eq(agentTable.name, testAgentName))
-      .execute()
-
-    expect(agentRows.length).toBeGreaterThanOrEqual(1)
-    const agentRecord = agentRows[0]
-    expect(agentRecord.name).toBe(testAgentName)
-    expect(agentRecord.model).toBe('gpt-4o')
-    expect(agentRecord.instructions).toContain('helpful assistant')
+    const agentRecord = await database.findById(agentTable, agentId)
+    expect(agentRecord).toBeTruthy()
+    expect(agentRecord!.name).toBe(testAgentName)
+    expect(agentRecord!.model).toBe('gpt-4o')
+    expect(agentRecord!.instructions).toContain('helpful assistant')
 
     // 2. CREATE CONTACT pointing to agent
     const agentAboutRef = agentSubject || `${env.webId!.replace('/profile/card#me', '')}/agents/${agentId}/`
@@ -222,7 +224,7 @@ describe('Solid Pod Contact CRUD', () => {
     const [contactCreated] = await database
       .insert(contactTable)
       .values({
-        id: contactId,
+        id: contactResourceId,
         name: testAgentName,
         alias: 'Test Bot',
         contactType: 'agent',

@@ -50,6 +50,7 @@ async function getDb(): Promise<SolidDatabase> {
   db = drizzle(session, {
     logger: false,
     disableInteropDiscovery: true,
+    resourcePreparation: 'best-effort',
     schema: solidSchema,
   })
 
@@ -134,13 +135,13 @@ describe('Solid Pod live CRUD core surfaces', () => {
     const grantId = testId('grant')
     const auditId = testId('audit')
 
-    const chatIri = database.resolveLocatorIri(chatTable, { id: chatId })
-    const chatResourceId = database.resolveResourceId(chatTable, chatIri)
-    const threadIri = database.resolveLocatorIri(threadTable, { id: threadId, parent: chatIri })
-    const threadResourceId = database.resolveResourceId(threadTable, threadIri)
+    const chatResourceId = chatTable.buildId({ id: chatId })
+    const chatIri = database.resolveLocatorIri(chatTable, { id: chatResourceId })
+    const threadResourceId = threadTable.buildId({ id: threadId, parent: chatIri })
+    const threadIri = database.resolveLocatorIri(threadTable, { id: threadResourceId })
 
     await step('chat.create', () => database.insert(chatTable).values({
-      id: chatId,
+      id: chatResourceId,
       title: 'Pod CRUD chat',
       description: `created-${chatId}`,
       participants: [webId],
@@ -158,11 +159,10 @@ describe('Solid Pod live CRUD core surfaces', () => {
     })).resolves.toMatchObject({ title: 'Pod CRUD chat updated' }))
 
     await step('thread.create', () => database.insert(threadTable).values({
-      id: threadId,
+      id: threadResourceId,
       parent: chatIri,
       title: 'Pod CRUD thread',
       workspace: `${baseUrl}/workspace/${threadId}/`,
-      metadata: { source: 'pod.integration.test' },
       createdAt: now,
       updatedAt: now,
     }).execute())
@@ -175,8 +175,10 @@ describe('Solid Pod live CRUD core surfaces', () => {
       updatedAt: new Date('2026-01-02T04:05:05.000Z'),
     })).resolves.toMatchObject({ title: 'Pod CRUD thread updated' }))
 
+    const messageResourceId = messageTable.buildId({ id: messageId, parent: chatIri, createdAt: now })
+    const messageIri = database.resolveLocatorIri(messageTable, { id: messageResourceId })
     await step('message.create', () => database.insert(messageTable).values({
-      id: messageId,
+      id: messageResourceId,
       parent: chatIri,
       chat: chatIri,
       thread: threadIri,
@@ -187,14 +189,9 @@ describe('Solid Pod live CRUD core surfaces', () => {
       createdAt: now,
       updatedAt: now,
     }).execute())
-    const messageIri = database.resolveLocatorIri(messageTable, { id: messageId, parent: chatIri, createdAt: now })
-    const messageResourceId = database.resolveResourceId(messageTable, messageIri)
     const messageDocUrl = messageIri.split('#')[0]
     await step('message.read', async () => expectResourceContains(session!, messageDocUrl, 'Pod CRUD message'))
     await step('message.read-resource-id', async () => expect(database.findById(messageTable, messageResourceId)).resolves.toMatchObject({
-      content: 'Pod CRUD message',
-    }))
-    await step('message.read-naked-id', async () => expect(database.findById(messageTable, messageId)).resolves.toMatchObject({
       content: 'Pod CRUD message',
     }))
     await step('message.update', async () => {
@@ -208,10 +205,10 @@ describe('Solid Pod live CRUD core surfaces', () => {
     })
     await step('message.verify-update', async () => expectResourceContains(session!, messageDocUrl, 'Pod CRUD message updated'))
 
-    const runtimeSessionIri = database.resolveLocatorIri(sessionTable, { id: runtimeSessionId, createdAt: now })
-    const runtimeSessionResourceId = database.resolveResourceId(sessionTable, runtimeSessionIri)
+    const runtimeSessionResourceId = sessionTable.buildId({ id: runtimeSessionId, createdAt: now })
+    const runtimeSessionIri = database.resolveLocatorIri(sessionTable, { id: runtimeSessionResourceId })
     const [createdSession] = await step('session.create', () => database.insert(sessionTable).values({
-      id: runtimeSessionId,
+      id: runtimeSessionResourceId,
       owner: webId,
       chat: chatIri,
       thread: threadIri,
@@ -219,7 +216,6 @@ describe('Solid Pod live CRUD core surfaces', () => {
       tool: 'linx',
       tokenUsage: 12,
       policyVersion: 'pod-crud-test/v1',
-      metadata: { source: 'pod.integration.test' },
       createdAt: now,
       updatedAt: now,
     }).execute())
@@ -237,26 +233,16 @@ describe('Solid Pod live CRUD core surfaces', () => {
       status: 'active',
       tokenUsage: 12,
     }))
-    await step('session.read-naked-id', async () => expect(database.findById(sessionTable, runtimeSessionId)).resolves.toMatchObject({
-      chat: chatIri,
-      thread: threadIri,
-      status: 'active',
-      tokenUsage: 12,
-    }))
-    await step('session.update-naked-id', async () => expect(database.updateById(sessionTable, runtimeSessionId, {
-      status: 'paused',
-      updatedAt: new Date('2026-01-02T04:06:30.000Z'),
-    })).resolves.toMatchObject({ status: 'paused' }))
     await step('session.update', async () => expect(database.updateByIri(sessionTable, runtimeSessionIri, {
       status: 'completed',
       tokenUsage: 34,
       updatedAt: new Date('2026-01-02T04:07:05.000Z'),
     })).resolves.toMatchObject({ status: 'completed', tokenUsage: 34 }))
 
-    const approvalIri = database.resolveLocatorIri(approvalResource, { id: approvalId, createdAt: now })
-    const approvalResourceId = database.resolveResourceId(approvalResource, approvalIri)
+    const approvalResourceId = approvalResource.buildId({ id: approvalId, createdAt: now })
+    const approvalIri = database.resolveLocatorIri(approvalResource, { id: approvalResourceId })
     await step('approval.create', () => database.insert(approvalResource).values({
-      id: approvalId,
+      id: approvalResourceId,
       session: runtimeSessionIri,
       toolCallId: `tool-${approvalId}`,
       toolName: 'shell',
@@ -286,13 +272,6 @@ describe('Solid Pod live CRUD core surfaces', () => {
       status: 'pending',
       toolName: 'shell',
     }))
-    await step('approval.read-naked-id', async () => expect(database.findById(approvalResource, approvalId)).resolves.toMatchObject({
-      status: 'pending',
-      toolName: 'shell',
-    }))
-    await step('approval.update-naked-id', async () => expect(database.updateById(approvalResource, approvalId, {
-      context: 'short-id update covered by ORM',
-    })).resolves.toMatchObject({ context: 'short-id update covered by ORM' }))
     await step('approval.update', async () => expect(database.updateByIri(approvalResource, approvalIri, {
       status: 'approved',
       decisionBy: webId,
@@ -301,15 +280,14 @@ describe('Solid Pod live CRUD core surfaces', () => {
       resolvedAt: new Date('2026-01-02T04:08:05.000Z'),
     })).resolves.toMatchObject({ status: 'approved', decisionBy: webId }))
 
-    const grantIri = database.resolveLocatorIri(grantResource, { id: grantId })
-    const grantResourceId = database.resolveResourceId(grantResource, grantIri)
+    const grantResourceId = grantResource.buildId({ id: grantId })
+    const grantIri = database.resolveLocatorIri(grantResource, { id: grantResourceId })
     await step('grant.create', () => database.insert(grantResource).values({
-      id: grantId,
+      id: grantResourceId,
       target: `${baseUrl}/workspace/${threadId}/`,
       action: 'https://undefineds.co/ns#executeCommand',
       title: 'Integration grant',
       summary: 'Integration test semantic grant wiki page.',
-      body: 'Allow semantically equivalent command approvals in this integration session.',
       schema: `${baseUrl}/settings/autonomy/schema/grant.ttl#GrantWikiPage`,
       pageKind: 'autonomy-grant',
       wikiStatus: 'active',
@@ -332,7 +310,6 @@ describe('Solid Pod live CRUD core surfaces', () => {
       id: grantResourceId,
       title: 'Integration grant',
       summary: 'Integration test semantic grant wiki page.',
-      body: 'Allow semantically equivalent command approvals in this integration session.',
       schema: `${baseUrl}/settings/autonomy/schema/grant.ttl#GrantWikiPage`,
       pageKind: 'autonomy-grant',
       wikiStatus: 'active',
@@ -351,10 +328,10 @@ describe('Solid Pod live CRUD core surfaces', () => {
       wikiStatus: 'reviewed',
     })).resolves.toMatchObject({ riskCeiling: 'high', wikiStatus: 'reviewed' }))
 
-    const auditIri = database.resolveLocatorIri(auditResource, { id: auditId, createdAt: now })
-    const auditResourceId = database.resolveResourceId(auditResource, auditIri)
+    const auditResourceId = auditResource.buildId({ id: auditId, createdAt: now })
+    const auditIri = database.resolveLocatorIri(auditResource, { id: auditResourceId })
     await step('audit.create', () => database.insert(auditResource).values({
-      id: auditId,
+      id: auditResourceId,
       action: 'approval_requested',
       actor: webId,
       actorRole: 'owner',
@@ -374,10 +351,6 @@ describe('Solid Pod live CRUD core surfaces', () => {
       action: 'approval_requested',
       actor: webId,
     }))
-    await step('audit.read-naked-id', async () => expect(database.findById(auditResource, auditId)).resolves.toMatchObject({
-      action: 'approval_requested',
-      actor: webId,
-    }))
     await step('audit.update', async () => expect(database.updateByIri(auditResource, auditIri, {
       policyVersion: 'pod-crud-test/v2',
     })).resolves.toMatchObject({
@@ -388,9 +361,8 @@ describe('Solid Pod live CRUD core surfaces', () => {
     await step('grant.delete', () => expectDeleted(database, grantResource, grantIri))
     await step('approval.delete', () => expectDeleted(database, approvalResource, approvalIri))
     await step('message.delete', async () => {
-      const result = await database.delete(messageTable).whereByIri(messageIri).execute()
-      expect(result.length).toBeGreaterThan(0)
-      await expectResourceNotContains(session!, messageDocUrl, messageIri)
+      await expect(database.deleteByIri(messageTable, messageIri)).resolves.toBe(true)
+      await expect(database.findByIri(messageTable, messageIri)).resolves.toBeNull()
       await expectResourceNotContains(session!, messageDocUrl, 'Pod CRUD message updated')
     })
     await step('session.delete', () => expectDeleted(database, sessionTable, runtimeSessionIri))

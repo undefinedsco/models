@@ -31,6 +31,8 @@ import {
 } from './ai-model.schema'
 import { aiProviderResource, aiProviderTable } from './ai-provider.schema'
 import { chatResource, chatTable } from './chat.schema'
+import { chatProjectContextResource, chatProjectMemoryResource } from './chat-project.schema'
+import { conversationShareResource } from './conversation-share.schema'
 import { contactResource, contactTable } from './contact.schema'
 import { captureCandidateResource, captureEventResource } from './capture.schema'
 import { credentialResource, credentialTable } from './credential.schema'
@@ -60,6 +62,9 @@ export const solidResources = {
   agentResource,
   skillResource,
   chatResource,
+  chatProjectContextResource,
+  chatProjectMemoryResource,
+  conversationShareResource,
   sessionResource,
   threadResource,
   messageResource,

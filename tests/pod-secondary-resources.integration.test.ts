@@ -45,6 +45,7 @@ async function getDb(): Promise<SolidDatabase> {
   db = drizzle(session, {
     logger: false,
     disableInteropDiscovery: true,
+    resourcePreparation: 'best-effort',
     schema: solidSchema,
   })
   await db.init([
@@ -87,9 +88,10 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
     expect(profile?.id).toBeTruthy()
 
     const providerId = `provider-${crypto.randomUUID()}`
-    const providerIri = database.resolveLocatorIri(aiProviderTable, { id: providerId })
+    const providerResourceId = aiProviderTable.buildId({ id: providerId })
+    const providerIri = database.resolveLocatorIri(aiProviderTable, { id: providerResourceId })
     await database.insert(aiProviderTable).values({
-      id: providerId,
+      id: providerResourceId,
       baseUrl: 'https://api.provider.example/v1',
       proxyUrl: 'https://proxy.provider.example/v1',
     }).execute()
@@ -100,9 +102,10 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       createdAt: now.toISOString(),
     })
     const credentialId = `credential-${crypto.randomUUID()}`
-    const credentialIri = database.resolveLocatorIri(credentialTable, { id: credentialId })
+    const credentialResourceId = credentialTable.buildId({ id: credentialId })
+    const credentialIri = database.resolveLocatorIri(credentialTable, { id: credentialResourceId })
     await database.insert(credentialTable).values({
-      id: credentialId,
+      id: credentialResourceId,
       provider: providerIri,
       authMode: 'oauth',
       service: 'ai',
@@ -132,13 +135,13 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
     expect(credential?.expiresAt).toEqual(now)
     expect(credential?.lastRefreshAt).toEqual(now)
     expect(credential?.reauthRequired).toBe(false)
-    await expect(database.findById(credentialTable, credentialId)).resolves.toMatchObject({
+    await expect(database.findById(credentialTable, credentialResourceId)).resolves.toMatchObject({
       id: `credentials.ttl#${credentialId}`,
       label: 'Smoke credential',
       storageMode: 'plaintext-v1',
       secretPayload: plaintextPayload,
     })
-    expect(extractPodResourceTemplateValue(credentialTable, credentialIri)).toBe(credentialId)
+    expect(extractPodResourceTemplateValue(credentialTable, credentialIri, 'key')).toBe(credentialId)
     await expect(database.updateByIri(credentialTable, credentialIri, {
       label: 'Smoke credential updated',
       failCount: 1,
@@ -146,9 +149,10 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
     await expectDeleted(database, credentialTable, credentialIri)
 
     const encryptedCredentialId = `encrypted-credential-${crypto.randomUUID()}`
-    const encryptedCredentialIri = database.resolveLocatorIri(credentialTable, { id: encryptedCredentialId })
+    const encryptedCredentialResourceId = credentialTable.buildId({ id: encryptedCredentialId })
+    const encryptedCredentialIri = database.resolveLocatorIri(credentialTable, { id: encryptedCredentialResourceId })
     await database.insert(credentialTable).values({
-      id: encryptedCredentialId,
+      id: encryptedCredentialResourceId,
       provider: providerIri,
       authMode: 'oauth',
       service: 'ai',
@@ -171,9 +175,10 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
     await expectDeleted(database, credentialTable, encryptedCredentialIri)
 
     const legacyCredentialId = `legacy-credential-${crypto.randomUUID()}`
-    const legacyCredentialIri = database.resolveLocatorIri(credentialTable, { id: legacyCredentialId })
+    const legacyCredentialResourceId = credentialTable.buildId({ id: legacyCredentialId })
+    const legacyCredentialIri = database.resolveLocatorIri(credentialTable, { id: legacyCredentialResourceId })
     await database.insert(credentialTable).values({
-      id: legacyCredentialId,
+      id: legacyCredentialResourceId,
       provider: providerIri,
       service: 'ai',
       status: 'active',
@@ -186,7 +191,7 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       apiKey: 'legacy-secret-smoke',
       label: 'Legacy API key credential',
     })
-    await expect(database.findById(credentialTable, legacyCredentialId)).resolves.toMatchObject({
+    await expect(database.findById(credentialTable, legacyCredentialResourceId)).resolves.toMatchObject({
       id: `credentials.ttl#${legacyCredentialId}`,
       authMode: 'apiKey',
       apiKey: 'legacy-secret-smoke',
@@ -195,9 +200,9 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
 
     const accessKeyId = `gateway-key-${crypto.randomUUID()}`
     const accessKeyResourceId = gatewayAccessKeyResource.buildId({ id: accessKeyId })
-    const accessKeyIri = database.resolveLocatorIri(gatewayAccessKeyResource, { id: accessKeyId })
+    const accessKeyIri = database.resolveLocatorIri(gatewayAccessKeyResource, { id: accessKeyResourceId })
     await database.insert(gatewayAccessKeyResource).values({
-      id: accessKeyId,
+      id: accessKeyResourceId,
       owner: webId,
       secretHash: 'sha256:gateway-smoke',
       deployment: 'local',
@@ -212,7 +217,7 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       deployment: 'local',
       scopes: ['gateway:invoke', 'quota:read'],
     })
-    await expect(database.updateById(gatewayAccessKeyResource, accessKeyId, {
+    await expect(database.updateById(gatewayAccessKeyResource, accessKeyResourceId, {
       lastUsedAt: now,
       revokedAt: now,
     })).resolves.toMatchObject({
@@ -223,9 +228,9 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
 
     const quotaId = `quota-${crypto.randomUUID()}`
     const quotaResourceId = quotaSnapshotResource.buildId({ id: quotaId })
-    const quotaIri = database.resolveLocatorIri(quotaSnapshotResource, { id: quotaId })
+    const quotaIri = database.resolveLocatorIri(quotaSnapshotResource, { id: quotaResourceId })
     await database.insert(quotaSnapshotResource).values({
-      id: quotaId,
+      id: quotaResourceId,
       owner: webId,
       deployment: 'local',
       provider: 'kimi',
@@ -247,7 +252,7 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       balance: 42,
       source: 'provider',
     })
-    await expect(database.updateById(quotaSnapshotResource, quotaId, {
+    await expect(database.updateById(quotaSnapshotResource, quotaResourceId, {
       status: 'error',
       source: 'gateway-cache',
     })).resolves.toMatchObject({
@@ -259,7 +264,7 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
     const modelId = `model-${crypto.randomUUID()}`
     const modelLocator = { id: modelId, isProvidedBy: providerIri }
     const modelResourceId = aiModelTable.buildId(modelLocator)
-    const modelIri = database.resolveLocatorIri(aiModelTable, modelLocator)
+    const modelIri = database.resolveLocatorIri(aiModelTable, { id: modelResourceId })
     await database.insert(aiModelTable).values({
       id: modelResourceId,
       displayName: 'Smoke Model',
@@ -310,9 +315,10 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
     await expectDeleted(database, settingsTable, settingIri)
 
     const favoriteId = `favorite-${crypto.randomUUID()}`
-    const favoriteIri = database.resolveLocatorIri(favoriteTable, { id: favoriteId })
+    const favoriteResourceId = favoriteTable.buildId({ id: favoriteId })
+    const favoriteIri = database.resolveLocatorIri(favoriteTable, { id: favoriteResourceId })
     await database.insert(favoriteTable).values({
-      id: favoriteId,
+      id: favoriteResourceId,
       targetType: SCHEMA.CreativeWork,
       target: `${podBase}/.data/chat/favorite-target/index.ttl#this`,
       title: 'Smoke Favorite',
@@ -325,7 +331,7 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       updatedAt: now,
     }).execute()
     await expect(database.findByIri(favoriteTable, favoriteIri)).resolves.toMatchObject({
-      id: favoriteId,
+      id: favoriteResourceId,
       title: 'Smoke Favorite',
     })
     expect(extractPodResourceTemplateValue(favoriteTable, favoriteIri)).toBe(favoriteId)
@@ -336,10 +342,12 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
     await expectDeleted(database, favoriteTable, favoriteIri)
 
     const inboxId = `inbox-${crypto.randomUUID()}`
-    const inboxIri = database.resolveLocatorIri(inboxNotificationTable, { id: inboxId })
-    const approvalObjectIri = database.resolveLocatorIri(approvalResource, { id: 'smoke', createdAt: now })
+    const inboxResourceId = inboxNotificationTable.buildId({ id: inboxId })
+    const inboxIri = database.resolveLocatorIri(inboxNotificationTable, { id: inboxResourceId })
+    const approvalObjectResourceId = approvalResource.buildId({ id: 'smoke', createdAt: now })
+    const approvalObjectIri = database.resolveLocatorIri(approvalResource, { id: approvalObjectResourceId })
     await database.insert(inboxNotificationTable).values({
-      id: inboxId,
+      id: inboxResourceId,
       actor: webId,
       object: approvalObjectIri,
       createdAt: now,
@@ -348,7 +356,7 @@ describe('Solid Pod secondary resource CRUD surfaces', () => {
       id: `${inboxId}.ttl`,
       object: approvalObjectIri,
     })
-    expect(extractPodResourceTemplateValue(inboxNotificationTable, inboxIri)).toBe(inboxId)
+    expect(extractPodResourceTemplateValue(inboxNotificationTable, inboxIri, 'key')).toBe(inboxId)
     await expect(database.updateByIri(inboxNotificationTable, inboxIri, {
       actor: `${podBase}/profile/card#updated`,
       createdAt: now,

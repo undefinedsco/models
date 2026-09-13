@@ -1,4 +1,4 @@
-import type { AIModelInsert, AIModelRow } from '../ai-model.schema'
+import { aiModelResource, type AIModelInsert, type AIModelRow } from '../ai-model.schema'
 import {
   AI_MODEL_CLASS_DEFAULT_CAPABILITY,
   filterAIModelCapabilityUris,
@@ -17,6 +17,30 @@ export interface AIConfigProviderCatalogEntry {
   defaultBaseUrl?: string
   defaultModels?: string[]
   defaultModelType?: string
+  capabilities?: string[]
+}
+
+export const AIConfigRuntimeCapability = {
+  chatCompletions: 'chat_completions',
+  responses: 'responses',
+  responsesWebSearch: 'responses_web_search',
+  imageInput: 'image_input',
+  imageGeneration: 'image_generation',
+  imageEditing: 'image_editing',
+  toolCalls: 'tool_calls',
+} as const
+
+export type AIConfigRuntimeCapabilityType = typeof AIConfigRuntimeCapability[keyof typeof AIConfigRuntimeCapability]
+
+const AI_CONFIG_RUNTIME_CAPABILITY_SET: ReadonlySet<string> = new Set(
+  Object.values(AIConfigRuntimeCapability),
+)
+
+export function filterAIConfigRuntimeCapabilities(value: unknown): AIConfigRuntimeCapabilityType[] {
+  if (!Array.isArray(value)) return []
+  return [...new Set(value.filter((entry): entry is AIConfigRuntimeCapabilityType => (
+    typeof entry === 'string' && AI_CONFIG_RUNTIME_CAPABILITY_SET.has(entry)
+  )))]
 }
 
 export interface AIConfigModel {
@@ -40,6 +64,7 @@ export interface AIConfigProviderState {
   /** All provider models selected by the user; legacy callers may use selectedModelId. */
   selectedModelIds?: string[]
   selectedModelId?: string
+  capabilities: string[]
 }
 
 export interface AIConfigUpdate {
@@ -52,6 +77,7 @@ export interface AIConfigUpdate {
   credentialLabel?: string
   credentialBaseUrl?: string
   models?: AIConfigModel[]
+  capabilities?: string[]
 }
 
 export interface BuildAIConfigProviderStateMapOptions {
@@ -66,6 +92,8 @@ export interface AIConfigCredentialSelection {
   providerId: string
   credential: Partial<CredentialRow> & Record<string, unknown>
   credentialId?: string
+  /** Exact base-relative Pod resource id used for mutations. */
+  credentialResourceId?: string
   credentialLabel?: string
   apiKey: string
   baseUrl?: string
@@ -303,6 +331,53 @@ function normalizeAIConfigModelStorageIds(value: unknown, providerId: string): s
   )
 }
 
+function storedResourceId(raw: unknown, buildCanonicalId: (localId: string) => string): string {
+  if (typeof raw !== 'string' || !raw.trim()) return ''
+  const value = raw.trim()
+  const localId = normalizeAIConfigResourceId(value)
+  if (!localId) return ''
+  if (ABSOLUTE_IRI.test(value)) return buildCanonicalId(localId)
+  if (value.includes('#') || /\.ttl$/iu.test(value) || value.endsWith('/')) {
+    return value.replace(/^\/+settings\/(?:providers\/)?/u, '')
+  }
+  return value
+}
+
+function inputResourceId(raw: string, buildCanonicalId: (localId: string) => string): string {
+  const stored = storedResourceId(raw, buildCanonicalId)
+  if (!stored) return ''
+  return stored === raw.trim() && !stored.includes('#') && !/\.ttl$/iu.test(stored) && !stored.endsWith('/')
+    ? buildCanonicalId(stored)
+    : stored
+}
+
+function providerStorageId(
+  row: Partial<AIProviderRow> & Record<string, unknown> | undefined,
+  providerId: string,
+): string {
+  const existing = storedResourceId(row?.id ?? row?.['@id'], (id) => aiProviderResource.buildId({ id }))
+  return existing || aiProviderResource.buildId({ id: providerId })
+}
+
+function credentialStorageId(
+  row: Partial<CredentialRow> & Record<string, unknown> | undefined,
+): string {
+  return storedResourceId(row?.id ?? row?.['@id'], (id) => credentialResource.buildId({ id }))
+}
+
+function modelStorageId(
+  row: Partial<AIModelRow> & Record<string, unknown> | undefined,
+  providerId: string,
+  modelId: string,
+): string {
+  const providerRef = aiConfigProviderRef(providerId)
+  const existing = storedResourceId(row?.id ?? row?.['@id'], (id) => aiModelResource.buildId({
+    id,
+    isProvidedBy: providerRef,
+  }))
+  return existing || aiModelResource.buildId({ id: modelId, isProvidedBy: providerRef })
+}
+
 function aiConfigProviderSupportsBackend(
   row: Partial<AIProviderRow> & Record<string, unknown>,
   backend: string,
@@ -322,6 +397,40 @@ export function getAIConfigProviderMetadata(providerId: string): AIConfigProvide
     id: canonicalId,
     displayName: titleizeProviderId(canonicalId),
   }
+}
+
+export function getAIConfigProviderCapabilities(
+  providerId: string,
+  explicitCapabilities?: unknown,
+): string[] {
+  if (Array.isArray(explicitCapabilities)) {
+    return uniqueStrings(explicitCapabilities
+      .filter((value): value is string => typeof value === 'string')
+      .map((value) => value.trim().toLowerCase()))
+  }
+  if (normalizeAIConfigProviderId(providerId) === UNDEFINEDS_AI_PROVIDER_ID) {
+    return [
+      AIConfigRuntimeCapability.chatCompletions,
+      AIConfigRuntimeCapability.responses,
+      AIConfigRuntimeCapability.responsesWebSearch,
+      AIConfigRuntimeCapability.imageInput,
+      AIConfigRuntimeCapability.imageGeneration,
+      AIConfigRuntimeCapability.imageEditing,
+      AIConfigRuntimeCapability.toolCalls,
+    ]
+  }
+  const metadata = getAIConfigProviderMetadata(providerId)
+  return metadata.capabilities?.length
+    ? [...metadata.capabilities]
+    : [AIConfigRuntimeCapability.chatCompletions]
+}
+
+export function aiConfigSupportsRuntimeCapability(
+  providerId: string,
+  capability: AIConfigRuntimeCapabilityType,
+  explicitCapabilities?: unknown,
+): boolean {
+  return getAIConfigProviderCapabilities(providerId, explicitCapabilities).includes(capability)
 }
 
 export function normalizeAIConfigResourceId(raw?: string | null): string {
@@ -388,6 +497,13 @@ function normalizeAIConfigModelStorageId(raw: string | null | undefined, provide
   return aiConfigResourceRefToModelId(raw, providerId)
 }
 
+function buildAIConfigModelStorageId(providerId: string, modelId: string): string {
+  return aiModelResource.buildId({
+    id: modelId,
+    isProvidedBy: aiConfigProviderRef(providerId),
+  })
+}
+
 export function sameAIConfigProviderFamily(left?: string | null, right?: string | null): boolean {
   const normalizedLeft = normalizeAIConfigProviderId(left)
   const normalizedRight = normalizeAIConfigProviderId(right)
@@ -407,6 +523,10 @@ export function getAIConfigDefaultBaseUrl(providerId: string): string | undefine
   return getAIConfigProviderMetadata(providerId).defaultBaseUrl
 }
 
+export function getDefaultAIConfigCredentialId(providerId: string): string {
+  return `${normalizeAIConfigProviderId(providerId)}-default`
+}
+
 export function createAIConfigCredentialId(): string {
   const random = typeof globalThis.crypto?.randomUUID === 'function'
     ? globalThis.crypto.randomUUID().replace(/-/g, '').slice(0, 16)
@@ -416,7 +536,7 @@ export function createAIConfigCredentialId(): string {
 
 export function aiConfigProviderRef(providerId: string): string {
   const provider = normalizeAIConfigProviderId(providerId)
-  return provider ? `/settings/providers/${provider}.ttl` : provider
+  return provider ? `settings/providers/${aiProviderResource.buildId({ id: provider })}` : provider
 }
 
 export function aiConfigModelRef(providerId: string, modelId?: string): string {
@@ -426,7 +546,7 @@ export function aiConfigModelRef(providerId: string, modelId?: string): string {
 
   const provider = normalizeAIConfigProviderId(providerId)
   const model = normalizeAIConfigModelStorageId(modelId, provider)
-  return provider && model ? `/settings/providers/${provider}.ttl#${model}` : model
+  return provider && model ? `settings/providers/${buildAIConfigModelStorageId(provider, model)}` : model
 }
 
 export function selectAIConfigCredential(
@@ -479,6 +599,7 @@ export function selectAIConfigCredential(
     credentialId: normalizeAIConfigResourceId(
       normalizeOptionalText(credential.id) ?? normalizeOptionalText(credential['@id']),
     ),
+    credentialResourceId: credentialStorageId(credential),
     credentialLabel: normalizeOptionalText(credential.label),
     apiKey,
     baseUrl:
@@ -572,8 +693,8 @@ function collectAIConfigProviderIdsForBackend(
 function aiConfigProviderIdCandidates(providerId: string): string[] {
   const normalized = normalizeAIConfigResourceId(providerId) || providerId
   return uniqueStrings([
+    aiProviderResource.buildId({ id: normalized }),
     normalized,
-    `${normalized}.ttl`,
   ])
 }
 
@@ -600,11 +721,12 @@ export const aiConfigRepository = {
 
   async markCredentialUsed(
     db: AIConfigRepositoryDb,
-    selection: Pick<AIConfigCredentialSelection, 'credentialId'> | undefined,
+    selection: Pick<AIConfigCredentialSelection, 'credentialId' | 'credentialResourceId'> | undefined,
     usedAt = new Date(),
   ): Promise<void> {
-    if (!selection?.credentialId) return
-    await db.updateById(credentialResource, selection.credentialId, { lastUsedAt: usedAt })
+    const resourceId = selection?.credentialResourceId ?? selection?.credentialId
+    if (!resourceId) return
+    await db.updateById(credentialResource, resourceId, { lastUsedAt: usedAt })
   },
 }
 
@@ -650,13 +772,18 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
     if (!modelId) continue
 
     const list = modelMap.get(providerId) ?? []
+    const runtimeCapabilities = filterAIConfigRuntimeCapabilities([
+      ...(Array.isArray(row.runtimeCapabilities) ? row.runtimeCapabilities : []),
+      ...(Array.isArray(row.capabilities) ? row.capabilities : []),
+    ])
+    const semanticCapabilities = filterAIModelCapabilityUris(row.capabilities)
+      .map(toAIModelCapabilityName)
+      .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
     list.push({
       id: modelId,
       name: typeof row.displayName === 'string' && row.displayName.trim() ? row.displayName : modelId,
       enabled: (typeof row.status === 'string' ? row.status : 'active') !== 'inactive',
-      capabilities: filterAIModelCapabilityUris(row.capabilities)
-        .map(toAIModelCapabilityName)
-        .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry)),
+      capabilities: runtimeCapabilities.length > 0 ? runtimeCapabilities : semanticCapabilities,
       modelType: row.rdfType
         ? toAIModelClassName(row.rdfType)
         : normalizeAIConfigModelType(row.modelType),
@@ -707,6 +834,7 @@ export function buildAIConfigProviderStateMap(options: BuildAIConfigProviderStat
       models,
       selectedModelIds: resolvedSelectedModelIds.length > 0 ? resolvedSelectedModelIds : undefined,
       selectedModelId: selectedModelId || undefined,
+      capabilities: getAIConfigProviderCapabilities(providerId, providerRow?.capabilities),
     }
   }
 
@@ -738,6 +866,7 @@ export function buildAIConfigMutationPlan(input: {
     input.updates.baseUrl !== undefined ||
     input.updates.supportsBackend !== undefined ||
     input.updates.rotationPolicy !== undefined ||
+    input.updates.capabilities !== undefined ||
     input.updates.models !== undefined
   const hasCredentialUpdate =
     input.updates.enabled !== undefined ||
@@ -760,7 +889,7 @@ export function buildAIConfigMutationPlan(input: {
       : normalizeAIConfigModelStorageIds(existingProvider?.hasModel, providerId)
 
     providerPayload = {
-      id: providerId,
+      id: providerStorageId(existingProvider, providerId),
       baseUrl:
         input.updates.baseUrl ??
         (typeof existingProvider?.baseUrl === 'string' ? existingProvider.baseUrl : undefined) ??
@@ -775,15 +904,22 @@ export function buildAIConfigMutationPlan(input: {
       rotationPolicy:
         input.updates.rotationPolicy ??
         (typeof existingProvider?.rotationPolicy === 'string' ? existingProvider.rotationPolicy : undefined),
+      capabilities:
+        input.updates.capabilities ??
+        (Array.isArray(existingProvider?.capabilities)
+          ? existingProvider.capabilities.filter((value): value is string => typeof value === 'string')
+          : undefined),
     }
   }
 
   if (hasCredentialUpdate) {
     credentialPayload = {
       id:
-        normalizeAIConfigResourceId(input.updates.credentialId) ||
-        normalizeAIConfigResourceId(typeof existingCredential?.id === 'string' ? existingCredential.id : '') ||
-        createAIConfigCredentialId(),
+        (input.updates.credentialId
+          ? inputResourceId(input.updates.credentialId, (id) => credentialResource.buildId({ id }))
+          : '') ||
+        credentialStorageId(existingCredential) ||
+        credentialResource.buildId({ id: getDefaultAIConfigCredentialId(providerId) }),
       provider: aiConfigProviderRef(providerId),
       service: typeof existingCredential?.service === 'string' && existingCredential.service ? existingCredential.service : 'ai',
       status:
@@ -833,10 +969,11 @@ export function buildAIConfigMutationPlan(input: {
         ...filterAIModelCapabilityUris(model.capabilities),
       ])]
       modelUpserts.push({
-        id: modelId,
+        id: modelStorageId(existing, providerId, modelId),
         displayName: model.name || modelId,
         rdfType: [modelClass],
         capabilities,
+        runtimeCapabilities: filterAIConfigRuntimeCapabilities(model.capabilities),
         isProvidedBy: aiConfigProviderRef(providerId),
         status: model.enabled ? 'active' : 'inactive',
         createdAt: existingDate(existing?.createdAt) ?? now,
@@ -846,7 +983,7 @@ export function buildAIConfigMutationPlan(input: {
 
     for (const modelId of existingById.keys()) {
       if (!nextIds.has(modelId)) {
-        modelDeleteIds.push(modelId)
+        modelDeleteIds.push(modelStorageId(existingById.get(modelId), providerId, modelId))
       }
     }
   }
@@ -874,9 +1011,7 @@ export function buildAIConfigDisconnectPlan(input: {
       continue
     }
 
-    const id = normalizeAIConfigResourceId(
-      normalizeOptionalText(row.id) ?? normalizeOptionalText(row['@id']),
-    )
+    const id = credentialStorageId(row)
     if (!id || seen.has(id)) {
       continue
     }

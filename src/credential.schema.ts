@@ -28,7 +28,9 @@ export type CredentialStorageModeType =
 export const credentialResource = podTable("credential", {
   id: id("id").default("credentials.ttl#{key}"),
   provider: uri("provider").predicate(UDFS.provider).link("aiProvider"),
-  authMode: string("authMode").predicate(UDFS.authMode).notNull().default(ProviderAuthMode.apiKey),
+  // Keep the write default while allowing credentials created before authMode
+  // was introduced to remain queryable and migratable.
+  authMode: string("authMode").predicate(UDFS.authMode).default(ProviderAuthMode.apiKey),
   service: string("service").predicate(UDFS.service).notNull().default("ai"),
   status: string("status").predicate(UDFS.status).notNull().default("active"),
   apiKey: string("apiKey").predicate(UDFS.apiKey),

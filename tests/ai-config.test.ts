@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  AIConfigRuntimeCapability,
+  aiConfigSupportsRuntimeCapability,
   aiConfigModelRef,
   aiConfigProviderRef,
   aiConfigRepository,
@@ -7,6 +9,8 @@ import {
   buildAIConfigMutationPlan,
   buildAIConfigProviderStateMap,
   createAIConfigCredentialId,
+  getDefaultAIConfigCredentialId,
+  getAIConfigProviderCapabilities,
   getAIConfigProviderFamilyIds,
   getAIConfigProviderMetadata,
   normalizeAIConfigModelId,
@@ -28,6 +32,10 @@ describe('ai-config shared core', () => {
     expect(second).not.toBe(first)
   })
 
+  it('keeps the legacy deterministic default credential id stable', () => {
+    expect(getDefaultAIConfigCredentialId('codex')).toBe('openai-default')
+  })
+
   it('normalizes provider aliases to canonical ids', () => {
     expect(normalizeAIConfigProviderId('claude')).toBe('anthropic')
     expect(normalizeAIConfigProviderId('codex')).toBe('openai')
@@ -42,6 +50,31 @@ describe('ai-config shared core', () => {
     expect(normalizeAIConfigResourceId('credentials.ttl#openai-default')).toBe('openai-default')
     expect(normalizeAIConfigResourceId('/settings/providers/openai.ttl')).toBe('openai')
     expect(normalizeAIConfigResourceId('settings/providers/openai.ttl')).toBe('openai')
+  })
+
+  it('uses explicit runtime capabilities and a conservative legacy fallback', () => {
+    expect(getAIConfigProviderCapabilities('undefineds')).toEqual([
+      AIConfigRuntimeCapability.chatCompletions,
+      AIConfigRuntimeCapability.responses,
+      AIConfigRuntimeCapability.responsesWebSearch,
+      AIConfigRuntimeCapability.imageInput,
+      AIConfigRuntimeCapability.imageGeneration,
+      AIConfigRuntimeCapability.imageEditing,
+      AIConfigRuntimeCapability.toolCalls,
+    ])
+    expect(getAIConfigProviderCapabilities('legacy-custom')).toEqual([
+      AIConfigRuntimeCapability.chatCompletions,
+    ])
+    expect(getAIConfigProviderCapabilities('legacy-custom', [])).toEqual([])
+    expect(aiConfigSupportsRuntimeCapability(
+      'legacy-custom',
+      AIConfigRuntimeCapability.responsesWebSearch,
+    )).toBe(false)
+    expect(aiConfigSupportsRuntimeCapability(
+      'custom-openai',
+      AIConfigRuntimeCapability.responsesWebSearch,
+      ['chat_completions', 'responses', 'responses_web_search'],
+    )).toBe(true)
   })
 
   it('normalizes Qwen aliases to the DashScope embedding provider catalog entry', () => {
@@ -101,7 +134,19 @@ describe('ai-config shared core', () => {
     expect(normalizeAIConfigModelId('anthropic.ttl#claude-sonnet-4', 'anthropic')).toBe('claude-sonnet-4')
     expect(normalizeAIConfigModelId('openrouter/openai/gpt-4o-mini', 'openrouter')).toBe('openai/gpt-4o-mini')
     expect(normalizeAIConfigModelId('https://pod.example/settings/providers/anthropic.ttl#claude-sonnet-4', 'anthropic')).toBe('claude-sonnet-4')
-    expect(aiConfigModelRef('anthropic', 'claude-sonnet-4')).toBe('/settings/providers/anthropic.ttl#claude-sonnet-4')
+    expect(aiConfigModelRef('anthropic', 'claude-sonnet-4')).toBe('settings/providers/anthropic.ttl#claude-sonnet-4')
+  })
+
+  it('builds AI config refs as nested-Pod-safe base-relative resource ids', () => {
+    const nestedPod = 'https://cloud.example/alice/pod/'
+    const providerRef = aiConfigProviderRef('anthropic')
+    const modelRef = aiConfigModelRef('anthropic', 'claude-sonnet-4')
+
+    expect(providerRef).toBe('settings/providers/anthropic.ttl')
+    expect(modelRef).toBe('settings/providers/anthropic.ttl#claude-sonnet-4')
+    expect(new URL(providerRef, nestedPod).href).toBe('https://cloud.example/alice/pod/settings/providers/anthropic.ttl')
+    expect(new URL(modelRef, nestedPod).href).toBe('https://cloud.example/alice/pod/settings/providers/anthropic.ttl#claude-sonnet-4')
+    expect(new URL('/settings/providers/anthropic.ttl', nestedPod).href).toBe('https://cloud.example/settings/providers/anthropic.ttl')
   })
 
   it('builds provider state from provider-scoped AI config resources', () => {
@@ -349,9 +394,9 @@ describe('ai-config shared core', () => {
       },
       async findById(resource: unknown, id: string) {
         expect((resource as { config?: { name?: string } }).config?.name).toBe('aiProvider')
-        if (id === 'deepseek') {
+        if (id === 'deepseek.ttl') {
           return {
-            id: 'deepseek',
+            id: 'deepseek.ttl',
             baseUrl: 'https://api.deepseek.com/v1',
             supportsBackend: 'codex',
           }
@@ -363,9 +408,36 @@ describe('ai-config shared core', () => {
     expect(selected).toMatchObject({
       providerId: 'deepseek',
       credentialId: 'deepseek-key-1',
+      credentialResourceId: 'deepseek-key-1',
       apiKey: 'sk-deepseek',
       baseUrl: 'https://api.deepseek.com/v1',
     })
+  })
+
+  it('uses the exact credential resource id when recording rotation usage', async () => {
+    const updates: Array<{ id: string; data: Record<string, unknown> }> = []
+    const usedAt = new Date('2026-08-11T08:00:00.000Z')
+
+    await aiConfigRepository.markCredentialUsed({
+      select() {
+        throw new Error('select should not be called')
+      },
+      async findById() {
+        throw new Error('findById should not be called')
+      },
+      async updateById(_resource: unknown, id: string, data: Record<string, unknown>) {
+        updates.push({ id, data })
+        return null
+      },
+    }, {
+      credentialId: 'jina-default',
+      credentialResourceId: 'credentials.ttl#jina-default',
+    }, usedAt)
+
+    expect(updates).toEqual([{
+      id: 'credentials.ttl#jina-default',
+      data: { lastUsedAt: usedAt },
+    }])
   })
 
   it('creates a shared mutation plan for provider, credential, and model writes', () => {
@@ -390,12 +462,12 @@ describe('ai-config shared core', () => {
 
     expect(plan.providerId).toBe('anthropic')
     expect(plan.providerPayload).toMatchObject({
-      id: 'anthropic',
+      id: 'anthropic.ttl',
       baseUrl: 'https://api.anthropic.com/v1',
       hasModel: [aiConfigModelRef('anthropic', 'claude-sonnet-4')],
     })
     expect(plan.credentialPayload).toMatchObject({
-      id: expect.stringMatching(/^cred_[a-z0-9_-]+$/u),
+      id: 'credentials.ttl#anthropic-default',
       provider: aiConfigProviderRef('anthropic'),
       service: 'ai',
       status: 'active',
@@ -404,7 +476,7 @@ describe('ai-config shared core', () => {
     })
     expect(plan.modelUpserts).toHaveLength(1)
     expect(plan.modelUpserts[0]).toMatchObject({
-      id: 'claude-sonnet-4',
+      id: 'anthropic.ttl#claude-sonnet-4',
       displayName: 'Claude Sonnet 4',
       rdfType: [UDFS.ChatModel],
       capabilities: [UDFS.ChatCapability],
@@ -437,12 +509,12 @@ describe('ai-config shared core', () => {
 
     expect(plan.providerId).toBe('paddleocr')
     expect(plan.providerPayload).toMatchObject({
-      id: 'paddleocr',
+      id: 'paddleocr.ttl',
       baseUrl: 'https://paddleocr.aistudio-app.com/api/v2/ocr/jobs',
       hasModel: [aiConfigModelRef('paddleocr', 'pp-ocrv6')],
     })
     expect(plan.credentialPayload).toMatchObject({
-      id: expect.stringMatching(/^cred_[a-z0-9_-]+$/u),
+      id: 'credentials.ttl#paddleocr-default',
       provider: aiConfigProviderRef('paddleocr'),
       service: 'ai',
       status: 'active',
@@ -450,7 +522,7 @@ describe('ai-config shared core', () => {
     })
     expect(plan.modelUpserts).toHaveLength(1)
     expect(plan.modelUpserts[0]).toMatchObject({
-      id: 'pp-ocrv6',
+      id: 'paddleocr.ttl#pp-ocrv6',
       displayName: 'PP-OCRv6',
       rdfType: [UDFS.DocumentUnderstandingModel],
       capabilities: [UDFS.DocumentUnderstandingCapability, UDFS.OCRCapability],
@@ -557,6 +629,52 @@ describe('ai-config shared core', () => {
     expect(plan.providerPayload?.hasModel).toBeUndefined()
   })
 
+  it('round-trips explicit provider and model runtime capabilities', () => {
+    const plan = buildAIConfigMutationPlan({
+      providerId: 'custom-openai',
+      currentProviderRows: [],
+      currentCredentialRows: [],
+      currentModelRows: [],
+      updates: {
+        capabilities: ['chat_completions', 'responses', 'responses_web_search'],
+        models: [{
+          id: 'model-1',
+          name: 'Model 1',
+          enabled: true,
+          capabilities: ['image_input', 'tool_calls'],
+        }],
+      },
+    })
+
+    expect(plan.providerPayload?.capabilities).toEqual([
+      'chat_completions',
+      'responses',
+      'responses_web_search',
+    ])
+    expect(plan.modelUpserts[0]).toMatchObject({
+      rdfType: [UDFS.ChatModel],
+      capabilities: [UDFS.ChatCapability],
+      runtimeCapabilities: ['image_input', 'tool_calls'],
+    })
+
+    const states = buildAIConfigProviderStateMap({
+      fallbackToCatalogModels: false,
+      providerRows: [{ id: 'custom-openai', capabilities: plan.providerPayload?.capabilities }],
+      credentialRows: [],
+      modelRows: [{
+        ...plan.modelUpserts[0],
+        id: 'model-1',
+        isProvidedBy: '/settings/providers/custom-openai.ttl',
+      }],
+    })
+    expect(states['custom-openai']?.capabilities).toEqual([
+      'chat_completions',
+      'responses',
+      'responses_web_search',
+    ])
+    expect(states['custom-openai']?.models[0]?.capabilities).toEqual(['image_input', 'tool_calls'])
+  })
+
   it('returns reader model type from AI config state reads', () => {
     const states = buildAIConfigProviderStateMap({
       fallbackToCatalogModels: false,
@@ -637,13 +755,13 @@ describe('ai-config shared core', () => {
 
     expect(plan.providerId).toBe('deepseek')
     expect(plan.providerPayload).toMatchObject({
-      id: 'deepseek',
+      id: 'deepseek.ttl',
       baseUrl: 'https://api.deepseek.com/v1',
       supportsBackend: 'codex',
       rotationPolicy: 'round_robin',
     })
     expect(plan.credentialPayload).toMatchObject({
-      id: 'deepseek-key-1',
+      id: 'credentials.ttl#deepseek-key-1',
       provider: aiConfigProviderRef('deepseek'),
       service: 'ai',
       status: 'active',
@@ -677,12 +795,12 @@ describe('ai-config shared core', () => {
 
     expect(plan.providerId).toBe('stepfun')
     expect(plan.providerPayload).toMatchObject({
-      id: 'stepfun',
+      id: 'stepfun.ttl',
       baseUrl: 'https://api.stepfun.com/v1',
       hasModel: [aiConfigModelRef('stepfun', 'step-3.7-flash')],
     })
     expect(plan.credentialPayload).toMatchObject({
-      id: expect.stringMatching(/^cred_[a-z0-9_-]+$/u),
+      id: 'credentials.ttl#stepfun-default',
       provider: aiConfigProviderRef('stepfun'),
       service: 'ai',
       status: 'active',
@@ -692,7 +810,7 @@ describe('ai-config shared core', () => {
     })
     expect(plan.modelUpserts).toHaveLength(1)
     expect(plan.modelUpserts[0]).toMatchObject({
-      id: 'step-3.7-flash',
+      id: 'stepfun.ttl#step-3.7-flash',
       displayName: 'step-3.7-flash',
       isProvidedBy: aiConfigProviderRef('stepfun'),
       status: 'active',
@@ -729,7 +847,7 @@ describe('ai-config shared core', () => {
 
     expect(plan).toEqual({
       providerId: 'anthropic',
-      credentialDeleteIds: ['anthropic-default', 'claude-default'],
+      credentialDeleteIds: ['credentials.ttl#anthropic-default', 'claude-default'],
     })
   })
 })

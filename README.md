@@ -112,10 +112,18 @@ provider, and which credential should be used for a provider call?
 The resources are:
 
 ```text
-aiProviderResource   /settings/providers/{providerId}.ttl
-aiModelResource      /settings/providers/{providerId}.ttl#{modelId}
-credentialResource   /settings/credentials.ttl#{credentialId}
+aiProviderResource   settings/providers/{providerId}.ttl
+aiModelResource      settings/providers/{providerId}.ttl#{modelId}
+credentialResource   settings/credentials.ttl#{credentialId}
 ```
+
+These values are Pod base-relative resource ids. They intentionally do not
+start with `/`: a slash-rooted relation such as
+`/settings/providers/openai.ttl` resolves to the origin root on nested Pods,
+while `settings/providers/openai.ttl` resolves under the current Pod. New
+writers should use `aiConfigProviderRef()` and `aiConfigModelRef()` for
+provider/model URI relation fields; readers continue to normalize legacy
+absolute and slash-rooted references.
 
 The separation is:
 
@@ -219,9 +227,9 @@ Representative paths:
 /.data/chat/{chatId}/{yyyy}/{MM}/{dd}/messages.ttl#{messageId}
 /agents/{agentId}/
 /.data/sessions/{yyyy}/{MM}/{dd}/{sessionId}.ttl
-/settings/providers/{providerId}.ttl
-/settings/providers/{providerId}.ttl#{modelId}
-/settings/credentials.ttl#{credentialId}
+settings/providers/{providerId}.ttl
+settings/providers/{providerId}.ttl#{modelId}
+settings/credentials.ttl#{credentialId}
 ```
 
 Schema fields that are RDF relations should store resource URIs, not hidden
