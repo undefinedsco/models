@@ -11,6 +11,9 @@ const pkg = JSON.parse(readFileSync(join(modelsRoot, 'package.json'), 'utf-8'))
 const version = args.version ?? pkg.version
 const workRoot = join(tmpdir(), `undefineds-models-release-${Date.now()}`)
 
+/** Lockfiles are development artifacts; they must not ride along in the tarball. */
+const LOCKFILES = new Set(['bun.lock', 'bun.lockb', 'yarn.lock', 'package-lock.json'])
+
 rmSync(workRoot, { recursive: true, force: true })
 mkdirSync(workRoot, { recursive: true })
 mkdirSync(outRoot, { recursive: true })
@@ -43,6 +46,7 @@ function shouldCopyPackagePath(root, path) {
     && !segments.includes('test')
     && !segments.includes('tests')
     && !segments.includes('src')
+    && !LOCKFILES.has(relativePath)
     && !(segments[0] === 'dist' && segments[1] === 'storage')
 }
 
