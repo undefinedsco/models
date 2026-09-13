@@ -158,3 +158,144 @@ export async function writeChatProjectContext(
 
   return readChatProjectContext(db, snapshot.workspace)
 }
+
+interface ChatProjectSettingsInput {
+  workspace: string
+  instructions?: string
+  memoryEnabled?: boolean
+}
+
+interface ChatProjectMemoryInput {
+  workspace: string
+  memory: ChatProjectMemoryEntry
+}
+
+export interface ReconcileChatProjectContextInput {
+  previous: ChatProjectContextSnapshot
+  next: ChatProjectContextSnapshot
+}
+
+async function writeChatProjectSettings(
+  db: SolidDatabase,
+  input: ChatProjectSettingsInput,
+): Promise<void> {
+  const [existingContext] = await chatProjectContextRepository.list(db, { workspace: input.workspace })
+  const now = new Date()
+  const changes = {
+    ...(input.instructions !== undefined ? { instructions: input.instructions } : {}),
+    ...(input.memoryEnabled !== undefined ? { memoryEnabled: input.memoryEnabled } : {}),
+    updatedAt: now,
+  }
+  if (existingContext) {
+    await db.updateById(chatProjectContextResource, existingContext.id, changes)
+    return
+  }
+  if (!chatProjectContextRepository.create) {
+    throw new Error('Chat project context repository does not support create')
+  }
+  const id = chatProjectContextResourceId(input.workspace)
+  const insert = {
+    // A stable ID makes concurrent first writes converge on the same resource.
+    id,
+    workspace: input.workspace,
+    instructions: input.instructions ?? '',
+    memoryEnabled: input.memoryEnabled ?? true,
+    createdAt: now,
+    updatedAt: now,
+  }
+  try {
+    await chatProjectContextRepository.create(db, insert)
+  } catch (error) {
+    // A simultaneous first writer may win the conditional Pod write. Resolve
+    // that race as an update, while rejecting the unlikely stable-ID collision.
+    const racedContext = await db.findById(chatProjectContextResource, id)
+    if (!racedContext) throw error
+    if (racedContext.workspace !== input.workspace) {
+      throw new Error('Project context resource belongs to a different workspace')
+    }
+    await db.updateById(chatProjectContextResource, id, changes)
+  }
+}
+
+async function upsertChatProjectMemory(
+  db: SolidDatabase,
+  input: ChatProjectMemoryInput,
+): Promise<void> {
+  const id = chatProjectMemoryResourceId(input.memory.id)
+  const existing = await db.findById(chatProjectMemoryResource, id)
+  const now = new Date()
+  if (existing) {
+    if (existing.workspace !== input.workspace) {
+      throw new Error('Project memory belongs to a different workspace')
+    }
+    await db.updateById(chatProjectMemoryResource, id, {
+      text: input.memory.text,
+      sourceMessage: input.memory.sourceMessage,
+      updatedAt: now,
+    })
+    return
+  }
+  if (!chatProjectMemoryRepository.create) {
+    throw new Error('Chat project memory repository does not support create')
+  }
+  await chatProjectMemoryRepository.create(db, {
+    id,
+    workspace: input.workspace,
+    text: input.memory.text,
+    sourceMessage: input.memory.sourceMessage,
+    createdAt: input.memory.createdAt ? new Date(input.memory.createdAt) : now,
+    updatedAt: now,
+  })
+}
+
+async function deleteChatProjectMemory(
+  db: SolidDatabase,
+  input: { workspace: string; id: string },
+): Promise<void> {
+  const id = chatProjectMemoryResourceId(input.id)
+  const existing = await db.findById(chatProjectMemoryResource, id)
+  if (!existing) return
+  if (existing.workspace !== input.workspace) {
+    throw new Error('Project memory belongs to a different workspace')
+  }
+  await db.deleteById(chatProjectMemoryResource, id)
+}
+
+/**
+ * Applies an explicit editor diff. Memories created by another client after
+ * `previous` was read, and fields not changed in this editor, are left untouched.
+ */
+export async function reconcileChatProjectContext(
+  db: SolidDatabase,
+  input: ReconcileChatProjectContextInput,
+): Promise<ChatProjectContextSnapshot> {
+  if (input.previous.workspace !== input.next.workspace) {
+    throw new Error('Project context workspace cannot change during reconciliation')
+  }
+  const instructionsChanged = input.previous.instructions !== input.next.instructions
+  const memoryEnabledChanged = input.previous.memoryEnabled !== input.next.memoryEnabled
+  if (instructionsChanged || memoryEnabledChanged) {
+    await writeChatProjectSettings(db, {
+      workspace: input.next.workspace,
+      ...(instructionsChanged ? { instructions: input.next.instructions } : {}),
+      ...(memoryEnabledChanged ? { memoryEnabled: input.next.memoryEnabled } : {}),
+    })
+  }
+  const previousMemories = new Map(input.previous.memories.map((memory) => [chatProjectMemoryResourceId(memory.id), memory]))
+  const changedMemories = input.next.memories.filter((memory) => {
+    const previous = previousMemories.get(chatProjectMemoryResourceId(memory.id))
+    return !previous || previous.text !== memory.text || previous.sourceMessage !== memory.sourceMessage
+  })
+  await Promise.all(changedMemories.map((memory) => upsertChatProjectMemory(db, {
+    workspace: input.next.workspace,
+    memory,
+  })))
+  const retainedIds = new Set(input.next.memories.map((memory) => chatProjectMemoryResourceId(memory.id)))
+  await Promise.all(input.previous.memories
+    .filter((memory) => !retainedIds.has(chatProjectMemoryResourceId(memory.id)))
+    .map((memory) => deleteChatProjectMemory(db, {
+      workspace: input.next.workspace,
+      id: memory.id,
+    })))
+  return readChatProjectContext(db, input.next.workspace)
+}

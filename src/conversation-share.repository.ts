@@ -33,3 +33,13 @@ export async function removeConversationShare(
   await db.deleteById(conversationShareResource, id)
   return { id }
 }
+
+/** Preserve share metadata while recording successful access revocation. */
+export async function markConversationShareRevoked(
+  db: SolidDatabase,
+  id: string,
+  revokedAt = new Date(),
+): Promise<{ id: string; revokedAt: Date }> {
+  await db.updateById(conversationShareResource, id, { revokedAt })
+  return { id, revokedAt }
+}
