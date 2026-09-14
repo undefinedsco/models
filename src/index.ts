@@ -728,6 +728,8 @@ export {
 } from './protocol-metadata'
 
 export {
+  aiModelDescriptor,
+  aiProviderDescriptor,
   approvalDescriptor,
   automationRuleDescriptor,
   captureCandidateDescriptor,

@@ -78,11 +78,10 @@ describe('udfs cli', () => {
         schemaUri: UDFS.Credential,
         operation: 'upsert',
         match: {
-          service: 'infra',
-          providerId: 'cloudflare',
-          secretType: 'tunnel-token',
+          id: 'cloudflare-tunnel-token',
         },
         set: {
+          service: 'infra',
           label: 'Cloudflare Tunnel Token',
           status: 'active',
         },
@@ -90,8 +89,8 @@ describe('udfs cli', () => {
     ], cliExecOptions)
     const result = JSON.parse(output)
     expect(result.ok).toBe(true)
-    expect(result.plan.resourceId).toBe('#infra-cloudflare-tunnel-token')
-    expect(result.plan.resourceUri).toBe('/settings/credentials.ttl#infra-cloudflare-tunnel-token')
+    expect(result.plan.resourceId).toBe('#cloudflare-tunnel-token')
+    expect(result.plan.resourceUri).toBe('/settings/credentials.ttl#cloudflare-tunnel-token')
   })
 
   it('runs the bundled consensus path from JSON input without API credentials', () => {

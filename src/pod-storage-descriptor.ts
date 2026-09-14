@@ -107,7 +107,22 @@ export const credentialDescriptor: PodModelDescriptor = {
       type: 'string',
       predicate: UDFS.term('id'),
       required: true,
-      description: 'Local credential id.',
+      description: 'Base-relative credential row id. Every credential in a provider pool keeps its own id.',
+    },
+    provider: {
+      type: 'uri',
+      predicate: UDFS.provider,
+      description: 'Provider resource URI this credential connects through, as a URI relation to the provider row.',
+    },
+    authMode: {
+      type: 'string',
+      predicate: UDFS.authMode,
+      description: 'Authentication mode such as apiKey, oauth, deviceCode, or console.',
+    },
+    offeringId: {
+      type: 'string',
+      predicate: UDFS.offeringId,
+      description: 'Offering id this credential connects through. Offerings are catalog content, so this stays a plain attribute, not a relation.',
     },
     service: {
       type: 'string',
@@ -115,33 +130,16 @@ export const credentialDescriptor: PodModelDescriptor = {
       required: true,
       description: 'Credential service grouping, for example ai or infra.',
     },
-    providerId: {
+    status: {
       type: 'string',
-      predicate: UDFS.provider,
-      required: true,
-      description: 'Provider identifier such as openai or cloudflare.',
-    },
-    secretType: {
-      type: 'string',
-      predicate: UDFS.secretType,
-      required: true,
-      description: 'Provider-specific secret kind such as api-key or tunnel-token.',
-    },
-    label: {
-      type: 'string',
-      predicate: UDFS.label,
-      description: 'User-facing credential label.',
+      predicate: UDFS.status,
+      description: 'Credential health status.',
     },
     apiKey: {
       type: 'string',
       predicate: UDFS.apiKey,
       secret: true,
       description: 'Secret token or API key material.',
-    },
-    authMode: {
-      type: 'string',
-      predicate: UDFS.authMode,
-      description: 'Authentication mode such as apiKey, oauth, deviceCode, or console.',
     },
     storageMode: {
       type: 'string',
@@ -202,17 +200,112 @@ export const credentialDescriptor: PodModelDescriptor = {
       predicate: UDFS.reauthRequired,
       description: 'Whether this credential requires user reauthentication.',
     },
-    status: {
+    baseUrl: {
       type: 'string',
-      predicate: UDFS.status,
-      description: 'Credential health status.',
+      predicate: UDFS.baseUrl,
+      description: 'Provider API base URL recorded on the credential.',
+    },
+    proxyUrl: {
+      type: 'string',
+      predicate: UDFS.proxyUrl,
+      description: 'Proxy URL used for requests made with this credential.',
+    },
+    label: {
+      type: 'string',
+      predicate: UDFS.label,
+      description: 'User-facing credential label.',
+    },
+    isDefault: {
+      type: 'boolean',
+      predicate: UDFS.isDefault,
+      description: 'Whether this credential is the default credential for its provider.',
+    },
+    createdAt: {
+      type: 'timestamp',
+      predicate: DCTerms.created,
+      description: 'Creation timestamp, set by the store.',
+    },
+    lastUsedAt: {
+      type: 'timestamp',
+      predicate: UDFS.lastUsedAt,
+      description: 'Last successful use timestamp.',
+    },
+    clientCredentialId: {
+      type: 'string',
+      predicate: UDFS.clientCredentialId,
+      description: 'Client the issued credential belongs to. An external runtime identifier, not an RDF link.',
+    },
+    appliedTo: {
+      type: 'string',
+      predicate: UDFS.appliedTo,
+      description: 'Client application id the credential is in effect for. A runtime identifier, not an RDF link.',
+    },
+    appliedOn: {
+      type: 'string',
+      predicate: UDFS.appliedOn,
+      description: 'Device id that wrote the applied configuration. A runtime identifier, not an RDF link.',
+    },
+    appliedAt: {
+      type: 'timestamp',
+      predicate: UDFS.appliedAt,
+      description: 'Timestamp when the credential was applied.',
+    },
+    failCount: {
+      type: 'number',
+      predicate: UDFS.failCount,
+      description: 'Failed use count recorded for the credential.',
+    },
+    rateLimitResetAt: {
+      type: 'timestamp',
+      predicate: UDFS.rateLimitResetAt,
+      description: 'Timestamp when the provider rate limit is expected to reset.',
+    },
+    oauthRefreshToken: {
+      type: 'string',
+      predicate: UDFS.oauthRefreshToken,
+      secret: true,
+      description: 'OAuth refresh token.',
+    },
+    oauthAccessToken: {
+      type: 'string',
+      predicate: UDFS.oauthAccessToken,
+      secret: true,
+      description: 'OAuth access token.',
+    },
+    oauthExpiresAt: {
+      type: 'timestamp',
+      predicate: UDFS.oauthExpiresAt,
+      description: 'OAuth access token expiry timestamp.',
+    },
+    projectId: {
+      type: 'string',
+      predicate: UDFS.projectId,
+      description: 'Provider project identifier recorded for the credential.',
+    },
+    organizationId: {
+      type: 'string',
+      predicate: UDFS.organizationId,
+      description: 'Provider organization identifier recorded for the credential.',
+    },
+    metadata: {
+      type: 'json',
+      predicate: UDFS.metadata,
+      description: 'Opaque adapter-local metadata bag; shared relations must be explicit fields.',
     },
   },
-  uniqueBy: ['service', 'providerId', 'secretType'],
+  // A credential pool holds several credentials per provider and offering (one
+  // per account or key), so `service`, `provider`, and `offeringId` are not
+  // unique together, and `secretType` is a resolution hint rather than a column.
+  // The row id is the only column that identifies a credential, so it is the
+  // whole key here; provider and offering stay attributes of the credential.
+  uniqueBy: ['id'],
   writableFields: [
-    'label',
-    'apiKey',
+    'provider',
     'authMode',
+    'offeringId',
+    'service',
+    'status',
+    'apiKey',
     'storageMode',
     'secretPayload',
     'encryptedSecret',
@@ -224,24 +317,36 @@ export const credentialDescriptor: PodModelDescriptor = {
     'accountLabel',
     'lastRefreshAt',
     'reauthRequired',
-    'status',
+    'baseUrl',
+    'proxyUrl',
+    'label',
+    'isDefault',
+    'lastUsedAt',
+    'clientCredentialId',
+    'appliedTo',
+    'appliedOn',
+    'appliedAt',
+    'failCount',
+    'rateLimitResetAt',
+    'oauthRefreshToken',
+    'oauthAccessToken',
+    'oauthExpiresAt',
+    'projectId',
+    'organizationId',
+    'metadata',
   ],
   mergePolicy: 'upsert',
   examples: [
     {
       request: '保存 Cloudflare tunnel token',
       match: {
-        service: 'infra',
-        providerId: 'cloudflare',
-        secretType: 'tunnel-token',
+        id: 'cloudflare-5f2c9a1e',
       },
     },
     {
       request: '保存 OpenAI API key',
       match: {
-        service: 'ai',
-        providerId: 'openai',
-        secretType: 'api-key',
+        id: 'openai-2b7d4e10',
       },
     },
   ],
@@ -430,6 +535,222 @@ export const quotaSnapshotDescriptor: PodModelDescriptor = {
     {
       request: 'Record a fresh quota snapshot for a provider credential',
       match: { id: 'ai/gateway/quota.ttl#quota_1' },
+    },
+  ],
+}
+
+export const aiProviderDescriptor: PodModelDescriptor = {
+  uri: UDFS.Provider,
+  version: '1.0.0',
+  source: 'official',
+  trustLevel: 'high',
+  namespace: UDFS.NAMESPACE,
+  class: UDFS.Provider,
+  resourceKind: 'provider',
+  description: 'AI provider endpoint configured in the Pod: endpoint, proxy, console entry, backend support, and the models it exposes. Its model rows live in the same provider document and are linked from here through hasModel.',
+  // One document per provider: the table id default is `{key}.ttl` against the
+  // `/settings/providers/` base, so `buildId({ id: provider })` resolves to
+  // `<provider>.ttl` and its model rows are subjects inside that document.
+  storage: {
+    base: '/settings/providers/',
+    resourceIdPattern: '{key}.ttl',
+  },
+  fields: {
+    id: {
+      type: 'string',
+      predicate: UDFS.term('id'),
+      required: true,
+      description: 'Base-relative provider row id, for example openai.ttl.',
+    },
+    displayName: {
+      type: 'string',
+      predicate: UDFS.displayName,
+      description: 'Provider display name stored on the provider row.',
+    },
+    baseUrl: {
+      type: 'string',
+      predicate: UDFS.baseUrl,
+      description: 'Provider API base URL.',
+    },
+    proxyUrl: {
+      type: 'string',
+      predicate: UDFS.proxyUrl,
+      description: 'Proxy URL used for provider requests.',
+    },
+    homepage: {
+      type: 'string',
+      predicate: UDFS.homepage,
+      description: 'Provider homepage URL.',
+    },
+    apiKeyUrl: {
+      type: 'string',
+      predicate: UDFS.apiKeyUrl,
+      description: 'URL where a user creates an API key for this provider.',
+    },
+    connectMode: {
+      type: 'string',
+      predicate: UDFS.connectMode,
+      description: 'Connection mode recorded for the provider authorization method.',
+    },
+    hasModel: {
+      type: 'uri',
+      predicate: UDFS.hasModel,
+      array: true,
+      description: 'Model rows this provider exposes, as subjects inside the provider document.',
+    },
+    defaultModel: {
+      type: 'uri',
+      predicate: UDFS.defaultModel,
+      description: 'Default model for this provider when a request does not select one.',
+    },
+    supportsBackend: {
+      type: 'string',
+      predicate: UDFS.supportsBackend,
+      description: 'Backends this provider can serve, read as a backend list by the AI config selector.',
+    },
+    capabilities: {
+      type: 'string',
+      predicate: UDFS.capability,
+      array: true,
+      description: 'Provider capability tags.',
+    },
+    rotationPolicy: {
+      type: 'string',
+      predicate: UDFS.rotationPolicy,
+      description: 'Credential rotation policy recorded for the provider.',
+    },
+  },
+  uniqueBy: ['id'],
+  writableFields: [
+    'displayName',
+    'baseUrl',
+    'proxyUrl',
+    'homepage',
+    'apiKeyUrl',
+    'connectMode',
+    'hasModel',
+    'defaultModel',
+    'supportsBackend',
+    'capabilities',
+    'rotationPolicy',
+  ],
+  mergePolicy: 'upsert',
+  examples: [
+    {
+      request: 'Describe the provider document a Pod AI connection writes',
+      match: { id: 'openai.ttl' },
+    },
+  ],
+}
+
+export const aiModelDescriptor: PodModelDescriptor = {
+  uri: UDFS.AIModel,
+  version: '1.0.0',
+  source: 'official',
+  trustLevel: 'high',
+  namespace: UDFS.NAMESPACE,
+  class: UDFS.AIModel,
+  resourceKind: 'ai-model',
+  description: 'AI model exposed by a provider, stored as a subject inside that provider document. The provider relation and model capabilities are URI facts, while pricing and modality facts stay literals.',
+  // Model rows are subjects inside the provider document: the table id default
+  // is `{isProvidedBy.doc}#{key}` against the `/settings/providers/` base, so
+  // `buildId({ id: modelKey, isProvidedBy: providerIri })` resolves to
+  // `<provider>.ttl#<modelKey>`.
+  storage: {
+    base: '/settings/providers/',
+    resourceIdPattern: '{isProvidedBy.doc}#{key}',
+  },
+  fields: {
+    id: {
+      type: 'string',
+      predicate: UDFS.term('id'),
+      required: true,
+      description: 'Base-relative model row id: provider document plus model key, for example openai.ttl#gpt-4o.',
+    },
+    rdfType: {
+      type: 'uri',
+      predicate: RDF.type,
+      array: true,
+      description: 'RDF class of the model row. The base table defaults to AIModel, and subclass tables narrow it.',
+    },
+    displayName: {
+      type: 'string',
+      predicate: UDFS.displayName,
+      description: 'Model display name stored on the model row.',
+    },
+    isProvidedBy: {
+      type: 'uri',
+      predicate: UDFS.isProvidedBy,
+      description: 'Provider document this model row belongs to, as a URI relation to the provider row.',
+    },
+    inputModalities: {
+      type: 'text',
+      predicate: UDFS.inputModality,
+      array: true,
+      description: 'Input modalities the model accepts.',
+    },
+    outputModalities: {
+      type: 'text',
+      predicate: UDFS.outputModality,
+      array: true,
+      description: 'Output modalities the model produces.',
+    },
+    runtimeCapabilities: {
+      type: 'string',
+      predicate: UDFS.capability,
+      array: true,
+      description: 'Adapter/runtime endpoint capabilities, kept separate from semantic model capabilities.',
+    },
+    capabilities: {
+      type: 'uri',
+      predicate: UDFS.hasCapability,
+      array: true,
+      description: 'Semantic capabilities of the model, as URIs.',
+    },
+    pricingInput: {
+      type: 'number',
+      predicate: UDFS.pricingInput,
+      description: 'Input token price recorded for the model.',
+    },
+    pricingOutput: {
+      type: 'number',
+      predicate: UDFS.pricingOutput,
+      description: 'Output token price recorded for the model.',
+    },
+    status: {
+      type: 'string',
+      predicate: UDFS.status,
+      description: 'Model availability status.',
+    },
+    createdAt: {
+      type: 'timestamp',
+      predicate: UDFS.createdAt,
+      description: 'Creation timestamp, set by the store.',
+    },
+    updatedAt: {
+      type: 'timestamp',
+      predicate: UDFS.updatedAt,
+      description: 'Last update timestamp.',
+    },
+  },
+  uniqueBy: ['id'],
+  writableFields: [
+    'displayName',
+    'isProvidedBy',
+    'inputModalities',
+    'outputModalities',
+    'runtimeCapabilities',
+    'capabilities',
+    'pricingInput',
+    'pricingOutput',
+    'status',
+    'updatedAt',
+  ],
+  mergePolicy: 'upsert',
+  examples: [
+    {
+      request: 'Describe a model row inside a provider document',
+      match: { id: 'openai.ttl#gpt-4o' },
     },
   ],
 }
@@ -1531,6 +1852,8 @@ export const officialPodModelDescriptors = [
   credentialDescriptor,
   gatewayAccessKeyDescriptor,
   quotaSnapshotDescriptor,
+  aiProviderDescriptor,
+  aiModelDescriptor,
   contactDescriptor,
   chatDescriptor,
   threadDescriptor,

@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import {
+  aiModelDescriptor,
+  aiModelResource,
+  aiProviderDescriptor,
+  aiProviderResource,
   approvalDescriptor,
   captureCandidateDescriptor,
   captureEventDescriptor,
   chatDescriptor,
   contactDescriptor,
   credentialDescriptor,
+  credentialResource,
   createPodModelDescriptorRegistry,
   createPodSchema,
   createPodStorage,
@@ -13,19 +18,72 @@ import {
   inputRequestDescriptor,
   messageDescriptor,
   officialPodModelDescriptors,
+  RDF,
   runStepDescriptor,
   threadDescriptor,
   DCTerms,
   SIOC,
   UDFS,
+  type PodModelDescriptor,
 } from '../src'
+
+function columnsOf(resource: unknown): Record<string, any> {
+  return ((resource as any)?._?.columns ?? (resource as any)?.columns) as Record<string, any>
+}
+
+function resourceConfigOf(resource: unknown): { base?: string; type?: string; namespace?: unknown } {
+  return ((resource as any)?._?.config ?? (resource as any)?.config) as {
+    base?: string
+    type?: string
+    namespace?: unknown
+  }
+}
+
+function predicateOf(resource: unknown, field: string): string {
+  const column = columnsOf(resource)[field]
+  return column?.getPredicate?.(resourceConfigOf(resource).namespace)
+    ?? (typeof column?.options?.predicate === 'string' ? column.options.predicate : '')
+}
+
+function idDefaultOf(resource: unknown): string {
+  const value = columnsOf(resource).id?.options?.defaultValue
+  return typeof value === 'string' ? value : ''
+}
+
+/** Descriptor `type` follows the column's element type, including array columns. */
+function allowedDescriptorTypes(column: Record<string, any>): string[] {
+  const dataType = column?.dataType === 'array' ? column?.options?.baseType : column?.dataType
+  switch (dataType) {
+    case 'string':
+      // drizzle-solid models `string()` and `text()` columns with the same
+      // dataType; the descriptor type picks literal repeatability instead.
+      return ['string', 'text']
+    case 'datetime':
+      return ['timestamp']
+    case 'integer':
+    case 'real':
+      return ['number']
+    default:
+      return [String(dataType)]
+  }
+}
+
+const tableBackedDescriptors: ReadonlyArray<{
+  name: string
+  descriptor: PodModelDescriptor
+  resource: unknown
+}> = [
+  { name: 'credential', descriptor: credentialDescriptor, resource: credentialResource },
+  { name: 'provider', descriptor: aiProviderDescriptor, resource: aiProviderResource },
+  { name: 'model', descriptor: aiModelDescriptor, resource: aiModelResource },
+]
 
 describe('pod storage descriptors', () => {
   it('describes the official credential model', () => {
     expect(credentialDescriptor.uri).toBe(UDFS.Credential)
     expect(credentialDescriptor.storage.base).toBe('/settings/credentials.ttl')
     expect(credentialDescriptor.storage.resourceIdPattern).toBe('#{id}')
-    expect(credentialDescriptor.uniqueBy).toEqual(['service', 'providerId', 'secretType'])
+    expect(credentialDescriptor.uniqueBy).toEqual(['id'])
     expect(credentialDescriptor.fields.apiKey.secret).toBe(true)
     expect(credentialDescriptor.fields.storageMode).toMatchObject({
       type: 'string',
@@ -55,6 +113,22 @@ describe('pod storage descriptors', () => {
       type: 'string',
       predicate: UDFS.keyVersion,
     })
+    expect(credentialDescriptor.fields.provider).toMatchObject({
+      type: 'uri',
+      predicate: UDFS.provider,
+    })
+    expect(credentialDescriptor.fields.scopes).toMatchObject({
+      type: 'text',
+      predicate: UDFS.scopes,
+      array: true,
+    })
+    expect(credentialDescriptor.fields.metadata).toMatchObject({
+      type: 'json',
+      predicate: UDFS.metadata,
+    })
+    expect(credentialDescriptor.fields.oauthAccessToken.secret).toBe(true)
+    expect(credentialDescriptor.fields.oauthRefreshToken.secret).toBe(true)
+    expect(credentialDescriptor.fields.metadata.secret).toBeUndefined()
   })
 
   it('lists local descriptors without natural-language matching', () => {
@@ -65,9 +139,7 @@ describe('pod storage descriptors', () => {
     expect(podSchema.describe({ uri: UDFS.Credential })?.examples[0]).toEqual({
       request: '保存 Cloudflare tunnel token',
       match: {
-        service: 'infra',
-        providerId: 'cloudflare',
-        secretType: 'tunnel-token',
+        id: 'cloudflare-5f2c9a1e',
       },
     })
   })
@@ -180,11 +252,12 @@ describe('pod storage descriptors', () => {
       schemaUri: UDFS.Credential,
       operation: 'upsert',
       match: {
-        service: 'infra',
-        providerId: 'cloudflare',
-        secretType: 'tunnel-token',
+        id: 'cloudflare-tunnel-token',
       },
       set: {
+        provider: 'https://pod.example/settings/providers/cloudflare.ttl',
+        service: 'infra',
+        offeringId: 'tunnel-token',
         label: 'Cloudflare Tunnel Token',
         status: 'active',
       },
@@ -192,21 +265,22 @@ describe('pod storage descriptors', () => {
 
     expect(validation.ok).toBe(true)
     if (!validation.ok) throw new Error(validation.error.message)
-    expect(validation.plan.resourceId).toBe('#infra-cloudflare-tunnel-token')
-    expect(validation.plan.resourceUri).toBe('/settings/credentials.ttl#infra-cloudflare-tunnel-token')
+    expect(validation.plan.resourceId).toBe('#cloudflare-tunnel-token')
+    expect(validation.plan.resourceUri).toBe('/settings/credentials.ttl#cloudflare-tunnel-token')
 
     const committed = podStorage.commit({ planId: validation.plan.id })
     expect(committed.ok).toBe(true)
     if (!committed.ok) throw new Error(committed.error.message)
     expect(committed.resource).toMatchObject({
       schemaUri: UDFS.Credential,
+      id: 'cloudflare-tunnel-token',
+      provider: 'https://pod.example/settings/providers/cloudflare.ttl',
       service: 'infra',
-      providerId: 'cloudflare',
-      secretType: 'tunnel-token',
+      offeringId: 'tunnel-token',
       label: 'Cloudflare Tunnel Token',
       status: 'active',
-      resourceId: '#infra-cloudflare-tunnel-token',
-      resourceUri: '/settings/credentials.ttl#infra-cloudflare-tunnel-token',
+      resourceId: '#cloudflare-tunnel-token',
+      resourceUri: '/settings/credentials.ttl#cloudflare-tunnel-token',
     })
   })
 
@@ -236,5 +310,122 @@ describe('pod storage descriptors', () => {
     expect(credentialDescriptor.fields.apiKey.predicate).toBe(UDFS.apiKey)
     expect(credentialDescriptor.fields.storageMode.predicate).toBe(UDFS.storageMode)
     expect(credentialDescriptor.fields.secretPayload.predicate).toBe(UDFS.secretPayload)
+    expect(credentialDescriptor.fields.provider.predicate).toBe(UDFS.provider)
+    expect(credentialDescriptor.fields.offeringId.predicate).toBe(UDFS.offeringId)
+    expect(credentialDescriptor.fields.metadata.predicate).toBe(UDFS.metadata)
+  })
+
+  it('describes provider and model rows inside the provider document', () => {
+    expect(aiProviderDescriptor.uri).toBe(UDFS.Provider)
+    expect(aiProviderDescriptor.resourceKind).toBe('provider')
+    expect(aiProviderDescriptor.storage).toEqual({
+      base: '/settings/providers/',
+      resourceIdPattern: '{key}.ttl',
+    })
+    expect(aiProviderDescriptor.uniqueBy).toEqual(['id'])
+    expect(aiProviderDescriptor.fields.hasModel).toMatchObject({
+      type: 'uri',
+      predicate: UDFS.hasModel,
+      array: true,
+    })
+    expect(aiProviderDescriptor.fields.defaultModel).toMatchObject({
+      type: 'uri',
+      predicate: UDFS.defaultModel,
+    })
+
+    expect(aiModelDescriptor.uri).toBe(UDFS.AIModel)
+    expect(aiModelDescriptor.resourceKind).toBe('ai-model')
+    expect(aiModelDescriptor.storage).toEqual({
+      base: '/settings/providers/',
+      resourceIdPattern: '{isProvidedBy.doc}#{key}',
+    })
+    expect(aiModelDescriptor.uniqueBy).toEqual(['id'])
+    expect(aiModelDescriptor.fields.isProvidedBy).toMatchObject({
+      type: 'uri',
+      predicate: UDFS.isProvidedBy,
+    })
+    expect(aiModelDescriptor.fields.rdfType).toMatchObject({
+      type: 'uri',
+      predicate: RDF.type,
+      array: true,
+    })
+    expect(aiModelDescriptor.fields.capabilities).toMatchObject({
+      type: 'uri',
+      predicate: UDFS.hasCapability,
+      array: true,
+    })
+    expect(aiModelDescriptor.fields.runtimeCapabilities).toMatchObject({
+      type: 'string',
+      predicate: UDFS.capability,
+      array: true,
+    })
+
+    const podSchema = createPodSchema(createPodModelDescriptorRegistry())
+    expect(podSchema.describe(UDFS.Provider)).toBe(aiProviderDescriptor)
+    expect(podSchema.describe(UDFS.AIModel)).toBe(aiModelDescriptor)
+  })
+
+  it('matches the provider document ids the products write for provider and model rows', () => {
+    const providerId = aiProviderResource.buildId({ id: 'openai' })
+    expect(`${aiProviderDescriptor.storage.base}${providerId}`).toBe('/settings/providers/openai.ttl')
+
+    const providerIri = aiProviderResource.buildIri('https://pod.example/', { id: 'openai' })
+    expect(`${aiModelDescriptor.storage.base}${aiModelResource.buildId({
+      id: 'gpt-4o',
+      isProvidedBy: providerIri,
+    } as never)}`).toBe('/settings/providers/openai.ttl#gpt-4o')
+  })
+})
+
+describe('pod storage descriptor column contracts', () => {
+  it.each(tableBackedDescriptors)('covers every $name column and no invented field', ({ descriptor, resource }) => {
+    expect(Object.keys(descriptor.fields).sort()).toEqual(Object.keys(columnsOf(resource)).sort())
+  })
+
+  it.each(tableBackedDescriptors)('keys $name rows on real columns only', ({ descriptor, resource }) => {
+    const columns = columnsOf(resource)
+    expect(descriptor.uniqueBy.length).toBeGreaterThan(0)
+    for (const field of descriptor.uniqueBy) {
+      expect(Object.keys(columns)).toContain(field)
+    }
+  })
+
+  it.each(tableBackedDescriptors)('keeps $name writableFields inside fields without the row id', ({ descriptor }) => {
+    const fields = Object.keys(descriptor.fields)
+    expect(descriptor.writableFields.length).toBeGreaterThan(0)
+    for (const field of descriptor.writableFields) {
+      expect(fields).toContain(field)
+    }
+    expect(descriptor.writableFields).not.toContain('id')
+    expect(descriptor.writableFields).not.toContain('createdAt')
+  })
+
+  it.each(tableBackedDescriptors)('maps $name predicates to the table columns', ({ descriptor, resource }) => {
+    for (const [field, fieldDescriptor] of Object.entries(descriptor.fields)) {
+      // The row id is the RDF subject, so the descriptor keeps the UDFS id term
+      // while the column predicate is the internal `@id` marker.
+      if (field === 'id') continue
+      expect(fieldDescriptor.predicate).toBe(predicateOf(resource, field))
+    }
+  })
+
+  it.each(tableBackedDescriptors)('maps $name field types and array flags to the table columns', ({ descriptor, resource }) => {
+    for (const [field, fieldDescriptor] of Object.entries(descriptor.fields)) {
+      const column = columnsOf(resource)[field]
+      expect(allowedDescriptorTypes(column)).toContain(fieldDescriptor.type)
+      expect(Boolean(column?.options?.isArray)).toBe(Boolean(fieldDescriptor.array))
+    }
+  })
+
+  it.each(tableBackedDescriptors)('derives $name storage from the table base and id default', ({ descriptor, resource }) => {
+    const expected = `${resourceConfigOf(resource).base}${idDefaultOf(resource)}`.replace(/\{key\}/gu, '{id}')
+    const actual = `${descriptor.storage.base}${descriptor.storage.resourceIdPattern}`.replace(/\{key\}/gu, '{id}')
+    expect(actual).toBe(expected)
+  })
+
+  it('keys credentials by row id because a provider pool repeats providers', () => {
+    expect(credentialDescriptor.uniqueBy).toEqual(['id'])
+    expect(Object.keys(credentialDescriptor.fields)).not.toContain('providerId')
+    expect(Object.keys(credentialDescriptor.fields)).not.toContain('secretType')
   })
 })
