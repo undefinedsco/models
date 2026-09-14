@@ -278,6 +278,11 @@ export const UDFS = createNamespace('udfs', 'https://undefineds.co/ns#', {
   failCount: 'failCount',
   rateLimitResetAt: 'rateLimitResetAt',
   authMode: 'authMode',
+  // Which offering of a provider a credential uses (`api-platform`,
+  // `official-subscription`, `token-plan`, `local`, …). The offering is an
+  // attribute of the credential; the provider relation only names the provider,
+  // and the id of the provider document only expresses where rows are stored.
+  offeringId: 'offeringId',
   storageMode: 'storageMode',
   secretPayload: 'secretPayload',
   encryptedSecret: 'encryptedSecret',

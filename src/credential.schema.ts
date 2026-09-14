@@ -1,4 +1,4 @@
-import { boolean, id, integer, podTable, string, text, timestamp, uri } from "@undefineds.co/drizzle-solid"
+import { boolean, id, integer, json, podTable, string, text, timestamp, uri } from "@undefineds.co/drizzle-solid"
 import { DCTerms, UDFS } from "./namespaces"
 
 export const ProviderAuthMode = {
@@ -31,6 +31,14 @@ export const credentialResource = podTable("credential", {
   // Keep the write default while allowing credentials created before authMode
   // was introduced to remain queryable and migratable.
   authMode: string("authMode").predicate(UDFS.authMode).default(ProviderAuthMode.apiKey),
+  // Which offering of the provider this credential connects through, by the
+  // offering id the provider catalog publishes (`api-platform`,
+  // `official-subscription`, `subscription-key`, `token-plan`,
+  // `pay-as-you-go`, `local`, …). A plain attribute rather than a relation:
+  // offerings are catalog content, not Pod resources, and the set grows with
+  // the catalog, so the schema does not enumerate it. Never encode it in the
+  // provider resource id - `provider` says which provider, this says how.
+  offeringId: string("offeringId").predicate(UDFS.offeringId),
   service: string("service").predicate(UDFS.service).notNull().default("ai"),
   status: string("status").predicate(UDFS.status).notNull().default("active"),
   apiKey: string("apiKey").predicate(UDFS.apiKey),
@@ -68,6 +76,11 @@ export const credentialResource = podTable("credential", {
   oauthExpiresAt: timestamp("oauthExpiresAt").predicate(UDFS.oauthExpiresAt),
   projectId: string("projectId").predicate(UDFS.projectId),
   organizationId: string("organizationId").predicate(UDFS.organizationId),
+  // Opaque adapter-local metadata only (account identity, compat switches, UI
+  // health/priority …). Shared relations must be explicit typed columns: a write
+  // to an undeclared column is dropped silently, so this declaration is what
+  // keeps existing callers' `metadata.*` reads and writes working.
+  metadata: json("metadata").predicate(UDFS.metadata),
 }, {
   base: "/settings/",
   sparqlEndpoint: "/settings/-/sparql",

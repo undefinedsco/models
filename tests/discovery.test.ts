@@ -23,6 +23,43 @@ describe('discovery shared metadata', () => {
     })
   })
 
+  it('publishes canonical Zhipu offerings for API Platform and Coding Plan', () => {
+    expect(getBuiltinProvider('zhipu')?.offerings).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'api-platform',
+        kind: 'api-platform',
+        authModes: ['apiKey'],
+        endpoints: [expect.objectContaining({
+          protocol: 'chatCompletions',
+          baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
+        })],
+      }),
+      expect.objectContaining({
+        id: 'coding-plan',
+        kind: 'token-plan',
+        authModes: ['apiKey'],
+        endpoints: [expect.objectContaining({
+          protocol: 'chatCompletions',
+          baseUrl: 'https://open.bigmodel.cn/api/coding/paas/v4',
+        })],
+      }),
+    ]))
+  })
+
+  it('publishes Ollama as a local offering', () => {
+    expect(getBuiltinProvider('ollama')?.offerings).toEqual([
+      expect.objectContaining({
+        id: 'local',
+        kind: 'local',
+        authModes: ['local'],
+        endpoints: [expect.objectContaining({
+          protocol: 'chatCompletions',
+          baseUrl: 'http://localhost:11434/v1',
+        })],
+      }),
+    ])
+  })
+
   it('normalizes provider ids when querying builtin models', () => {
     const defaultClaudeModel = getBuiltinDefaultModel('claude')
 

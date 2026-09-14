@@ -20,7 +20,39 @@
       "logoUrl": "https://openai.com/favicon.ico",
       "description": "OpenAI API - GPT-4, GPT-3.5 系列模型",
       "supportedFeatures": ["chat", "embedding", "image", "audio", "vision", "function-calling"],
-      "authType": "bearer"
+      "authType": "bearer",
+      "offerings": [
+        {
+          "id": "official-subscription",
+          "label": "Codex Subscription",
+          "kind": "oauth-subscription",
+          "lifecycle": "unavailable",
+          "authModes": ["oauth"],
+          "runtimeProviderIds": ["openai"],
+          "consoleUrl": "https://chatgpt.com/codex",
+          "subscriptionUrl": "https://chatgpt.com/codex",
+          "endpoints": [],
+          "modelDiscovery": { "strategy": "unsupported", "path": "/models", "endpointProtocol": "responses" },
+          "quota": { "strategy": "subscription", "url": "https://chatgpt.com/codex" }
+        },
+        {
+          "id": "api-platform",
+          "label": "API Platform",
+          "kind": "api-platform",
+          "authModes": ["apiKey"],
+          "runtimeProviderIds": ["openai"],
+          "credentialPrefixHints": ["sk-"],
+          "consoleUrl": "https://platform.openai.com/api-keys",
+          "subscriptionUrl": "https://platform.openai.com/settings/organization/billing/overview",
+          "endpoints": [
+            { "protocol": "responses", "baseUrl": "https://api.openai.com/v1" },
+            { "protocol": "chatCompletions", "baseUrl": "https://api.openai.com/v1" }
+          ],
+          "modelDiscovery": { "strategy": "openaiCompatible", "path": "/models", "endpointProtocol": "chatCompletions" },
+          "quota": { "strategy": "providerApi", "url": "https://platform.openai.com/usage" },
+          "usagePolicyUrl": "https://openai.com/policies/usage-policies/"
+        }
+      ]
     },
     {
       "slug": "anthropic",
@@ -30,7 +62,38 @@
       "logoUrl": "https://www.anthropic.com/favicon.ico",
       "description": "Anthropic Claude 系列模型",
       "supportedFeatures": ["chat", "vision", "function-calling"],
-      "authType": "x-api-key"
+      "authType": "x-api-key",
+      "offerings": [
+        {
+          "id": "official-subscription",
+          "label": "Claude Code Subscription",
+          "kind": "oauth-subscription",
+          "lifecycle": "unavailable",
+          "authModes": ["oauth"],
+          "runtimeProviderIds": ["anthropic"],
+          "consoleUrl": "https://claude.ai/",
+          "subscriptionUrl": "https://claude.ai/settings/billing",
+          "endpoints": [],
+          "modelDiscovery": { "strategy": "unsupported", "path": "/models", "endpointProtocol": "anthropic" },
+          "quota": { "strategy": "subscription", "url": "https://claude.ai/settings/usage" }
+        },
+        {
+          "id": "api-platform",
+          "label": "API Platform",
+          "kind": "api-platform",
+          "authModes": ["apiKey"],
+          "runtimeProviderIds": ["anthropic"],
+          "credentialPrefixHints": ["sk-ant-"],
+          "consoleUrl": "https://console.anthropic.com/settings/keys",
+          "subscriptionUrl": "https://console.anthropic.com/settings/plans",
+          "endpoints": [
+            { "protocol": "anthropic", "baseUrl": "https://api.anthropic.com/v1" }
+          ],
+          "modelDiscovery": { "strategy": "anthropic", "path": "/models", "endpointProtocol": "anthropic" },
+          "quota": { "strategy": "console", "url": "https://console.anthropic.com/settings/limits" },
+          "usagePolicyUrl": "https://www.anthropic.com/legal/aup"
+        }
+      ]
     },
     {
       "slug": "openrouter",
@@ -50,7 +113,25 @@
       "logoUrl": "https://www.deepseek.com/favicon.ico",
       "description": "DeepSeek 深度求索 AI 模型",
       "supportedFeatures": ["chat", "function-calling"],
-      "authType": "bearer"
+      "authType": "bearer",
+      "offerings": [
+        {
+          "id": "api-platform",
+          "label": "API Platform",
+          "kind": "api-platform",
+          "authModes": ["apiKey"],
+          "runtimeProviderIds": ["deepseek"],
+          "credentialPrefixHints": ["sk-"],
+          "consoleUrl": "https://platform.deepseek.com/api_keys",
+          "subscriptionUrl": "https://platform.deepseek.com/usage",
+          "endpoints": [
+            { "protocol": "chatCompletions", "baseUrl": "https://api.deepseek.com/v1" }
+          ],
+          "modelDiscovery": { "strategy": "openaiCompatible", "path": "/models", "endpointProtocol": "chatCompletions" },
+          "quota": { "strategy": "console", "url": "https://platform.deepseek.com/usage" },
+          "usagePolicyUrl": "https://cdn.deepseek.com/policies/en-US/deepseek-open-platform-terms-of-use.html"
+        }
+      ]
     },
     {
       "slug": "ollama",
@@ -60,7 +141,23 @@
       "logoUrl": "https://ollama.com/public/ollama.png",
       "description": "本地模型运行与管理",
       "supportedFeatures": ["chat", "embedding", "vision"],
-      "authType": "none"
+      "authType": "none",
+      "offerings": [
+        {
+          "id": "local",
+          "label": "Local Ollama",
+          "kind": "local",
+          "authModes": ["local"],
+          "runtimeProviderIds": ["ollama"],
+          "consoleUrl": "https://ollama.com",
+          "subscriptionUrl": "https://ollama.com",
+          "endpoints": [
+            { "protocol": "chatCompletions", "baseUrl": "http://localhost:11434/v1" }
+          ],
+          "modelDiscovery": { "strategy": "openaiCompatible", "path": "/models", "endpointProtocol": "chatCompletions" },
+          "quota": { "strategy": "unsupported", "url": "https://ollama.com" }
+        }
+      ]
     },
     {
       "slug": "google",
@@ -90,7 +187,81 @@
       "logoUrl": "https://qwen.ai/favicon.ico",
       "description": "阿里云通义千问系列模型",
       "supportedFeatures": ["chat", "vision", "function-calling"],
-      "authType": "bearer"
+      "authType": "bearer",
+      "offerings": [
+        {
+          "id": "pay-as-you-go",
+          "label": "Pay as You Go",
+          "kind": "api-platform",
+          "authModes": ["apiKey"],
+          "runtimeProviderIds": ["bailian"],
+          "credentialPrefixHints": ["sk-"],
+          "consoleUrl": "https://bailian.console.aliyun.com/",
+          "subscriptionUrl": "https://bailian.console.aliyun.com/",
+          "endpoints": [
+            { "protocol": "chatCompletions", "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1" },
+            { "protocol": "anthropic", "baseUrl": "https://dashscope.aliyuncs.com/apps/anthropic" }
+          ],
+          "modelDiscovery": { "strategy": "openaiCompatible", "path": "/models", "endpointProtocol": "chatCompletions" },
+          "quota": { "strategy": "console", "url": "https://bailian.console.aliyun.com/" },
+          "usagePolicyUrl": "https://help.aliyun.com/zh/model-studio/",
+          "region": "cn"
+        },
+        {
+          "id": "token-plan",
+          "label": "Token Plan Personal",
+          "kind": "token-plan",
+          "authModes": ["apiKey"],
+          "runtimeProviderIds": ["bailian-token-plan"],
+          "credentialPrefixHints": ["sk-"],
+          "consoleUrl": "https://bailian.console.aliyun.com/",
+          "subscriptionUrl": "https://bailian.console.aliyun.com/",
+          "endpoints": [
+            { "protocol": "chatCompletions", "baseUrl": "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1" },
+            { "protocol": "anthropic", "baseUrl": "https://token-plan.cn-beijing.maas.aliyuncs.com/apps/anthropic" }
+          ],
+          "modelDiscovery": { "strategy": "openaiCompatible", "path": "/models", "endpointProtocol": "chatCompletions" },
+          "quota": { "strategy": "subscription", "url": "https://bailian.console.aliyun.com/" },
+          "usagePolicyUrl": "https://help.aliyun.com/zh/model-studio/",
+          "region": "cn-beijing"
+        },
+        {
+          "id": "token-plan-team",
+          "label": "Token Plan Team",
+          "kind": "token-plan",
+          "authModes": ["apiKey"],
+          "runtimeProviderIds": ["bailian-token-plan"],
+          "credentialPrefixHints": ["sk-"],
+          "consoleUrl": "https://bailian.console.aliyun.com/",
+          "subscriptionUrl": "https://bailian.console.aliyun.com/",
+          "endpoints": [
+            { "protocol": "chatCompletions", "baseUrl": "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1" },
+            { "protocol": "anthropic", "baseUrl": "https://token-plan.cn-beijing.maas.aliyuncs.com/apps/anthropic" }
+          ],
+          "modelDiscovery": { "strategy": "openaiCompatible", "path": "/models", "endpointProtocol": "chatCompletions" },
+          "quota": { "strategy": "subscription", "url": "https://bailian.console.aliyun.com/" },
+          "usagePolicyUrl": "https://help.aliyun.com/zh/model-studio/",
+          "region": "cn-beijing"
+        },
+        {
+          "id": "coding-plan",
+          "label": "Coding Plan Pro",
+          "kind": "token-plan",
+          "authModes": ["apiKey"],
+          "runtimeProviderIds": ["bailian-coding-plan"],
+          "credentialPrefixHints": ["sk-sp-"],
+          "consoleUrl": "https://bailian.console.aliyun.com/",
+          "subscriptionUrl": "https://bailian.console.aliyun.com/",
+          "endpoints": [
+            { "protocol": "chatCompletions", "baseUrl": "https://coding.dashscope.aliyuncs.com/v1" },
+            { "protocol": "anthropic", "baseUrl": "https://coding.dashscope.aliyuncs.com/apps/anthropic" }
+          ],
+          "modelDiscovery": { "strategy": "openaiCompatible", "path": "/models", "endpointProtocol": "chatCompletions" },
+          "quota": { "strategy": "subscription", "url": "https://bailian.console.aliyun.com/" },
+          "usagePolicyUrl": "https://help.aliyun.com/zh/model-studio/",
+          "region": "cn"
+        }
+      ]
     },
     {
       "slug": "moonshot",
@@ -100,7 +271,43 @@
       "logoUrl": "https://www.moonshot.cn/favicon.ico",
       "description": "月之暗面 Kimi 模型",
       "supportedFeatures": ["chat", "function-calling"],
-      "authType": "bearer"
+      "authType": "bearer",
+      "offerings": [
+        {
+          "id": "subscription-key",
+          "label": "Token Plan",
+          "kind": "token-plan",
+          "authModes": ["apiKey"],
+          "runtimeProviderIds": ["kimi"],
+          "credentialPrefixHints": ["sk-kimi-"],
+          "consoleUrl": "https://www.kimi.com/code",
+          "subscriptionUrl": "https://www.kimi.com/code",
+          "endpoints": [
+            { "protocol": "chatCompletions", "baseUrl": "https://api.kimi.com/coding/v1", "region": "cn", "supportsDeveloperMessages": false },
+            { "protocol": "anthropic", "baseUrl": "https://api.kimi.com/coding/" }
+          ],
+          "modelDiscovery": { "strategy": "openaiCompatible", "path": "/models", "endpointProtocol": "chatCompletions" },
+          "quota": { "strategy": "subscription", "url": "https://www.kimi.com/code" },
+          "usagePolicyUrl": "https://www.kimi.com/user/agreement"
+        },
+        {
+          "id": "api-platform",
+          "label": "API Platform",
+          "kind": "api-platform",
+          "authModes": ["apiKey"],
+          "runtimeProviderIds": ["kimi"],
+          "credentialPrefixHints": ["sk-"],
+          "consoleUrl": "https://platform.moonshot.cn/console/api-keys",
+          "subscriptionUrl": "https://platform.moonshot.cn/console/account",
+          "endpoints": [
+            { "protocol": "chatCompletions", "baseUrl": "https://api.moonshot.ai/v1" }
+          ],
+          "modelDiscovery": { "strategy": "openaiCompatible", "path": "/models", "endpointProtocol": "chatCompletions" },
+          "quota": { "strategy": "console", "url": "https://platform.moonshot.cn/console/account" },
+          "usagePolicyUrl": "https://platform.moonshot.cn/docs/intro",
+          "region": "cn"
+        }
+      ]
     },
     {
       "slug": "minimax",
@@ -150,7 +357,41 @@
       "logoUrl": "https://open.bigmodel.cn/favicon.ico",
       "description": "智谱 GLM 模型平台",
       "supportedFeatures": ["chat", "vision", "function-calling"],
-      "authType": "bearer"
+      "authType": "bearer",
+      "offerings": [
+        {
+          "id": "api-platform",
+          "label": "API 平台",
+          "kind": "api-platform",
+          "authModes": ["apiKey"],
+          "runtimeProviderIds": ["zhipu"],
+          "credentialPrefixHints": ["id."],
+          "consoleUrl": "https://open.bigmodel.cn/usercenter/apikeys",
+          "subscriptionUrl": "https://open.bigmodel.cn/finance-center/expense-manage",
+          "endpoints": [
+            { "protocol": "chatCompletions", "baseUrl": "https://open.bigmodel.cn/api/paas/v4" }
+          ],
+          "modelDiscovery": { "strategy": "openaiCompatible", "path": "/models", "endpointProtocol": "chatCompletions" },
+          "quota": { "strategy": "console", "url": "https://open.bigmodel.cn/finance-center/expense-manage" },
+          "usagePolicyUrl": "https://open.bigmodel.cn/"
+        },
+        {
+          "id": "coding-plan",
+          "label": "GLM Coding Plan",
+          "kind": "token-plan",
+          "authModes": ["apiKey"],
+          "runtimeProviderIds": ["zhipu"],
+          "credentialPrefixHints": ["id."],
+          "consoleUrl": "https://open.bigmodel.cn/usercenter/apikeys",
+          "subscriptionUrl": "https://bigmodel.cn/glm-coding",
+          "endpoints": [
+            { "protocol": "chatCompletions", "baseUrl": "https://open.bigmodel.cn/api/coding/paas/v4" }
+          ],
+          "modelDiscovery": { "strategy": "openaiCompatible", "path": "/models", "endpointProtocol": "chatCompletions" },
+          "quota": { "strategy": "subscription", "url": "https://bigmodel.cn/glm-coding" },
+          "usagePolicyUrl": "https://open.bigmodel.cn/"
+        }
+      ]
     },
     {
       "slug": "codebuddy",

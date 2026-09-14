@@ -29,6 +29,7 @@ export const gatewayAccessKeyResource = podTable('gatewayAccessKey', {
   createdAt: timestamp('createdAt').predicate(UDFS.createdAt),
   expiresAt: timestamp('expiresAt').predicate(UDFS.expiresAt),
   lastUsedAt: timestamp('lastUsedAt').predicate(UDFS.lastUsedAt),
+  disabledAt: timestamp('disabledAt').predicate(UDFS.disabledAt),
   revokedAt: timestamp('revokedAt').predicate(UDFS.revokedAt),
 }, {
   base: '/.data/',
@@ -264,6 +265,19 @@ export const aiGatewayRepository = {
   ): Promise<GatewayAccessKeyRow | null> {
     const patch = {
       revokedAt: asDate(input.revokedAt) ?? new Date(),
+    }
+    if (isAbsoluteIri(input.id)) {
+      return db.updateByIri<GatewayAccessKeyRow>(gatewayAccessKeyResource, input.id, patch)
+    }
+    return db.updateById<GatewayAccessKeyRow>(gatewayAccessKeyResource, input.id, patch)
+  },
+
+  setAccessKeyEnabled(
+    db: AIGatewayRepositoryDb,
+    input: { id: string; enabled: boolean; disabledAt?: Date | string | number },
+  ): Promise<GatewayAccessKeyRow | null> {
+    const patch = {
+      disabledAt: input.enabled ? null : (asDate(input.disabledAt) ?? new Date()),
     }
     if (isAbsoluteIri(input.id)) {
       return db.updateByIri<GatewayAccessKeyRow>(gatewayAccessKeyResource, input.id, patch)

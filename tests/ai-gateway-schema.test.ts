@@ -61,6 +61,7 @@ describe('AI Gateway shared resources', () => {
       'expiresAt',
       'lastUsedAt',
       'revokedAt',
+      'disabledAt',
     ])
     expect(columnsOf(gatewayAccessKeyResource).ownerId).toBeUndefined()
     expect(predicateOf(gatewayAccessKeyResource, 'owner')).toBe(UDFS.owner)
@@ -69,6 +70,7 @@ describe('AI Gateway shared resources', () => {
     expect(predicateOf(gatewayAccessKeyResource, 'deployment')).toBe(UDFS.deployment)
     expect(predicateOf(gatewayAccessKeyResource, 'scopes')).toBe(UDFS.scopes)
     expect(predicateOf(gatewayAccessKeyResource, 'revokedAt')).toBe(UDFS.revokedAt)
+    expect(predicateOf(gatewayAccessKeyResource, 'disabledAt')).toBe(UDFS.disabledAt)
   })
 
   it('models quota snapshots with semantic credential relations and serialized windows', () => {

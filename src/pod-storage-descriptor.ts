@@ -314,6 +314,11 @@ export const gatewayAccessKeyDescriptor: PodModelDescriptor = {
       predicate: UDFS.revokedAt,
       description: 'Revocation timestamp. Presence means the key is no longer valid.',
     },
+    disabledAt: {
+      type: 'timestamp',
+      predicate: UDFS.disabledAt,
+      description: 'Temporary disable timestamp. Clear it to enable the key again.',
+    },
   },
   uniqueBy: ['id'],
   writableFields: [
@@ -326,6 +331,7 @@ export const gatewayAccessKeyDescriptor: PodModelDescriptor = {
     'expiresAt',
     'lastUsedAt',
     'revokedAt',
+    'disabledAt',
   ],
   mergePolicy: 'upsert',
   examples: [

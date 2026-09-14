@@ -108,6 +108,7 @@ describe('AI runtime resources', () => {
   it('keeps only cross-product intent in the shared AIConfig resource', () => {
     expectColumns(credentialResource, [
       'authMode',
+      'offeringId',
       'apiKey',
       'storageMode',
       'secretPayload',
@@ -131,6 +132,7 @@ describe('AI runtime resources', () => {
       'appliedTo',
       'appliedOn',
       'appliedAt',
+      'metadata',
     ])
 
     expectColumns(aiProviderResource, ['defaultModel', 'proxyUrl'])
@@ -197,6 +199,40 @@ describe('AI runtime resources', () => {
     expect(authMode.options?.defaultValue).toBe(ProviderAuthMode.apiKey)
   })
 
+  it('names a credential offering with a documented string id, not a link or enum', () => {
+    const offeringId = columnsOf(credentialResource).offeringId as {
+      dataType?: string
+      options?: { linkTableName?: unknown; defaultValue?: unknown }
+    }
+
+    // Offering ids are catalog content (`@undefineds.co/ai-connections`), and the
+    // catalog grows without a models release, so the schema keeps this a free
+    // string: every published id (`api-platform`, `official-subscription`,
+    // `subscription-key`, `token-plan`, `local`, …) is nameable. A relation would
+    // need an offering resource in the Pod to point at, and there is none.
+    expect(offeringId.dataType).toBe('string')
+    expect(offeringId.options?.linkTableName).toBeUndefined()
+    // Credentials written before the attribute existed must stay queryable
+    // without it, exactly like `authMode`.
+    expect(offeringId.options?.defaultValue).toBeUndefined()
+  })
+
+  it('keeps the adapter-local credential metadata bag declared as UDFS JSON', () => {
+    const metadata = columnsOf(credentialResource).metadata as {
+      dataType?: string
+      options?: { linkTableName?: unknown }
+    }
+
+    // drizzle-solid drops writes to columns the schema does not declare, so an
+    // undeclared `metadata` discards every credential `metadata.*` write the
+    // applet and the gateway make and reads them back as undefined. Asserting
+    // the declaration here keeps that regression from passing silently again.
+    expect(metadata).toBeDefined()
+    expect(metadata.dataType).toBe('json')
+    expect(metadata.options?.linkTableName).toBeUndefined()
+    expect(predicateOf(credentialResource, 'metadata')).toBe(UDFS.metadata)
+  })
+
   it('uses UDFS as the primary AI and credential storage contract', () => {
     expect(resourceConfigOf(credentialResource)).toMatchObject({ type: UDFS.Credential, namespace: UDFS })
     expect(resourceConfigOf(aiProviderResource)).toMatchObject({ type: UDFS.Provider, namespace: UDFS })
@@ -208,6 +244,7 @@ describe('AI runtime resources', () => {
 
     expect(predicateOf(credentialResource, 'provider')).toBe(UDFS.provider)
     expect(predicateOf(credentialResource, 'authMode')).toBe(UDFS.authMode)
+    expect(predicateOf(credentialResource, 'offeringId')).toBe(UDFS.offeringId)
     expect(predicateOf(credentialResource, 'apiKey')).toBe(UDFS.apiKey)
     expect(predicateOf(credentialResource, 'storageMode')).toBe(UDFS.storageMode)
     expect(predicateOf(credentialResource, 'secretPayload')).toBe(UDFS.secretPayload)
@@ -225,6 +262,7 @@ describe('AI runtime resources', () => {
     expect(predicateOf(credentialResource, 'appliedTo')).toBe(UDFS.appliedTo)
     expect(predicateOf(credentialResource, 'appliedOn')).toBe(UDFS.appliedOn)
     expect(predicateOf(credentialResource, 'appliedAt')).toBe(UDFS.appliedAt)
+    expect(predicateOf(credentialResource, 'metadata')).toBe(UDFS.metadata)
     expect(predicateOf(aiProviderResource, 'hasModel')).toBe(UDFS.hasModel)
     expect(predicateOf(aiProviderResource, 'apiKeyUrl')).toBe(UDFS.apiKeyUrl)
     expect(predicateOf(aiProviderResource, 'connectMode')).toBe(UDFS.connectMode)

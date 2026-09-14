@@ -23,6 +23,38 @@ export interface ProviderMetadata {
   description?: string
   supportedFeatures?: ProviderFeature[]
   authType?: 'bearer' | 'x-api-key' | 'query-param' | 'none'
+  /** Canonical commercial/local offerings consumed by adapters. */
+  offerings?: ProviderOfferingMetadata[]
+}
+
+export interface ProviderOfferingMetadata {
+  id: string
+  label: string
+  kind: 'oauth-subscription' | 'api-platform' | 'token-plan' | 'local'
+  lifecycle?: 'active' | 'legacy' | 'unavailable'
+  authModes: Array<'oauth' | 'deviceCode' | 'apiKey' | 'local'>
+  runtimeProviderIds?: string[]
+  productLabel?: string
+  credentialPrefixHints?: string[]
+  consoleUrl?: string
+  subscriptionUrl?: string
+  endpoints: Array<{
+    protocol: string
+    baseUrl: string
+    region?: string
+    supportsDeveloperMessages?: boolean
+  }>
+  modelDiscovery?: {
+    strategy: 'openaiCompatible' | 'anthropic' | 'unsupported'
+    path: string
+    endpointProtocol: string
+  }
+  quota?: {
+    strategy: 'providerApi' | 'subscription' | 'console' | 'unsupported'
+    url: string
+  }
+  usagePolicyUrl?: string
+  region?: string
 }
 
 export type ProviderFeature = 'chat' | 'embedding' | 'image' | 'audio' | 'vision' | 'function-calling'

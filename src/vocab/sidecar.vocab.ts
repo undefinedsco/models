@@ -87,6 +87,7 @@ export const GrantVocab = {
   onBehalfOf: UDFS.onBehalfOf,
   createdAt: DCTerms.created,
   revokedAt: UDFS.revokedAt,
+  disabledAt: UDFS.disabledAt,
 } as const
 
 /**

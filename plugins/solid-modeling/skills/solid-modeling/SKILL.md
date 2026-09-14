@@ -1,6 +1,6 @@
 ---
 name: solid-modeling
-description: Use when designing or reviewing shared Solid Pod, RDF, Linked Data, drizzle-solid, or @undefineds.co/models schemas; especially for URI vs id fields, default id functions, inverse links, chat/thread/message/task/run modeling, Pod persistence boundaries, and cross-app data semantics.
+description: Use when designing or reviewing shared Solid Pod, RDF, Linked Data, drizzle-solid, or @undefineds.co/models schemas; especially for class inheritance, capability and product-role boundaries, URI vs id fields, default id functions, inverse links, Pod persistence boundaries, and cross-app data semantics.
 ---
 
 # Solid Modeling
@@ -71,6 +71,48 @@ CLI, mobile, or workers should not duplicate shared schemas.
   native runtime events into shared DTOs.
 - Do not copy shared predicates, subject/id defaults, Turtle serializers, URI
   builders, or resource lifecycle state machines into shells.
+
+## Class, Capability, and Product Role
+
+Before adding a discriminator such as `type`, `kind`, or `modelType`, separate
+three different questions:
+
+| Question | Meaning | Modeling mechanism |
+|---|---|---|
+| What is it? | A stable semantic kind with an `is-a` relationship | RDF class plus `SolidSchema.extend()` |
+| What can it do? | An independently composable ability | URI relation such as `hasCapability` |
+| How does this product use it? | A selected workload or policy slot | Product/shared config relation to the resource |
+
+Use inheritance when all instances of the child remain valid instances of the
+parent and the distinction is useful across products. For example,
+`ChatModel` and `EmbeddingModel` are subclasses of `AIModel`; inherited common
+fields stay on `AIModel`, while `EmbeddingModel.dimension` belongs only to the
+embedding subclass.
+
+Do not turn capabilities into subclasses. Vision, OCR, tool calling, reasoning,
+and structured output can be combined independently. A Qwen-VL model remains a
+`ChatModel` and links to vision or OCR capability resources. It does not become
+an `OCRModel` merely because a product uses it for OCR.
+
+Do not turn product workload names into shared classes. `ocrModel`,
+`readerModel`, and `indexerModel` are configuration roles that point to eligible
+AI model resources. Eligibility is determined from class and capabilities; the
+role itself does not redefine the model's identity.
+
+Use canonical URIs for persisted RDF classes and capabilities. Adapter-facing
+strings such as `chat`, `vision`, or `ocr` may exist at an API/UI boundary, but
+the persistence adapter must map them to and from the shared vocabulary.
+
+Keep ownership narrow:
+
+- Cross-product model classes, capability terms, and reusable model-selection
+  slots belong in `@undefineds.co/models`.
+- Product-specific behavior such as Xpod FTS5/VEC toggles, indexing schedules,
+  backend choices, and migration progress stays in a product-owned namespace
+  and schema, even when persisted in the user's Pod.
+
+See `docs/class-capability-role-modeling.md` for the decision procedure and
+worked examples.
 
 ## ORM-First Pod Access
 
