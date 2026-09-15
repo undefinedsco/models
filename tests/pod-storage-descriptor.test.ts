@@ -20,6 +20,7 @@ import {
   officialPodModelDescriptors,
   RDF,
   runStepDescriptor,
+  solidResources,
   threadDescriptor,
   DCTerms,
   SIOC,
@@ -37,6 +38,10 @@ function resourceConfigOf(resource: unknown): { base?: string; type?: string; na
     type?: string
     namespace?: unknown
   }
+}
+
+function resourceNameOf(resource: unknown): string {
+  return String((resource as any)?._?.name ?? (resource as any)?.config?.name ?? '')
 }
 
 function predicateOf(resource: unknown, field: string): string {
@@ -427,5 +432,104 @@ describe('pod storage descriptor column contracts', () => {
     expect(credentialDescriptor.uniqueBy).toEqual(['id'])
     expect(Object.keys(credentialDescriptor.fields)).not.toContain('providerId')
     expect(Object.keys(credentialDescriptor.fields)).not.toContain('secretType')
+  })
+})
+
+describe('pod storage descriptor link relations', () => {
+  const schemaResources: unknown[] = Object.values(solidResources)
+
+  /** The one schema resource behind an official descriptor; the RDF class joins them. */
+  function schemaResourceOf(descriptor: PodModelDescriptor): unknown {
+    const matches = schemaResources.filter((resource) => {
+      const type = resourceConfigOf(resource).type
+      return type === descriptor.uri || type === descriptor.class
+    })
+    expect(matches, `${descriptor.resourceKind} matches ${matches.length} schema resources`).toHaveLength(1)
+    return matches[0]
+  }
+
+  /** RDF class a column's `.link(...)` target declares, read back from the column builder. */
+  function linkTargetType(column: Record<string, any>): string {
+    const linkedTable = column?.getLinkTable?.()
+    if (linkedTable) return resourceConfigOf(linkedTable).type ?? ''
+
+    const linkTableName = column?.getLinkTableName?.()
+    if (linkTableName) {
+      const target = schemaResources.find((resource) => resourceNameOf(resource) === linkTableName)
+      expect(target, `linked table ${linkTableName} is not a schema resource`).toBeDefined()
+      return resourceConfigOf(target).type ?? ''
+    }
+
+    return column?.getLinkTarget?.() ?? ''
+  }
+
+  function descriptorOfType(type: string): PodModelDescriptor {
+    const matches = officialPodModelDescriptors.filter((descriptor) => (
+      descriptor.uri === type || descriptor.class === type
+    ))
+    expect(matches, `no official descriptor for ${type}`).toHaveLength(1)
+    return matches[0]
+  }
+
+  it('describes every official descriptor with exactly one schema resource', () => {
+    for (const descriptor of officialPodModelDescriptors) {
+      schemaResourceOf(descriptor)
+    }
+  })
+
+  it('declares the link target on every field whose column declares .link(...)', () => {
+    for (const descriptor of officialPodModelDescriptors) {
+      const columns = columnsOf(schemaResourceOf(descriptor))
+      for (const [field, column] of Object.entries(columns)) {
+        if (!column?.isLink?.()) continue
+
+        const location = `${descriptor.resourceKind}.${field}`
+        expect(Object.keys(descriptor.fields), `${location} is a linked column but not a descriptor field`).toContain(field)
+        const references = descriptor.fields[field].references
+        expect(references, `${location} must declare references`).toBeDefined()
+
+        const target = descriptorOfType(linkTargetType(column))
+        expect(references?.resource, `${location} target`).toBe(target.resourceKind)
+        expect(references?.key, `${location} key`).toBe(target.uniqueBy[0])
+        // The declared key must be a real field on the target descriptor.
+        expect(Object.keys(target.fields), `${location} key`).toContain(references?.key)
+      }
+    }
+  })
+
+  it('declares references only where the backing column links', () => {
+    for (const descriptor of officialPodModelDescriptors) {
+      const columns = columnsOf(schemaResourceOf(descriptor))
+      for (const [field, fieldDescriptor] of Object.entries(descriptor.fields)) {
+        const location = `${descriptor.resourceKind}.${field}`
+        const column = columns[field]
+        expect(column, `${location} has no schema column`).toBeDefined()
+        expect(Boolean(fieldDescriptor.references), `${location} references`).toBe(Boolean(column?.isLink?.()))
+      }
+    }
+  })
+
+  it('points every declared relation at one official descriptor', () => {
+    for (const descriptor of officialPodModelDescriptors) {
+      for (const [field, fieldDescriptor] of Object.entries(descriptor.fields)) {
+        const references = fieldDescriptor.references
+        if (!references) continue
+
+        const location = `${descriptor.resourceKind}.${field}`
+        const targets = officialPodModelDescriptors.filter((candidate) => (
+          candidate.resourceKind === references.resource
+        ))
+        expect(targets, `${location} -> ${references.resource}`).toHaveLength(1)
+        expect(targets[0].uniqueBy[0], `${location} key`).toBe(references.key)
+      }
+    }
+  })
+
+  it('keeps the credential provider edge instead of the retired providerId attribute', () => {
+    expect(credentialDescriptor.fields.provider.references).toEqual({
+      resource: 'provider',
+      key: 'id',
+    })
+    expect(credentialDescriptor.fields.offeringId.references).toBeUndefined()
   })
 })

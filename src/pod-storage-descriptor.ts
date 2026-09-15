@@ -5,6 +5,23 @@ export type PodModelDescriptorTrustLevel = 'high' | 'medium' | 'low'
 export type PodModelFieldType = 'string' | 'text' | 'number' | 'boolean' | 'timestamp' | 'uri' | 'json'
 export type PodModelMergePolicy = 'create-only' | 'upsert' | 'patch' | 'append'
 
+/**
+ * Edge target of a field whose backing table column declares
+ * `drizzle-solid`'s `.link(...)`.
+ *
+ * A `uri` field without this member says "the value is a URI" and nothing more,
+ * so consumers cannot type relation traversal and fall back to guessing the
+ * target from the value's shape or from an id convention. The relation restores
+ * the two facts the link declaration already carries in the schema:
+ * which descriptor is on the other side, and which field identifies that row.
+ */
+export interface PodModelFieldReference {
+  /** `resourceKind` of the target descriptor (`PodModelDescriptor.resourceKind`). */
+  resource: string
+  /** Identity field on the target row (`PodModelDescriptor.uniqueBy[0]`). */
+  key: string
+}
+
 export interface PodModelFieldDescriptor {
   type: PodModelFieldType
   predicate: string
@@ -12,6 +29,8 @@ export interface PodModelFieldDescriptor {
   secret?: boolean
   array?: boolean
   description?: string
+  /** Present only when the backing table column declares `.link(...)`. */
+  references?: PodModelFieldReference
 }
 
 export interface PodModelDescriptor {
@@ -35,6 +54,35 @@ export interface PodModelDescriptor {
     request: string
     match: Record<string, unknown>
   }>
+}
+
+/**
+ * A descriptor whose `fields` keeps its literal shape: literal keys, literal
+ * `type`, and literal `array`/`secret` flags.
+ */
+export type PodModelDescriptorWithFields<
+  F extends Record<string, PodModelFieldDescriptor>,
+> = Omit<PodModelDescriptor, 'fields'> & { fields: F }
+
+/**
+ * Declares a descriptor while keeping the literal field map.
+ *
+ * Annotating a descriptor with `PodModelDescriptor` erases `fields` into
+ * `Record<string, PodModelFieldDescriptor>`: `keyof fields` collapses to
+ * `string | number` and every `type`/`array`/`secret` literal widens to its
+ * union. Consumers that derive row types from descriptors (a mapped type over
+ * `D['fields']`) then get an index signature, so a stale field name compiles and
+ * reads `undefined` at runtime. The `const F` type parameter is the whole
+ * point: declare with `definePodModelDescriptor({...})` and the literal keys,
+ * field types, and flags survive into the published `.d.ts`.
+ *
+ * Runtime behaviour is the identity function: the returned value is the same
+ * object the caller passed.
+ */
+export function definePodModelDescriptor<const F extends Record<string, PodModelFieldDescriptor>>(
+  descriptor: PodModelDescriptorWithFields<F>,
+): PodModelDescriptorWithFields<F> {
+  return descriptor
 }
 
 export interface PodStorageMutationPlan {
@@ -89,7 +137,7 @@ export interface PodSchemaSearchEntry {
   matchedFields: string[]
 }
 
-export const credentialDescriptor: PodModelDescriptor = {
+export const credentialDescriptor = definePodModelDescriptor({
   uri: UDFS.Credential,
   version: '1.0.0',
   source: 'official',
@@ -112,6 +160,7 @@ export const credentialDescriptor: PodModelDescriptor = {
     provider: {
       type: 'uri',
       predicate: UDFS.provider,
+      references: { resource: 'provider', key: 'id' },
       description: 'Provider resource URI this credential connects through, as a URI relation to the provider row.',
     },
     authMode: {
@@ -350,9 +399,9 @@ export const credentialDescriptor: PodModelDescriptor = {
       },
     },
   ],
-}
+})
 
-export const gatewayAccessKeyDescriptor: PodModelDescriptor = {
+export const gatewayAccessKeyDescriptor = definePodModelDescriptor({
   uri: UDFS.GatewayAccessKey,
   version: '1.0.0',
   source: 'official',
@@ -445,9 +494,9 @@ export const gatewayAccessKeyDescriptor: PodModelDescriptor = {
       match: { id: 'ai/gateway/access-keys.ttl#key_1' },
     },
   ],
-}
+})
 
-export const quotaSnapshotDescriptor: PodModelDescriptor = {
+export const quotaSnapshotDescriptor = definePodModelDescriptor({
   uri: UDFS.QuotaSnapshot,
   version: '1.0.0',
   source: 'official',
@@ -467,6 +516,7 @@ export const quotaSnapshotDescriptor: PodModelDescriptor = {
     credential: {
       type: 'uri',
       predicate: UDFS.credential,
+      references: { resource: 'credential', key: 'id' },
       required: true,
       description: 'Credential resource URI this quota snapshot describes.',
     },
@@ -537,9 +587,9 @@ export const quotaSnapshotDescriptor: PodModelDescriptor = {
       match: { id: 'ai/gateway/quota.ttl#quota_1' },
     },
   ],
-}
+})
 
-export const aiProviderDescriptor: PodModelDescriptor = {
+export const aiProviderDescriptor = definePodModelDescriptor({
   uri: UDFS.Provider,
   version: '1.0.0',
   source: 'official',
@@ -595,12 +645,14 @@ export const aiProviderDescriptor: PodModelDescriptor = {
     hasModel: {
       type: 'uri',
       predicate: UDFS.hasModel,
+      references: { resource: 'ai-model', key: 'id' },
       array: true,
       description: 'Model rows this provider exposes, as subjects inside the provider document.',
     },
     defaultModel: {
       type: 'uri',
       predicate: UDFS.defaultModel,
+      references: { resource: 'ai-model', key: 'id' },
       description: 'Default model for this provider when a request does not select one.',
     },
     supportsBackend: {
@@ -641,9 +693,9 @@ export const aiProviderDescriptor: PodModelDescriptor = {
       match: { id: 'openai.ttl' },
     },
   ],
-}
+})
 
-export const aiModelDescriptor: PodModelDescriptor = {
+export const aiModelDescriptor = definePodModelDescriptor({
   uri: UDFS.AIModel,
   version: '1.0.0',
   source: 'official',
@@ -681,6 +733,7 @@ export const aiModelDescriptor: PodModelDescriptor = {
     isProvidedBy: {
       type: 'uri',
       predicate: UDFS.isProvidedBy,
+      references: { resource: 'provider', key: 'id' },
       description: 'Provider document this model row belongs to, as a URI relation to the provider row.',
     },
     inputModalities: {
@@ -753,9 +806,9 @@ export const aiModelDescriptor: PodModelDescriptor = {
       match: { id: 'openai.ttl#gpt-4o' },
     },
   ],
-}
+})
 
-export const approvalDescriptor: PodModelDescriptor = {
+export const approvalDescriptor = definePodModelDescriptor({
   uri: UDFS.ApprovalRequest,
   version: '1.0.0',
   source: 'official',
@@ -784,11 +837,13 @@ export const approvalDescriptor: PodModelDescriptor = {
     chat: {
       type: 'uri',
       predicate: UDFS.conversation,
+      references: { resource: 'chat', key: 'id' },
       description: 'Related chat command surface.',
     },
     thread: {
       type: 'uri',
       predicate: UDFS.inThread,
+      references: { resource: 'thread', key: 'id' },
       description: 'Related concrete thread/work site.',
     },
     toolCallId: {
@@ -925,9 +980,9 @@ export const approvalDescriptor: PodModelDescriptor = {
       },
     },
   ],
-}
+})
 
-export const inputRequestDescriptor: PodModelDescriptor = {
+export const inputRequestDescriptor = definePodModelDescriptor({
   uri: UDFS.InputRequest,
   version: '1.0.0',
   source: 'official',
@@ -956,21 +1011,25 @@ export const inputRequestDescriptor: PodModelDescriptor = {
     chat: {
       type: 'uri',
       predicate: UDFS.conversation,
+      references: { resource: 'chat', key: 'id' },
       description: 'Related chat command surface.',
     },
     thread: {
       type: 'uri',
       predicate: UDFS.inThread,
+      references: { resource: 'thread', key: 'id' },
       description: 'Related concrete thread/work site.',
     },
     run: {
       type: 'uri',
       predicate: UDFS.run,
+      references: { resource: 'run', key: 'id' },
       description: 'Run waiting for input.',
     },
     task: {
       type: 'uri',
       predicate: UDFS.task,
+      references: { resource: 'task', key: 'id' },
       description: 'Task whose execution requires input.',
     },
     requester: {
@@ -1094,7 +1153,7 @@ export const inputRequestDescriptor: PodModelDescriptor = {
       },
     },
   ],
-}
+})
 
 
 function exactIdStorage(base = '/.data/'): PodModelDescriptor['storage'] {
@@ -1104,14 +1163,14 @@ function exactIdStorage(base = '/.data/'): PodModelDescriptor['storage'] {
   }
 }
 
-const idField: PodModelFieldDescriptor = {
+const idField = {
   type: 'string',
   predicate: UDFS.term('id'),
   required: true,
   description: 'Base-relative resource id. For exact-id descriptors this includes the full document path and optional fragment.',
-}
+} as const satisfies PodModelFieldDescriptor
 
-export const captureCandidateDescriptor: PodModelDescriptor = {
+export const captureCandidateDescriptor = definePodModelDescriptor({
   uri: UDFS.CaptureCandidate,
   version: '1.0.0',
   source: 'official',
@@ -1131,10 +1190,10 @@ export const captureCandidateDescriptor: PodModelDescriptor = {
     reason: { type: 'text', predicate: UDFS.reason, description: 'Short rationale for why this source might be worth capturing.' },
     status: { type: 'string', predicate: UDFS.status, description: 'Candidate lifecycle status such as candidate, promoted, rejected, duplicate, ignored, or superseded.' },
     sourceHash: { type: 'string', predicate: UDFS.sourceHash, description: 'Optional source digest for duplicate detection.' },
-    chat: { type: 'uri', predicate: UDFS.conversation, description: 'Related chat command surface.' },
-    thread: { type: 'uri', predicate: UDFS.inThread, description: 'Related concrete thread/work site.' },
-    task: { type: 'uri', predicate: UDFS.task, description: 'Related task.' },
-    run: { type: 'uri', predicate: UDFS.run, description: 'Related run.' },
+    chat: { type: 'uri', predicate: UDFS.conversation, references: { resource: 'chat', key: 'id' }, description: 'Related chat command surface.' },
+    thread: { type: 'uri', predicate: UDFS.inThread, references: { resource: 'thread', key: 'id' }, description: 'Related concrete thread/work site.' },
+    task: { type: 'uri', predicate: UDFS.task, references: { resource: 'task', key: 'id' }, description: 'Related task.' },
+    run: { type: 'uri', predicate: UDFS.run, references: { resource: 'run', key: 'id' }, description: 'Related run.' },
     actor: { type: 'uri', predicate: DCTerms.creator, description: 'Secretary, user, or worker that created the candidate.' },
     metadata: { type: 'json', predicate: UDFS.metadata, description: 'Opaque adapter-local metadata; shared relations must be explicit fields.' },
     createdAt: { type: 'timestamp', predicate: DCTerms.created, description: 'Creation timestamp.' },
@@ -1167,9 +1226,9 @@ export const captureCandidateDescriptor: PodModelDescriptor = {
       },
     },
   ],
-}
+})
 
-export const captureEventDescriptor: PodModelDescriptor = {
+export const captureEventDescriptor = definePodModelDescriptor({
   uri: UDFS.CaptureEvent,
   version: '1.0.0',
   source: 'official',
@@ -1182,7 +1241,7 @@ export const captureEventDescriptor: PodModelDescriptor = {
   fields: {
     id: idField,
     source: { type: 'uri', predicate: DCTerms.source, required: true, description: 'Original message, file, URL, fetched document, or resource considered by capture.' },
-    captureCandidate: { type: 'uri', predicate: UDFS.captureCandidate, description: 'Candidate resource involved in this event, when applicable.' },
+    captureCandidate: { type: 'uri', predicate: UDFS.captureCandidate, references: { resource: 'capture-candidate', key: 'id' }, description: 'Candidate resource involved in this event, when applicable.' },
     targetResource: { type: 'uri', predicate: UDFS.targetResource, description: 'Formal resource affected by this capture decision.' },
     decision: { type: 'string', predicate: UDFS.captureDecision, required: true, description: 'Decision such as direct_commit, optimistic_commit, candidate_created, promoted, rejected, corrected, rollback, duplicate, or ignored.' },
     suggestedType: { type: 'uri', predicate: UDFS.suggestedType, description: 'Type suggested at decision time.' },
@@ -1190,12 +1249,12 @@ export const captureEventDescriptor: PodModelDescriptor = {
     confidence: { type: 'string', predicate: UDFS.confidence, description: 'Classifier confidence at decision time.' },
     reason: { type: 'text', predicate: UDFS.reason, description: 'Explanation for the capture decision.' },
     userCorrection: { type: 'text', predicate: UDFS.userCorrection, description: 'User correction to type, target, title, summary, or content.' },
-    approval: { type: 'uri', predicate: UDFS.approval, description: 'ApprovalRequest controlling an authority gate, if any.' },
-    inputRequest: { type: 'uri', predicate: UDFS.inputRequest, description: 'InputRequest controlling missing information, if any.' },
-    chat: { type: 'uri', predicate: UDFS.conversation, description: 'Related chat command surface.' },
-    thread: { type: 'uri', predicate: UDFS.inThread, description: 'Related concrete thread/work site.' },
-    task: { type: 'uri', predicate: UDFS.task, description: 'Related task.' },
-    run: { type: 'uri', predicate: UDFS.run, description: 'Related run.' },
+    approval: { type: 'uri', predicate: UDFS.approval, references: { resource: 'approval', key: 'id' }, description: 'ApprovalRequest controlling an authority gate, if any.' },
+    inputRequest: { type: 'uri', predicate: UDFS.inputRequest, references: { resource: 'input-request', key: 'id' }, description: 'InputRequest controlling missing information, if any.' },
+    chat: { type: 'uri', predicate: UDFS.conversation, references: { resource: 'chat', key: 'id' }, description: 'Related chat command surface.' },
+    thread: { type: 'uri', predicate: UDFS.inThread, references: { resource: 'thread', key: 'id' }, description: 'Related concrete thread/work site.' },
+    task: { type: 'uri', predicate: UDFS.task, references: { resource: 'task', key: 'id' }, description: 'Related task.' },
+    run: { type: 'uri', predicate: UDFS.run, references: { resource: 'run', key: 'id' }, description: 'Related run.' },
     actor: { type: 'uri', predicate: DCTerms.creator, description: 'Secretary, user, or worker that made or recorded the decision.' },
     about: { type: 'uri', predicate: SCHEMA.about, description: 'Control object or semantic subject the event is about.' },
     metadata: { type: 'json', predicate: UDFS.metadata, description: 'Opaque adapter-local metadata; shared relations must be explicit fields.' },
@@ -1231,9 +1290,9 @@ export const captureEventDescriptor: PodModelDescriptor = {
       },
     },
   ],
-}
+})
 
-export const contactDescriptor: PodModelDescriptor = {
+export const contactDescriptor = definePodModelDescriptor({
   uri: UDFS.Contact,
   version: '1.0.0',
   source: 'official',
@@ -1271,9 +1330,9 @@ export const contactDescriptor: PodModelDescriptor = {
   ],
   mergePolicy: 'upsert',
   examples: [{ request: 'Create an AI agent contact projection', match: { id: 'agent-secretary.ttl' } }],
-}
+})
 
-export const chatDescriptor: PodModelDescriptor = {
+export const chatDescriptor = definePodModelDescriptor({
   uri: MEETING.LongChat,
   version: '1.0.0',
   source: 'official',
@@ -1293,7 +1352,7 @@ export const chatDescriptor: PodModelDescriptor = {
     starred: { type: 'boolean', predicate: UDFS.favorite, description: 'Favorite flag.' },
     muted: { type: 'boolean', predicate: UDFS.muted, description: 'Muted flag.' },
     unreadCount: { type: 'number', predicate: UDFS.unreadCount, description: 'Unread message count.' },
-    contact: { type: 'uri', predicate: UDFS.hasContact, description: 'Optional counterpart/contact represented by this channel.' },
+    contact: { type: 'uri', predicate: UDFS.hasContact, references: { resource: 'contact', key: 'id' }, description: 'Optional counterpart/contact represented by this channel.' },
     participants: { type: 'uri', predicate: WF.participant, array: true, description: 'Participant resource URIs.' },
     metadata: { type: 'json', predicate: UDFS.metadata, description: 'Opaque adapter/UI metadata.' },
     lastActiveAt: { type: 'timestamp', predicate: UDFS.lastActiveAt, description: 'Last activity timestamp.' },
@@ -1308,9 +1367,9 @@ export const chatDescriptor: PodModelDescriptor = {
   ],
   mergePolicy: 'upsert',
   examples: [{ request: 'Create a team chat surface', match: { id: 'team/index.ttl#this' } }],
-}
+})
 
-export const threadDescriptor: PodModelDescriptor = {
+export const threadDescriptor = definePodModelDescriptor({
   uri: SIOC.Thread,
   version: '1.0.0',
   source: 'official',
@@ -1333,9 +1392,9 @@ export const threadDescriptor: PodModelDescriptor = {
   writableFields: ['parent', 'title', 'status', 'starred', 'workspace', 'metadata'],
   mergePolicy: 'upsert',
   examples: [{ request: 'Create a thread under a chat surface', match: { id: 'chat/team/index.ttl#thread' } }],
-}
+})
 
-export const messageDescriptor: PodModelDescriptor = {
+export const messageDescriptor = definePodModelDescriptor({
   uri: MEETING.Message,
   version: '1.0.0',
   source: 'official',
@@ -1348,8 +1407,8 @@ export const messageDescriptor: PodModelDescriptor = {
   fields: {
     id: idField,
     parent: { type: 'uri', predicate: SIOC.has_parent, required: true, description: 'Parent command surface/container URI.' },
-    chat: { type: 'uri', predicate: WF.message, description: 'Solid Chat compatibility containment relation.' },
-    thread: { type: 'uri', predicate: SIOC.has_member, description: 'Thread containment relation.' },
+    chat: { type: 'uri', predicate: WF.message, references: { resource: 'chat', key: 'id' }, description: 'Solid Chat compatibility containment relation.' },
+    thread: { type: 'uri', predicate: SIOC.has_member, references: { resource: 'thread', key: 'id' }, description: 'Thread containment relation.' },
     maker: { type: 'uri', predicate: FOAF.maker, description: 'Author resource IRI.' },
     role: { type: 'string', predicate: UDFS.messageType, description: 'Message role.' },
     content: { type: 'text', predicate: SIOC.content, required: true, description: 'Plain text content.' },
@@ -1377,9 +1436,9 @@ export const messageDescriptor: PodModelDescriptor = {
   ],
   mergePolicy: 'append',
   examples: [{ request: 'Append a message under a team chat', match: { id: 'chat/team/2026/06/14/messages.ttl#msg_1' } }],
-}
+})
 
-export const chatProjectContextDescriptor: PodModelDescriptor = {
+export const chatProjectContextDescriptor = definePodModelDescriptor({
   uri: UDFS.ChatProjectContext,
   version: '1.0.0',
   source: 'official',
@@ -1401,9 +1460,9 @@ export const chatProjectContextDescriptor: PodModelDescriptor = {
   writableFields: ['workspace', 'instructions', 'memoryEnabled', 'createdAt', 'updatedAt'],
   mergePolicy: 'upsert',
   examples: [{ request: 'Save shared instructions for a workspace', match: { id: 'workspace-key.ttl' } }],
-}
+})
 
-export const chatProjectMemoryDescriptor: PodModelDescriptor = {
+export const chatProjectMemoryDescriptor = definePodModelDescriptor({
   uri: UDFS.ProjectMemory,
   version: '1.0.0',
   source: 'official',
@@ -1425,9 +1484,9 @@ export const chatProjectMemoryDescriptor: PodModelDescriptor = {
   writableFields: ['workspace', 'text', 'sourceMessage', 'createdAt', 'updatedAt'],
   mergePolicy: 'upsert',
   examples: [{ request: 'Remember an explicit project fact', match: { id: 'memory-id.ttl' } }],
-}
+})
 
-export const conversationShareDescriptor: PodModelDescriptor = {
+export const conversationShareDescriptor = definePodModelDescriptor({
   uri: UDFS.ConversationShare,
   version: '1.0.0',
   source: 'official',
@@ -1450,9 +1509,9 @@ export const conversationShareDescriptor: PodModelDescriptor = {
   writableFields: ['thread', 'resourceUrl', 'includeToolDetails', 'excludedMessageIds', 'createdAt', 'revokedAt'],
   mergePolicy: 'upsert',
   examples: [{ request: 'Record a read-only conversation share', match: { id: 'share-id.ttl' } }],
-}
+})
 
-export const ideaDescriptor: PodModelDescriptor = {
+export const ideaDescriptor = definePodModelDescriptor({
   uri: UDFS.Idea,
   version: '1.0.0',
   source: 'official',
@@ -1476,8 +1535,8 @@ export const ideaDescriptor: PodModelDescriptor = {
     conflicts: { type: 'text', predicate: UDFS.conflicts, array: true, description: 'Potential semantic conflicts.' },
     nextStep: { type: 'text', predicate: UDFS.nextStep, description: 'Suggested next action.' },
     promotedTo: { type: 'uri', predicate: UDFS.promotedTo, description: 'Committed resource created from the idea.' },
-    chat: { type: 'uri', predicate: UDFS.conversation, description: 'Source chat.' },
-    thread: { type: 'uri', predicate: UDFS.inThread, description: 'Source thread.' },
+    chat: { type: 'uri', predicate: UDFS.conversation, references: { resource: 'chat', key: 'id' }, description: 'Source chat.' },
+    thread: { type: 'uri', predicate: UDFS.inThread, references: { resource: 'thread', key: 'id' }, description: 'Source thread.' },
     sourceMessages: { type: 'uri', predicate: DCTerms.source, array: true, description: 'Source messages.' },
     createdBy: { type: 'uri', predicate: DCTerms.creator, description: 'Creator WebID or agent URI.' },
     metadata: { type: 'json', predicate: UDFS.metadata, description: 'Opaque adapter metadata.' },
@@ -1495,9 +1554,9 @@ export const ideaDescriptor: PodModelDescriptor = {
       match: { id: '2026/05/28.ttl#idea_symphony_quality_metrics' },
     },
   ],
-}
+})
 
-export const issueDescriptor: PodModelDescriptor = {
+export const issueDescriptor = definePodModelDescriptor({
   uri: UDFS.Issue,
   version: '1.0.0',
   source: 'official',
@@ -1518,9 +1577,9 @@ export const issueDescriptor: PodModelDescriptor = {
     status: { type: 'string', predicate: UDFS.status, description: 'Issue lifecycle status.' },
     priority: { type: 'string', predicate: UDFS.priority, description: 'Issue priority.' },
     labels: { type: 'text', predicate: UDFS.tags, array: true, description: 'Tags or labels.' },
-    chat: { type: 'uri', predicate: UDFS.conversation, description: 'Owning or source chat.' },
-    thread: { type: 'uri', predicate: UDFS.inThread, description: 'Owning or source thread.' },
-    parentIssue: { type: 'uri', predicate: UDFS.parentIssue, description: 'Parent issue.' },
+    chat: { type: 'uri', predicate: UDFS.conversation, references: { resource: 'chat', key: 'id' }, description: 'Owning or source chat.' },
+    thread: { type: 'uri', predicate: UDFS.inThread, references: { resource: 'thread', key: 'id' }, description: 'Owning or source thread.' },
+    parentIssue: { type: 'uri', predicate: UDFS.parentIssue, references: { resource: 'issue', key: 'id' }, description: 'Parent issue.' },
     tasks: { type: 'uri', predicate: UDFS.task, array: true, description: 'Executable task slices.' },
     createdBy: { type: 'uri', predicate: DCTerms.creator, description: 'Creator WebID or agent URI.' },
     assignedTo: { type: 'uri', predicate: UDFS.assignedTo, description: 'Assignee WebID or agent URI.' },
@@ -1539,9 +1598,9 @@ export const issueDescriptor: PodModelDescriptor = {
       match: { id: 'issue_symphony_runtime_projection.ttl' },
     },
   ],
-}
+})
 
-export const taskDescriptor: PodModelDescriptor = {
+export const taskDescriptor = definePodModelDescriptor({
   uri: UDFS.Task,
   version: '1.0.0',
   source: 'official',
@@ -1556,7 +1615,7 @@ export const taskDescriptor: PodModelDescriptor = {
     title: { type: 'string', predicate: DCTerms.title, description: 'Task title.' },
     instruction: { type: 'text', predicate: UDFS.instruction, required: true, description: 'Executable instruction.' },
     prompt: { type: 'text', predicate: UDFS.prompt, description: 'Runtime prompt projection.' },
-    issue: { type: 'uri', predicate: UDFS.issue, description: 'Originating issue.' },
+    issue: { type: 'uri', predicate: UDFS.issue, references: { resource: 'issue', key: 'id' }, description: 'Originating issue.' },
     message: { type: 'uri', predicate: UDFS.message, description: 'Message that produced this task.' },
     workspace: { type: 'uri', predicate: UDFS.workspace, required: true, description: 'Workspace URI.' },
     status: { type: 'string', predicate: UDFS.status, description: 'Task lifecycle status.' },
@@ -1577,9 +1636,9 @@ export const taskDescriptor: PodModelDescriptor = {
       match: { id: 'task_symphony_worker_projection' },
     },
   ],
-}
+})
 
-export const scheduleDescriptor: PodModelDescriptor = {
+export const scheduleDescriptor = definePodModelDescriptor({
   uri: UDFS.Schedule,
   version: '1.0.0',
   source: 'official',
@@ -1591,7 +1650,7 @@ export const scheduleDescriptor: PodModelDescriptor = {
   storage: exactIdStorage(),
   fields: {
     id: idField,
-    task: { type: 'uri', predicate: UDFS.task, required: true, description: 'Scheduled task.' },
+    task: { type: 'uri', predicate: UDFS.task, references: { resource: 'task', key: 'id' }, required: true, description: 'Scheduled task.' },
     status: { type: 'string', predicate: UDFS.status, description: 'Schedule lifecycle status.' },
     scheduleKind: { type: 'string', predicate: UDFS.scheduleKind, description: 'Schedule kind: once, interval, or cron.' },
     cron: { type: 'string', predicate: UDFS.cron, description: 'Cron expression.' },
@@ -1606,9 +1665,9 @@ export const scheduleDescriptor: PodModelDescriptor = {
   writableFields: ['task', 'status', 'scheduleKind', 'cron', 'intervalSeconds', 'timezone', 'startsAt', 'nextRunAt', 'lastRunAt', 'metadata'],
   mergePolicy: 'upsert',
   examples: [{ request: 'Create a time trigger for a task', match: { id: 'schedules/schedule_1.ttl' } }],
-}
+})
 
-export const automationRuleDescriptor: PodModelDescriptor = {
+export const automationRuleDescriptor = definePodModelDescriptor({
   uri: UDFS.AutomationRule,
   version: '1.0.0',
   source: 'official',
@@ -1624,8 +1683,8 @@ export const automationRuleDescriptor: PodModelDescriptor = {
     description: { type: 'text', predicate: DCTerms.description, description: 'Rule description.' },
     status: { type: 'string', predicate: UDFS.status, description: 'Rule lifecycle status.' },
     ruleKind: { type: 'string', predicate: UDFS.ruleKind, description: 'Rule kind: event, schedule, or manual.' },
-    task: { type: 'uri', predicate: UDFS.task, description: 'Task dispatched by this rule.' },
-    schedule: { type: 'uri', predicate: UDFS.schedule, description: 'Schedule that triggers this rule.' },
+    task: { type: 'uri', predicate: UDFS.task, references: { resource: 'task', key: 'id' }, description: 'Task dispatched by this rule.' },
+    schedule: { type: 'uri', predicate: UDFS.schedule, references: { resource: 'schedule', key: 'id' }, description: 'Schedule that triggers this rule.' },
     source: { type: 'uri', predicate: DCTerms.source, description: 'Source resource.' },
     target: { type: 'uri', predicate: AS.target, description: 'Target resource.' },
     condition: { type: 'json', predicate: UDFS.condition, description: 'Structured condition.' },
@@ -1638,9 +1697,9 @@ export const automationRuleDescriptor: PodModelDescriptor = {
   writableFields: ['title', 'description', 'status', 'ruleKind', 'task', 'schedule', 'source', 'target', 'condition', 'actions', 'metadata', 'lastTriggeredAt', 'lastRunStatus'],
   mergePolicy: 'upsert',
   examples: [{ request: 'Create an automation rule that dispatches a task', match: { id: 'automation/rule_1.ttl' } }],
-}
+})
 
-export const deliveryDescriptor: PodModelDescriptor = {
+export const deliveryDescriptor = definePodModelDescriptor({
   uri: UDFS.Delivery,
   version: '1.0.0',
   source: 'official',
@@ -1654,12 +1713,12 @@ export const deliveryDescriptor: PodModelDescriptor = {
     id: idField,
     kind: { type: 'string', predicate: UDFS.deliveryKind, description: 'Delivery kind.' },
     status: { type: 'string', predicate: UDFS.status, description: 'Delivery lifecycle status.' },
-    task: { type: 'uri', predicate: UDFS.task, description: 'Task being delivered.' },
+    task: { type: 'uri', predicate: UDFS.task, references: { resource: 'task', key: 'id' }, description: 'Task being delivered.' },
     source: { type: 'uri', predicate: DCTerms.source, description: 'Source resource.' },
     target: { type: 'uri', predicate: AS.target, description: 'Target resource.' },
-    chat: { type: 'uri', predicate: UDFS.conversation, description: 'Related chat.' },
-    thread: { type: 'uri', predicate: UDFS.inThread, description: 'Source thread.' },
-    targetThread: { type: 'uri', predicate: UDFS.targetThread, description: 'Target thread.' },
+    chat: { type: 'uri', predicate: UDFS.conversation, references: { resource: 'chat', key: 'id' }, description: 'Related chat.' },
+    thread: { type: 'uri', predicate: UDFS.inThread, references: { resource: 'thread', key: 'id' }, description: 'Source thread.' },
+    targetThread: { type: 'uri', predicate: UDFS.targetThread, references: { resource: 'thread', key: 'id' }, description: 'Target thread.' },
     targetSession: { type: 'uri', predicate: UDFS.targetSession, description: 'Target session.' },
     actor: { type: 'uri', predicate: AS.actor, description: 'Actor.' },
     object: { type: 'uri', predicate: AS.object, description: 'Object resource.' },
@@ -1681,9 +1740,9 @@ export const deliveryDescriptor: PodModelDescriptor = {
   ],
   mergePolicy: 'upsert',
   examples: [{ request: 'Create a worker delivery package', match: { id: 'task/symphony/2026/05/28/deliveries.ttl#delivery_1' } }],
-}
+})
 
-export const runDescriptor: PodModelDescriptor = {
+export const runDescriptor = definePodModelDescriptor({
   uri: UDFS.Run,
   version: '1.0.0',
   source: 'official',
@@ -1695,11 +1754,11 @@ export const runDescriptor: PodModelDescriptor = {
   storage: exactIdStorage(),
   fields: {
     id: idField,
-    task: { type: 'uri', predicate: UDFS.task, description: 'Task being executed.' },
-    delivery: { type: 'uri', predicate: UDFS.delivery, description: 'Delivery that caused or carries this run.' },
+    task: { type: 'uri', predicate: UDFS.task, references: { resource: 'task', key: 'id' }, description: 'Task being executed.' },
+    delivery: { type: 'uri', predicate: UDFS.delivery, references: { resource: 'delivery', key: 'id' }, description: 'Delivery that caused or carries this run.' },
     trigger: { type: 'uri', predicate: UDFS.trigger, description: 'Resource that triggered the run.' },
     input: { type: 'uri', predicate: UDFS.input, description: 'Concrete input/context projection resource.' },
-    thread: { type: 'uri', predicate: UDFS.inThread, required: true, description: 'Runtime thread.' },
+    thread: { type: 'uri', predicate: UDFS.inThread, references: { resource: 'thread', key: 'id' }, required: true, description: 'Runtime thread.' },
     workspace: { type: 'uri', predicate: UDFS.workspace, required: true, description: 'Workspace URI.' },
     status: { type: 'string', predicate: UDFS.status, description: 'Run lifecycle status.' },
     runner: { type: 'string', predicate: UDFS.runner, required: true, description: 'Runtime implementation.' },
@@ -1722,9 +1781,9 @@ export const runDescriptor: PodModelDescriptor = {
   ],
   mergePolicy: 'upsert',
   examples: [{ request: 'Record a runtime execution attempt', match: { id: 'task/symphony/2026/05/28/runs.ttl#run_1' } }],
-}
+})
 
-export const runStepDescriptor: PodModelDescriptor = {
+export const runStepDescriptor = definePodModelDescriptor({
   uri: UDFS.RunStep,
   version: '1.0.0',
   source: 'official',
@@ -1736,7 +1795,7 @@ export const runStepDescriptor: PodModelDescriptor = {
   storage: exactIdStorage(),
   fields: {
     id: idField,
-    run: { type: 'uri', predicate: UDFS.run, required: true, description: 'Run this step belongs to.' },
+    run: { type: 'uri', predicate: UDFS.run, references: { resource: 'run', key: 'id' }, required: true, description: 'Run this step belongs to.' },
     stepType: { type: 'string', predicate: UDFS.stepType, required: true, description: 'RunStep event type.' },
     message: { type: 'string', predicate: DCTerms.description, description: 'Human-readable step message.' },
     payload: { type: 'json', predicate: UDFS.payload, description: 'Structured step payload.' },
@@ -1745,9 +1804,9 @@ export const runStepDescriptor: PodModelDescriptor = {
   writableFields: ['run', 'stepType', 'message', 'payload'],
   mergePolicy: 'append',
   examples: [{ request: 'Append a runtime tool call step', match: { id: 'task/symphony/2026/05/28/runs.ttl#run-step_1' } }],
-}
+})
 
-export const evidenceDescriptor: PodModelDescriptor = {
+export const evidenceDescriptor = definePodModelDescriptor({
   uri: UDFS.Evidence,
   version: '1.0.0',
   source: 'official',
@@ -1761,11 +1820,11 @@ export const evidenceDescriptor: PodModelDescriptor = {
     id: idField,
     evidenceKind: { type: 'string', predicate: UDFS.evidenceKind, required: true, description: 'Evidence kind.' },
     about: { type: 'uri', predicate: SCHEMA.about, required: true, description: 'Control object this evidence supports.' },
-    issue: { type: 'uri', predicate: UDFS.issue, description: 'Related issue.' },
-    task: { type: 'uri', predicate: UDFS.task, description: 'Related task.' },
-    delivery: { type: 'uri', predicate: UDFS.delivery, description: 'Related delivery.' },
-    run: { type: 'uri', predicate: UDFS.run, description: 'Related run.' },
-    thread: { type: 'uri', predicate: UDFS.inThread, description: 'Related thread.' },
+    issue: { type: 'uri', predicate: UDFS.issue, references: { resource: 'issue', key: 'id' }, description: 'Related issue.' },
+    task: { type: 'uri', predicate: UDFS.task, references: { resource: 'task', key: 'id' }, description: 'Related task.' },
+    delivery: { type: 'uri', predicate: UDFS.delivery, references: { resource: 'delivery', key: 'id' }, description: 'Related delivery.' },
+    run: { type: 'uri', predicate: UDFS.run, references: { resource: 'run', key: 'id' }, description: 'Related run.' },
+    thread: { type: 'uri', predicate: UDFS.inThread, references: { resource: 'thread', key: 'id' }, description: 'Related thread.' },
     summary: { type: 'text', predicate: DCTerms.abstract, description: 'Evidence summary.' },
     source: { type: 'uri', predicate: DCTerms.source, description: 'Source artifact or document.' },
     actor: { type: 'uri', predicate: DCTerms.creator, description: 'Actor that produced the evidence.' },
@@ -1776,9 +1835,9 @@ export const evidenceDescriptor: PodModelDescriptor = {
   writableFields: ['evidenceKind', 'about', 'issue', 'task', 'delivery', 'run', 'thread', 'summary', 'source', 'actor', 'outcome', 'metadata'],
   mergePolicy: 'append',
   examples: [{ request: 'Record test evidence for a task', match: { id: 'task/symphony/2026/05/28/evidence.ttl#evidence_1' } }],
-}
+})
 
-export const reportDescriptor: PodModelDescriptor = {
+export const reportDescriptor = definePodModelDescriptor({
   uri: UDFS.Report,
   version: '1.0.0',
   source: 'official',
@@ -1794,12 +1853,12 @@ export const reportDescriptor: PodModelDescriptor = {
     status: { type: 'string', predicate: UDFS.status, description: 'Report lifecycle status.' },
     outcome: { type: 'string', predicate: UDFS.outcome, description: 'Reported outcome.' },
     about: { type: 'uri', predicate: SCHEMA.about, required: true, description: 'Control object being summarized.' },
-    issue: { type: 'uri', predicate: UDFS.issue, description: 'Related issue.' },
-    task: { type: 'uri', predicate: UDFS.task, description: 'Related task.' },
-    delivery: { type: 'uri', predicate: UDFS.delivery, description: 'Related delivery.' },
-    run: { type: 'uri', predicate: UDFS.run, description: 'Related run.' },
-    thread: { type: 'uri', predicate: UDFS.inThread, description: 'Related thread.' },
-    evidence: { type: 'uri', predicate: UDFS.evidence, array: true, description: 'Evidence summarized by this report.' },
+    issue: { type: 'uri', predicate: UDFS.issue, references: { resource: 'issue', key: 'id' }, description: 'Related issue.' },
+    task: { type: 'uri', predicate: UDFS.task, references: { resource: 'task', key: 'id' }, description: 'Related task.' },
+    delivery: { type: 'uri', predicate: UDFS.delivery, references: { resource: 'delivery', key: 'id' }, description: 'Related delivery.' },
+    run: { type: 'uri', predicate: UDFS.run, references: { resource: 'run', key: 'id' }, description: 'Related run.' },
+    thread: { type: 'uri', predicate: UDFS.inThread, references: { resource: 'thread', key: 'id' }, description: 'Related thread.' },
+    evidence: { type: 'uri', predicate: UDFS.evidence, references: { resource: 'evidence', key: 'id' }, array: true, description: 'Evidence summarized by this report.' },
     summary: { type: 'text', predicate: DCTerms.abstract, required: true, description: 'Report summary.' },
     reviewer: { type: 'uri', predicate: SCHEMA.reviewedBy, description: 'Reviewer.' },
     actor: { type: 'uri', predicate: DCTerms.creator, description: 'Actor that produced the report.' },
@@ -1816,9 +1875,9 @@ export const reportDescriptor: PodModelDescriptor = {
   ],
   mergePolicy: 'upsert',
   examples: [{ request: 'Publish a worker handoff report', match: { id: 'task/symphony/2026/05/28/reports.ttl#report_1' } }],
-}
+})
 
-export const sessionDescriptor: PodModelDescriptor = {
+export const sessionDescriptor = definePodModelDescriptor({
   uri: UDFS.term('Session'),
   version: '1.0.0',
   source: 'official',
@@ -1831,8 +1890,8 @@ export const sessionDescriptor: PodModelDescriptor = {
   fields: {
     id: idField,
     owner: { type: 'uri', predicate: UDFS.actor, required: true, description: 'Session owner.' },
-    chat: { type: 'uri', predicate: UDFS.conversation, description: 'Related chat.' },
-    thread: { type: 'uri', predicate: UDFS.inThread, description: 'Related thread.' },
+    chat: { type: 'uri', predicate: UDFS.conversation, references: { resource: 'chat', key: 'id' }, description: 'Related chat.' },
+    thread: { type: 'uri', predicate: UDFS.inThread, references: { resource: 'thread', key: 'id' }, description: 'Related thread.' },
     status: { type: 'string', predicate: UDFS.sessionStatus, description: 'Session lifecycle status.' },
     tool: { type: 'string', predicate: UDFS.sessionTool, description: 'Runtime tool or backend.' },
     tokenUsage: { type: 'number', predicate: UDFS.tokenUsage, description: 'Token usage.' },
@@ -1846,7 +1905,7 @@ export const sessionDescriptor: PodModelDescriptor = {
   writableFields: ['owner', 'chat', 'thread', 'status', 'tool', 'tokenUsage', 'messages', 'policy', 'policyVersion', 'metadata', 'archivedAt'],
   mergePolicy: 'upsert',
   examples: [{ request: 'Record a worker runtime session', match: { id: '2026/05/28/sess_1.ttl' } }],
-}
+})
 
 export const officialPodModelDescriptors = [
   credentialDescriptor,
