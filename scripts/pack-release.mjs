@@ -1,8 +1,14 @@
-import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, join, relative, sep } from 'node:path'
+import { join, relative, sep } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
+import {
+  ensureExecutableBins,
+  fixExtensionlessDeclarationImports,
+  fixExtensionlessRelativeImports,
+  fixJsonImportAttributes,
+} from './lib/dist-rewrite.mjs'
 
 const modelsRoot = fileURLToPath(new URL('..', import.meta.url))
 const outRoot = join(modelsRoot, 'preview')
@@ -20,6 +26,7 @@ mkdirSync(outRoot, { recursive: true })
 
 copyPackage(modelsRoot, workRoot)
 fixExtensionlessRelativeImports(join(workRoot, 'dist'))
+fixExtensionlessDeclarationImports(join(workRoot, 'dist'))
 fixJsonImportAttributes(join(workRoot, 'dist'))
 ensureExecutableBins(join(workRoot, 'dist'))
 writeJson(join(workRoot, 'package.json'), createPublishablePackage(pkg, version))
@@ -103,75 +110,6 @@ function pick(object, keys) {
       .filter((key) => Object.prototype.hasOwnProperty.call(object, key))
       .map((key) => [key, object[key]]),
   )
-}
-
-function walkJs(dir, files = []) {
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const next = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      walkJs(next, files)
-    } else if (entry.isFile() && next.endsWith('.js')) {
-      files.push(next)
-    }
-  }
-  return files
-}
-
-function fixExtensionlessRelativeImports(root) {
-  const specifierPattern = /(from\s+['"])(\.{1,2}\/[^'"]+)(['"])/g
-  const sideEffectPattern = /(import\s+['"])(\.{1,2}\/[^'"]+)(['"])/g
-  for (const file of walkJs(root)) {
-    let source = readFileSync(file, 'utf8')
-    source = source.replace(specifierPattern, (_match, before, specifier, after) => (
-      `${before}${resolveRelativeSpecifier(file, specifier)}${after}`
-    ))
-    source = source.replace(sideEffectPattern, (_match, before, specifier, after) => (
-      `${before}${resolveRelativeSpecifier(file, specifier)}${after}`
-    ))
-    writeFileSync(file, source)
-  }
-}
-
-function resolveRelativeSpecifier(fromFile, specifier) {
-  if (
-    specifier.endsWith('.js')
-    || specifier.endsWith('.json')
-    || specifier.includes('?')
-    || specifier.includes('#')
-  ) {
-    return specifier
-  }
-
-  const targetBase = join(dirname(fromFile), specifier)
-  if (existsSync(`${targetBase}.js`)) {
-    return `${specifier}.js`
-  }
-
-  if (existsSync(join(targetBase, 'index.js'))) {
-    return `${specifier}/index.js`
-  }
-
-  return specifier
-}
-
-function fixJsonImportAttributes(root) {
-  const jsonImportPattern = /(import\s+[^;]*?from\s+['"][^'"]+\.json['"])(\s*;)/g
-  for (const file of walkJs(root)) {
-    const source = readFileSync(file, 'utf8').replace(jsonImportPattern, (_match, statement, suffix) => {
-      if (statement.includes(' with { type: \'json\' }') || statement.includes(' with { type: "json" }')) {
-        return `${statement}${suffix}`
-      }
-      return `${statement} with { type: 'json' }${suffix}`
-    })
-    writeFileSync(file, source)
-  }
-}
-
-function ensureExecutableBins(root) {
-  const udfsBin = join(root, 'bin', 'udfs.js')
-  if (existsSync(udfsBin)) {
-    chmodSync(udfsBin, 0o755)
-  }
 }
 
 function npmPack(cwd) {
