@@ -57,7 +57,8 @@ export const credentialResource = podTable("credential", {
   proxyUrl: string("proxyUrl").predicate(UDFS.proxyUrl),
   label: string("label").predicate(UDFS.label),
   isDefault: boolean("isDefault").predicate(UDFS.isDefault).default(false),
-  createdAt: timestamp("createdAt").predicate(DCTerms.created).notNull().defaultNow(),
+  // Older credentials predate this field; keep reads optional and default new writes.
+  createdAt: timestamp("createdAt").predicate(DCTerms.created).defaultNow(),
   lastUsedAt: timestamp("lastUsedAt").predicate(UDFS.lastUsedAt),
   // A credential Xpod itself issued to a client (the gateway `sk-` key) names the
   // CSS/OIDC client it belongs to. That is an external runtime identifier - the
