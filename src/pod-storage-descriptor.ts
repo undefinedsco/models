@@ -309,6 +309,16 @@ export const credentialDescriptor = definePodModelDescriptor({
       predicate: UDFS.rateLimitResetAt,
       description: 'Timestamp when the provider rate limit is expected to reset.',
     },
+    lastFailureCode: {
+      type: 'string',
+      predicate: UDFS.lastFailureCode,
+      description: 'Stable credential failure category. No upstream response body or secret.',
+    },
+    lastFailureAt: {
+      type: 'timestamp',
+      predicate: UDFS.lastFailureAt,
+      description: 'Time when the most recent credential failure was observed.',
+    },
     oauthRefreshToken: {
       type: 'string',
       predicate: UDFS.oauthRefreshToken,
@@ -377,6 +387,8 @@ export const credentialDescriptor = definePodModelDescriptor({
     'appliedAt',
     'failCount',
     'rateLimitResetAt',
+    'lastFailureCode',
+    'lastFailureAt',
     'oauthRefreshToken',
     'oauthAccessToken',
     'oauthExpiresAt',
@@ -1620,6 +1632,9 @@ export const taskDescriptor = definePodModelDescriptor({
     workspace: { type: 'uri', predicate: UDFS.workspace, required: true, description: 'Workspace URI.' },
     status: { type: 'string', predicate: UDFS.status, description: 'Task lifecycle status.' },
     priority: { type: 'string', predicate: UDFS.priority, description: 'Priority.' },
+    dueAt: { type: 'timestamp', predicate: UDFS.dueAt, description: 'Deadline, independent of execution scheduling.' },
+    completedAt: { type: 'timestamp', predicate: UDFS.completedAt, description: 'Time the task was completed.' },
+    notes: { type: 'text', predicate: DCTerms.description, description: 'User notes about the task.' },
     assignedTo: { type: 'uri', predicate: UDFS.assignedTo, description: 'Assignee WebID or agent URI.' },
     source: { type: 'uri', predicate: DCTerms.source, description: 'Source resource.' },
     metadata: { type: 'json', predicate: UDFS.metadata, description: 'Opaque adapter metadata.' },
@@ -1627,7 +1642,7 @@ export const taskDescriptor = definePodModelDescriptor({
   uniqueBy: ['id'],
   writableFields: [
     'title', 'instruction', 'prompt', 'issue', 'message', 'workspace',
-    'status', 'priority', 'assignedTo', 'source', 'metadata',
+    'status', 'priority', 'dueAt', 'completedAt', 'notes', 'assignedTo', 'source', 'metadata',
   ],
   mergePolicy: 'upsert',
   examples: [

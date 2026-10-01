@@ -425,6 +425,9 @@ export {
 
 export {
   claimApprovalRequest,
+  decideApprovalRequest,
+  type ApprovalDecisionRequest,
+  type ApprovalDecisionResult,
   isApprovalStatusClaimable,
   type ApprovalClaimDatabase,
   type ApprovalClaimRequest,

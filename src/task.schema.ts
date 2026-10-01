@@ -35,6 +35,9 @@ export const taskResource = podTable(
 
     status: string('status').predicate(UDFS.status).notNull().default(TaskStatus.OPEN),
     priority: string('priority').predicate(UDFS.priority),
+    dueAt: timestamp('dueAt').predicate(UDFS.dueAt),
+    completedAt: timestamp('completedAt').predicate(UDFS.completedAt),
+    notes: text('notes').predicate(DCTerms.description),
     assignedTo: uri('assignedTo').predicate(UDFS.assignedTo),
     source: uri('source').predicate(DCTerms.source),
     metadata: object('metadata').predicate(UDFS.metadata),

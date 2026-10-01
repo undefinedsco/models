@@ -1,6 +1,10 @@
 import {
   aiProviderDescriptor,
   credentialDescriptor,
+  taskDescriptor,
+  decideApprovalRequest,
+  type ApprovalDecisionRequest,
+  type ApprovalDecisionResult,
   type PodModelDescriptor,
   type PodModelFieldDescriptor,
 } from '../dist/index.js'
@@ -25,6 +29,15 @@ type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B 
 /** `true` only when `T` is a literal union rather than a widened `string`. */
 type IsNotWidened<T> = string extends T ? false : true
 type Expect<T extends true> = T
+
+type _DecisionInput = Expect<Equal<Parameters<typeof decideApprovalRequest>[0], ApprovalDecisionRequest>>
+type _DecisionOutput = Expect<Equal<Awaited<ReturnType<typeof decideApprovalRequest>>, ApprovalDecisionResult>>
+type _DecisionValues = Expect<Equal<ApprovalDecisionRequest['decision'], 'approved' | 'rejected'>>
+type _TaskDueAt = Expect<Equal<typeof taskDescriptor.fields.dueAt.type, 'timestamp'>>
+type _TaskCompletedAt = Expect<Equal<typeof taskDescriptor.fields.completedAt.type, 'timestamp'>>
+type _TaskNotes = Expect<Equal<typeof taskDescriptor.fields.notes.type, 'text'>>
+type _FailureCode = Expect<Equal<typeof credentialDescriptor.fields.lastFailureCode.type, 'string'>>
+type _FailureAt = Expect<Equal<typeof credentialDescriptor.fields.lastFailureAt.type, 'timestamp'>>
 
 /** Row derivation a consumer writes over a descriptor (Xpod's `RowOf<D>`). */
 type PodFieldValue<F extends PodModelFieldDescriptor> =

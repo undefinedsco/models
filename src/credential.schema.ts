@@ -72,6 +72,11 @@ export const credentialResource = podTable("credential", {
   appliedAt: timestamp("appliedAt").predicate(UDFS.appliedAt),
   failCount: integer("failCount").predicate(UDFS.failCount).default(0),
   rateLimitResetAt: timestamp("rateLimitResetAt").predicate(UDFS.rateLimitResetAt),
+  // Stable, non-sensitive failure category supplied by the runtime adapter:
+  // authentication, login_expired, quota_exhausted, authorization, rate_limited,
+  // upstream_unavailable, or provider_error. Never store upstream response text.
+  lastFailureCode: string("lastFailureCode").predicate(UDFS.lastFailureCode),
+  lastFailureAt: timestamp("lastFailureAt").predicate(UDFS.lastFailureAt),
   oauthRefreshToken: string("oauthRefreshToken").predicate(UDFS.oauthRefreshToken),
   oauthAccessToken: string("oauthAccessToken").predicate(UDFS.oauthAccessToken),
   oauthExpiresAt: timestamp("oauthExpiresAt").predicate(UDFS.oauthExpiresAt),
