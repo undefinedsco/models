@@ -292,3 +292,7 @@ When adding or changing a durable model:
 - [SIOC Ontology](http://rdfs.org/sioc/spec/)
 - [Dublin Core Terms](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/)
 - [Schema.org](https://schema.org/)
+
+### Pure file/reader Note contracts
+
+Import Note constants and input types from `@undefineds.co/models/file-reader-notes`. This subpath uses the canonical module without loading the root schema barrel. URI vocabulary remains available through `@undefineds.co/models/namespaces`; no schema or vocabulary values are duplicated.
