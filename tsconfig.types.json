@@ -6,6 +6,7 @@
     "rootDir": "."
   },
   "include": [
-    "tests/pod-storage-descriptor.types.test.ts"
+    "tests/pod-storage-descriptor.types.test.ts",
+    "tests/file-reader-notes.types.test.ts"
   ]
 }

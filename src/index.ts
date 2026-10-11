@@ -425,6 +425,9 @@ export {
 
 export {
   claimApprovalRequest,
+  decideApprovalRequest,
+  type ApprovalDecisionRequest,
+  type ApprovalDecisionResult,
   isApprovalStatusClaimable,
   type ApprovalClaimDatabase,
   type ApprovalClaimRequest,
@@ -810,3 +813,5 @@ export { solidResources, solidSchema } from './schema'
 // Discovery Service (发现服务)
 // ============================================
 export * from './discovery'
+
+export * from './file-reader-notes'
