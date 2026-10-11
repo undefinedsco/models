@@ -1,3 +1,5 @@
+import type { ReaderCoverageUnit } from './file-reader-notes'
+
 export const READER_MATERIALIZATION_NOTE_KIND =
   'reader-materialization' as const
 export const READER_MARKDOWN_MEDIA_TYPE = 'text/markdown' as const
@@ -20,7 +22,7 @@ export interface ReaderMaterializationProvenance {
   readerOptionsHash: string
   representationHash: string
   representationMediaType: typeof READER_MARKDOWN_MEDIA_TYPE
-  coverageUnit: 'page' | 'line' | 'byte' | 'section' | 'symbol' | 'rdf-resource'
+  coverageUnit: ReaderCoverageUnit
   coveredRange: string
   readUnits: number
   totalUnits?: number
