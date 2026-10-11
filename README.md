@@ -296,3 +296,14 @@ When adding or changing a durable model:
 ### Pure file/reader Note contracts
 
 Import Note constants and input types from `@undefineds.co/models/file-reader-notes`. This subpath uses the canonical module without loading the root schema barrel. URI vocabulary remains available through `@undefineds.co/models/namespaces`; no schema or vocabulary values are duplicated.
+
+The companion `@undefineds.co/models/file-reader-notes.schema` entry provides
+`fileMetadataNoteResource`, `readerCoverageNoteResource`, their shared-factory
+repository descriptors, and `fileMetadataNoteValues` / `readerCoverageNoteValues`.
+For CRUD, map the caller's full HTTP(S) subject to exact ORM id and keep `about`
+as a URI property. Both shapes share `UDFS.Note` and `/.data/`; `noteKind` is a
+property, never a filename category. Use `findByIri` / `updateByIri` / `deleteByIri`
+and compare returned `@id` (the ORM row's `id` is base-relative). See
+[the binding contract](docs/file-reader-notes.md) for collection discrimination
+and addressability constraints. Content-only serializers and real Pod CRUD
+remain separate capabilities.
