@@ -1,3 +1,4 @@
+import { fileMetadataNoteResource, readerCoverageNoteResource } from './file-reader-notes.schema'
 import { agentResource, agentTable } from './agent.schema'
 import {
   agentStatusResource,
@@ -57,6 +58,8 @@ import { threadResource, threadTable } from './thread.schema'
 import { automationRuleResource, automationRuleTable } from './automation-rule.schema'
 
 export const solidResources = {
+  fileMetadataNoteResource,
+  readerCoverageNoteResource,
   solidProfileResource,
   contactResource,
   agentResource,

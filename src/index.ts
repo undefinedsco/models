@@ -815,3 +815,5 @@ export { solidResources, solidSchema } from './schema'
 export * from './discovery'
 
 export * from './file-reader-notes'
+
+export * from './file-reader-notes.schema'
